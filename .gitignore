@@ -1,0 +1,5 @@
+*.swp
+*.app
+*.stash
+Makefile
+*.bin
