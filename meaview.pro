@@ -5,10 +5,21 @@
 TEMPLATE = app
 TARGET = meaview
 INCLUDEPATH += .
-QT += widgets printsupport
+QT += widgets printsupport core concurrent
 CONFIG += c++11 debug
 QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++ -g -Wno-deprecated-register -O0
 
 # Input
-HEADERS += channelplot.h config.h meaview.h qcustomplot.h windows.h
-SOURCES += channelplot.cpp meaview.cpp qcustomplot.cpp windows.cpp
+HEADERS += 	channelplot.h \
+			config.h \
+			meaview.h \
+			qcustomplot.h \
+			windows.h \
+			files.h \
+			recording.h
+SOURCES += 	channelplot.cpp \
+			meaview.cpp \
+			qcustomplot.cpp \
+			windows.cpp \
+			files.cpp \
+			recording.cpp

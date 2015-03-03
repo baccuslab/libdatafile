@@ -7,22 +7,97 @@
 #define _FILES_H_
 
 /* C++ includes */
+#include <cstring>
 
 /* Qt includes */
+#if QT_VERSION < 0x050000
 #include <QFile>
+#include <QDataStream>
+#include <QDebug>
+#include <QTime>
+#include <QDate>
+#endif
 
 /* meaview includes */
 #include "config.h"
 
-
-/* class: BinFile
- * --------------
- * The BinFile class represents data as it should be written directly
- * to disk in the standard AIB format.
+/* class: BinHeader
+ * ----------------
+ * The BinHeader class represents the header of a data file in the binary
+ * AIB format.
  */
-class BinFile : public QFile {
-	Q_OBJECT
+class BinHeader {
+	public:
+		BinHeader();
+		BinHeader(unsigned int length);
+		~BinHeader();
+
+		friend class DataFile;
+		friend QDataStream &operator<<(QDataStream &, BinHeader &);
+		friend QDataStream &operator>>(QDataStream &, BinHeader &);
+
+	private:
+		void createDateAndTime();
+		void computeNumSamples(unsigned int);
+		uint32_t getNumSamples();
+		void computeHeaderSize();
+
+		uint32_t size;
+		int16_t type;
+		int16_t version;
+		uint32_t numSamples;
+		uint32_t numChannels;
+		int16_t *channels;
+		float sampleRate;
+		uint32_t blockSize;
+		float gain;
+		float offset;
+		uint32_t dateSize;
+		char *dateStr;
+		uint32_t timeSize;
+		char *timeStr;
+		uint32_t roomSize;
+		char *roomStr;
 };
+
+/* class: DataFile
+ * ---------------
+ * The DataFile class provides an interface to data recorded during an
+ * experiment. As of 01 Mar 2015, the only supported file format is the
+ * standard "AIB" binary format traditionally used in the lab's recording
+ * software. This class should be extensible, so that files may be written
+ * in other formats, e.g., HDF5, but this is not yet implemented.
+ */
+class DataFile : public QFile {
+	Q_OBJECT
+
+	public:
+		DataFile(QString &filename, QObject *parent = 0);
+		DataFile(QString &filename, unsigned int length, QObject *parent = 0);
+		~DataFile();
+		QVector<int16_t> getData(int block, int channel);
+
+		uint32_t getHeaderSize();
+		uint32_t getNumSamples();
+		uint32_t getNumChannels();
+		uint32_t getBlockSize();
+		float getGain();
+		float getOffset();
+
+	private:
+		/* Methods */
+
+		/* Attributes */
+		bool newFile;
+		QString filename;
+		QDataStream *dataStream;
+		BinHeader *hdr;
+};
+
+/* Stream insertion/extraction operators for DataFile 
+ */
+QDataStream& operator<<(QDataStream &, BinHeader &);
+QDataStream& operator>>(QDataStream &, BinHeader &);
 
 #endif
 

@@ -5,8 +5,10 @@
 
 /* C++ includes */
 
+#if QT_VERSION < 0x050000
 /* Qt includes */
 #include <QFont>
+#endif
 
 /* meaview includes */
 #include "channelplot.h"
@@ -26,16 +28,20 @@ ChannelPlot::ChannelPlot(
 	this->addGraph();
 	this->xAxis->setTicks(false);
 	this->xAxis->setTickLabels(false);
+	this->xAxis->grid()->setVisible(false);
 	this->yAxis->setTicks(false);
 	this->yAxis->setTickLabels(false);
+	this->yAxis->grid()->setVisible(false);
 	this->setTitle();
+	this->replot();
 }
 
 void ChannelPlot::setTitle() {
 	this->titleString = QString("%1%2").arg(this->position.row).arg(this->position.col);
 	this->plotLayout()->insertRow(0);
-	this->title = unique_ptr<QCPPlotTitle>(new QCPPlotTitle(this, this->titleString));
+	this->title = new QCPPlotTitle(this, this->titleString);
 	this->title->setFont(QFont("Helvetica", -1, QFont::Light));
+	this->plotLayout()->addElement(0, 0, this->title);
 }
 
 int ChannelPlot::getChannelIndex() {

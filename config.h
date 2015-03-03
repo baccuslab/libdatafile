@@ -7,11 +7,14 @@
 #define _CONFIG_H_
 
 /* C++ includes */
+#include <cstring>
 #include <string>
 #include <vector>
 #include <map>
 
+#if QT_VERSION < 0x050000
 /* Qt includes */
+#endif
 
 using namespace std;
 
@@ -20,8 +23,6 @@ const int WINDOW_HEIGHT = 1000;
 const int WINDOW_WIDTH = 1000;
 
 /* Information about channels */
-const int SAMPLE_RATE = 10000;
-const int NUM_CHANNELS = 64;
 const int PHOTODIODE_CHANNEL = 0;
 const int INTRACELLULAR_CHANNEL_VOLTAGE = 1;
 const int INTRACELLULAR_CHANNEL_CURRENT = 2;
@@ -39,8 +40,31 @@ const string SAVE_FILE_EXTENSION(".bin");
 #ifdef Q_OS_WIN
 const string DEFAULT_SAVE_DIR("C:/Desktop/");
 #else
-const string DEFAULT_SAVE_DIR("/tmp");
+const string DEFAULT_SAVE_DIR("~/Desktop");
 #endif
+const unsigned int DEFAULT_RECORD_LENGTH = 1000; 	// seconds
+const unsigned int MAX_RECORD_LENGTH = 10000; 		// seconds
+
+/* Information about AIB binary files */
+const float SAMPLE_RATE = 10000.0;
+const float GAIN = 0.00015258789;
+const float OFFSET = -5.0;
+const uint32_t NUM_CHANNELS = 64;
+const int16_t AIB_TYPE = 2;
+const int16_t AIB_VERSION = 1;
+const char AIB_ROOM[] = {'r', 'e', 'c', 'o', 'r', 'd', 'e', 'd', ' ',
+		'i', 'n', ' ', 'd', '2', '3', '9', '\0'};
+const uint32_t AIB_ROOM_SIZE = strlen(AIB_ROOM);
+const uint32_t AIB_BLOCK_SIZE = 20000;
+const char TIME_FORMAT[] = "h:mm:ss AP"; 		// QTime format
+const char DATE_FORMAT[] = "ddd, MMM dd, yyyy";	// QDate format
+
+/* Display properties for recording/playback */
+const float DEFAULT_DISPLAY_SCALE = 0.5;
+const float DISPLAY_SCALES[] {
+	0.125, 0.25, 0.5, 1, 2, 4
+};
+const float DISPLAY_REFRESH_INTERVAL = 2000; // ms
 
 /* Possible arrangements of the electrodes in the window */
 const string DEFAULT_VIEW("Hexagonal");

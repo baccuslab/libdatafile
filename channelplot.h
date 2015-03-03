@@ -7,10 +7,12 @@
 #define _CHANNEL_PLOT_H_
 
 /* C++ includes */
-#include <memory>			// Smart pointers
+//#include <memory>			// Smart pointers
 
 /* Qt includes */
+#if QT_VERSION < 0x050000
 #include <QString>
+#endif
 
 /* Other third-party includes */
 #include "qcustomplot.h"
@@ -36,7 +38,7 @@ class ChannelPlot : public QCustomPlot {
 		int channel;
 		pos_t position;
 		QString titleString;
-		unique_ptr<QCPPlotTitle> title;
+		QCPPlotTitle *title;
 };
 
 #endif

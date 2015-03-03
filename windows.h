@@ -7,20 +7,24 @@
 #define _WINDOWS_H_
 
 /* C++ includes */
-#include <memory>		// For smart pointers
+//#include <memory>		// For smart pointers
 
+#if QT_VERSION < 0x050000
 /* Qt includes */
-//#include <QMainWindow>
-//#include <QGridLayout>
-//#include <QMenuBar>
-//#include <QMenu>
-//#include <QStatusBar>
-//#include <QDialog>
-//#include <QSettings>
+#include <QMainWindow>
+#include <QGridLayout>
+#include <QMenuBar>
+#include <QMenu>
+#include <QStatusBar>
+#include <QDialog>
+#include <QSettings>
+#endif
 
 /* meaview includes */
 #include "config.h"
 #include "channelplot.h"
+#include "files.h"
+#include "recording.h"
 
 /* class: MainWindow
  * -----------------
@@ -39,25 +43,56 @@ class MainWindow : public QMainWindow {
 	public slots:
 		void openNewRecording();
 		void loadRecording();
+		void setScale(int);
+		void togglePlayback();
+		void plotNextDataBlock();
 	
 	private:
 		/* Methods */
+		void initSettings();
 		void initMenuBar();
+		void initToolBar();
 		void initPlotGroup();
 		void initStatusBar();
+		void initPlaybackRecording();
+		void initLiveRecording();
 
-		/* Atributes */
+		/* Settings */
+		QSettings *settings;
+
+		/* GUI attributes */
 		QMenuBar *menubar;
 		QMenu *fileMenu;
+		QToolBar *toolbar;
+
+		QPushButton *startButton;
+		QGroupBox *timeGroup;
+		QLabel *timeLabel;
+		QHBoxLayout *timeLayout;
+		QLineEdit *timeLine;
+		QIntValidator *timeValidator;
+
+		QGroupBox *scaleGroup;
+		QHBoxLayout *scaleLayout;
+		QLabel *scaleLabel;
+		QComboBox *scaleBox;
+
 		QStatusBar *statusBar;
-		unique_ptr<QWidget> channelPlotGroup;
-		unique_ptr<QGridLayout> channelLayout;
+
+		QWidget *channelPlotGroup;
+		QGridLayout *channelLayout;
 		vector<ChannelPlot *> channelPlots;
+
+		QTimer *playbackTimer;
+		bool isPlaying = false;
+
+		/* Recording attributes */
+		PlaybackRecording *recording;
 };
 
 /* class: NewRecordingWindow
  * -------------------------
- * A simple subclass of QDialog that allows the user to create
+ * A subclass of QDialog that allows the user to create
  * a new recording, choosing a few basic parameters of the recording.
  */
 class NewRecordingWindow : public QDialog {
@@ -67,11 +102,13 @@ class NewRecordingWindow : public QDialog {
 		~NewRecordingWindow();
 
 		QString getFullFilename();
+		uint getTime();
 		void openBinFile(QString &filename);
 		int validateChoices();
 
 	private slots:
 		void setView();
+		void chooseDirectory();
 
 	private:
 		QString getSaveDir();
@@ -81,9 +118,10 @@ class NewRecordingWindow : public QDialog {
 		QSettings *settings;
 		QGroupBox *viewGroup;
 		QVBoxLayout *viewLayout;
-		QPushButton *viewButton;
-		QActionGroup *viewActionGroup;
-		QMenu *viewMenu;
+		QComboBox *viewBox;
+		//QPushButton *viewButton;
+		//QActionGroup *viewActionGroup;
+		//QMenu *viewMenu;
 		QGroupBox *saveGroup;
 		QGridLayout *saveLayout;
 		QLineEdit *saveLine;
@@ -92,6 +130,10 @@ class NewRecordingWindow : public QDialog {
 		QRegExpValidator *fileValidator;
 		QLineEdit *fileLine;
 		QVBoxLayout *fileLayout;
+		QGroupBox *timeGroup;
+		QVBoxLayout *timeLayout;
+		QLineEdit *timeLine;
+		QIntValidator *timeValidator;
 		QGroupBox *buttonGroup;
 		QPushButton *okButton;
 		QPushButton *cancelButton;
@@ -99,9 +141,6 @@ class NewRecordingWindow : public QDialog {
 		QGridLayout *layout;
 		QFile *file;
 };
-
-
-
 
 /* class: OnlineAnalysisWindow
  * ---------------------------
