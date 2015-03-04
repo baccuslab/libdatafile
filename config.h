@@ -8,6 +8,7 @@
 
 /* C++ includes */
 #include <cstring>
+#include <numeric>
 
 /* Qt includes */
 #include <QString>
@@ -81,7 +82,6 @@ const QMap<QString, QPen> PEN_MAP {
 	{"Green", QPen(QColor(85, 168, 104))}, 
 	{"Red", QPen(QColor(196, 78, 82))}
 };
-
 const QStringList PLOT_COLOR_LABELS(PLOT_COLOR_MAP.uniqueKeys());
 
 /* Possible arrangements of the electrodes in the window */

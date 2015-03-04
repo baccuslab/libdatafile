@@ -1,14 +1,9 @@
-/* meaview.cpp
+/* main.cpp
  * Definition of entry point for meaview application.
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
 
-/* C++ inclues */
-
-/* Qt includes */
-
-/* meaview includes */
-#include "meaview.h"
+#include "mainwindow.h"
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
