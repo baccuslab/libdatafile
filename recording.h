@@ -11,12 +11,11 @@
 /* C++ includes */
 
 /* Qt includes */
-#if QT_VERSION < 0x050000
-#endif
+#include <QVector>
 
 /* meaview includes */
-#include "config.h"
 #include "files.h"
+#include "config.h"
 
 /* class: Recording
  * ----------------
@@ -34,6 +33,7 @@ class Recording {
 		DataFile &getFile();
 		QString &getFilename();
 		unsigned int getTime();
+		void setBlock(unsigned int);
 
 	protected:
 		/* Methods */

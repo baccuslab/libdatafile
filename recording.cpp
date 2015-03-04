@@ -18,11 +18,14 @@ Recording::Recording(QString &filename, bool live, unsigned int time) {
 }
 
 Recording::~Recording() {
-	delete this->dataFile;
 }
 
 DataFile &Recording::getFile() {
 	return *(this->dataFile);
+}
+
+void Recording::setBlock(unsigned int block) {
+	this->currentBlock = block;
 }
 
 LiveRecording::LiveRecording(QString &filename, unsigned int time) :

@@ -3,12 +3,6 @@
  * (C) Benjamin Naecker bnaecker@stanford.edu
  */
 
-/* C++ includes */
-#include <iostream>
-#include <cstdlib>
-/* Qt includes */
-
-/* meaview includes */
 #include "files.h"
 
 using namespace std;
@@ -27,6 +21,7 @@ DataFile::DataFile(QString &name, QObject *parent) : QFile(name, parent) {
 	/* This file already exists, read the header */
 	this->hdr = new BinHeader();
 	*(this->dataStream) >> *(this->hdr);
+	this->computeNumBlocks();
 }
 
 /* This constructor is used when the recording is new, i.e.,
@@ -46,6 +41,7 @@ DataFile::DataFile(QString &name, unsigned int length, QObject *parent) :
 	/* Construct a header and write it to the file */
 	this->hdr = new BinHeader(length);
 	*(this->dataStream) << *(this->hdr);
+	this->computeNumBlocks();
 	this->flush();
 
 	/* Resize the file for to the expected size */
@@ -53,7 +49,6 @@ DataFile::DataFile(QString &name, unsigned int length, QObject *parent) :
 }
 
 DataFile::~DataFile() {
-	delete this->dataStream;
 	this->close();
 }
 
@@ -62,12 +57,20 @@ QVector<int16_t> DataFile::getData(int block, int channel) {
 			block * this->hdr->blockSize * this->hdr->numChannels * sizeof(int16_t) + 
 			channel * this->hdr->blockSize * sizeof(int16_t))))
 		throw;
-	qDebug() << "Read start pos: " << this->pos();
+	//qDebug() << "Read start pos: " << this->pos();
 	QVector<int16_t> data(this->hdr->blockSize);
 	for (auto i = 0; i < this->hdr->blockSize; i++)
 		*(this->dataStream) >> data[i];
-	qDebug() << "Read end pos: " << this->pos();
+	//qDebug() << "Read end pos: " << this->pos();
 	return data;
+}
+
+void DataFile::computeNumBlocks() {
+	this->numBlocks = this->getNumSamples() / this->getBlockSize();
+}
+
+uint32_t DataFile::getNumBlocks() {
+	return this->numBlocks;
 }
 
 uint32_t DataFile::getHeaderSize() {

@@ -5,15 +5,20 @@
 
 /* C++ includes */
 
-#if QT_VERSION < 0x050000
 /* Qt includes */
+#include <QMainWindow>
+#include <QGridLayout>
+#include <QMenuBar>
+#include <QMenu>
+#include <QStatusBar>
+#include <QDialog>
+#include <QSettings>
 #include <QMenu>
 #include <QToolBar>
 #include <QAction>
 #include <QLabel>
 #include <QDebug>
 #include <QtConcurrent>
-#endif
 
 /* meaview includes */
 #include "windows.h"
@@ -38,12 +43,14 @@ void MainWindow::initSettings() {
 	QCoreApplication::setOrganizationName("baccuslab");
 	QCoreApplication::setApplicationName("meaview");
 	settings = new QSettings();
-	settings->setValue("savedir", QVariant(QString::fromStdString(DEFAULT_SAVE_DIR)));
-	settings->setValue("filename", QVariant(QString::fromStdString(DEFAULT_SAVE_FILENAME)));
-	settings->setValue("view", QVariant(QString::fromStdString(DEFAULT_VIEW)));
+	settings->setValue("savedir", QVariant(DEFAULT_SAVE_DIR));
+	settings->setValue("filename", QVariant(DEFAULT_SAVE_FILENAME));
+	settings->setValue("view", QVariant(DEFAULT_VIEW));
 	settings->setValue("time", QVariant(DEFAULT_RECORD_LENGTH));
 	settings->setValue("scale", QVariant(DEFAULT_DISPLAY_SCALE));
 	settings->setValue("refresh", QVariant(DISPLAY_REFRESH_INTERVAL));
+	settings->setValue("pen", QVariant(PEN_MAP[DEFAULT_PLOT_COLOR]));
+	settings->setValue("pen-label", QVariant(DEFAULT_PLOT_COLOR));
 }
 
 void MainWindow::initMenuBar() {
@@ -95,8 +102,13 @@ void MainWindow::initToolBar() {
 	/* Button to start/stop recording */
 	startButton = new QPushButton("Start");
 	startButton->setEnabled(false);
+	startButton->setShortcut(QKeySequence("Ctrl+Enter"));
 	//connect(this->startButton, SIGNAL(triggered()), this, SLOT(startPlayback()));
 	toolbar->addWidget(this->startButton);
+
+	settingsButton = new QPushButton("Settings");
+	connect(this->settingsButton, SIGNAL(clicked()), this, SLOT(openSettings()));
+	toolbar->addWidget(settingsButton);
 
 	toolbar->addSeparator();
 
@@ -116,6 +128,11 @@ void MainWindow::initToolBar() {
 	addToolBar(toolbar);
 }
 
+void MainWindow::openSettings() {
+	SettingsWindow w;
+	w.exec();
+}
+
 void MainWindow::initStatusBar() {
 	this->statusBar = new QStatusBar();
 	QLabel *statusLabel = new QLabel("Ready");
@@ -128,9 +145,9 @@ void MainWindow::initPlotGroup() {
 	channelLayout = new QGridLayout();
 	channelPlots.resize(NUM_CHANNELS);
 	for (int c = 0; c < NUM_CHANNELS; c++) {
-		pos_t pos = CHANNEL_VIEWS.at(DEFAULT_VIEW).at(c);
+		QPair<int, int> pos = CHANNEL_VIEWS.value(DEFAULT_VIEW).at(c);
 		channelPlots.at(c) = new ChannelPlot(c, pos);
-		channelLayout->addWidget(channelPlots.at(c), pos.row, pos.col, 1, 1);
+		channelLayout->addWidget(channelPlots.at(c), pos.first, pos.second, 1, 1);
 		//connect(channelPlots.at(c), SIGNAL(mouseDoubleClick(QMouseEvent *)),
 				//this, SLOT(openSingleChannel()));
 	}
@@ -163,7 +180,7 @@ void MainWindow::openNewRecording() {
 void MainWindow::loadRecording() {
 	QString filename = QFileDialog::getOpenFileName(
 			this, tr("Load recording"),
-			QString::fromStdString(DEFAULT_SAVE_DIR), tr("Recordings (*.bin)"));
+			DEFAULT_SAVE_DIR, tr("Recordings (*.bin)"));
 	if (filename.isNull())
 		return;
 	
@@ -186,7 +203,7 @@ void MainWindow::initPlaybackRecording() {
 void MainWindow::setScale(int s) {
 	//QComboBox *sender = dynamic_cast<QComboBox *>(QObject::sender());
 	//this->settings->setValue("scale", sender->currentData());
-	this->settings->setValue("scale", QVariant(s));
+	this->settings->setValue("scale", QVariant(DISPLAY_SCALES[s]));
 	/* Need to make this more general. Slot may be usefully called
 	 * from many senders, not just the ComboBox
 	 */
@@ -213,18 +230,111 @@ void MainWindow::plotNextDataBlock() {
 	QVector<double> x(this->recording->getFile().getBlockSize(), 0);
 	for (auto i = 0; i < AIB_BLOCK_SIZE; i++)
 		x[i] = i;
+	double scale = this->settings->value("scale").toDouble();
+	qDebug() << "Scale :" << scale << "Range: " << scale * DISPLAY_RANGE;
 	QVector<QVector<int16_t> > data = this->recording->getNextDataBlock();
+	QVariant tmp = this->settings->value("pen");
+	QPen pen(tmp.convert(tmp.type()));
 	for (auto i = 0; i < NUM_CHANNELS; i++) {
 		QVector<double> tmp(AIB_BLOCK_SIZE, 0);
-		for (auto j = 0; j < AIB_BLOCK_SIZE; j++)
+		double min = 1000000;
+		for (auto j = 0; j < AIB_BLOCK_SIZE; j++) {
 			tmp[j] = data.at(i).at(j);
+			if (tmp[j] < min)
+				min = tmp[j];
+		}
 		//qDebug() << "Channel: " << i << " element 7: " << data.at(i).at(7);
+		//qDebug() << "Channel: " << i << " min = " << min;
 		//qDebug() << "Plot: " << i << " element 7: " << tmp.at(7);
 		this->channelPlots.at(i)->graph(0)->setData(x, tmp);
-		this->channelPlots.at(i)->rescaleAxes();
+		this->channelPlots.at(i)->yAxis->setRange(-(scale * DISPLAY_RANGE),
+				(scale * DISPLAY_RANGE));
+		this->channelPlots.at(i)->graph(0)->setPen(pen);
 		this->channelPlots.at(i)->replot();
 	}
 	qDebug() << "Done plotting block";
+}
+
+/***************************************************
+ **************** SettingsWindow *******************
+ ***************************************************/
+SettingsWindow::SettingsWindow(QWidget *parent) : QDialog(parent) {
+	settings = new QSettings();
+
+	displayGroup = new QGroupBox("Display");
+	displayLayout = new QGridLayout();
+	viewLabel = new QLabel("Channel view:");
+	viewBox = new QComboBox();
+	for (auto &view : VIEW_LABELS)
+		viewBox->addItem(view);
+	viewBox->setCurrentIndex(
+			VIEW_LABELS.indexOf(settings->value("view").toString()));
+	scaleLabel = new QLabel("Display scale:");
+	scaleBox = new QComboBox();
+	for (auto &scale : DISPLAY_SCALES)
+		scaleBox->addItem(QString::number(scale));
+	scaleBox->setCurrentIndex(
+			DISPLAY_SCALES.indexOf(settings->value("scale").toFloat()));
+	penColorLabel = new QLabel("Plot color:");
+	penColorBox = new QComboBox();
+	for (auto &color : PLOT_COLOR_LABELS)
+		penColorBox->addItem(color);
+	penColorBox->setCurrentIndex(
+			PLOT_COLOR_LABELS.indexOf(settings->value("pen-label").toString()));
+	displayLayout->addWidget(viewLabel, 0, 0);
+	displayLayout->addWidget(viewBox, 0, 1);
+	displayLayout->addWidget(scaleLabel, 1, 0);
+	displayLayout->addWidget(scaleBox, 1, 1);
+	displayLayout->addWidget(penColorLabel, 2, 0);
+	displayLayout->addWidget(penColorBox, 2, 1);
+	displayGroup->setLayout(displayLayout);
+
+	playbackGroup = new QGroupBox("Playback");
+	playbackLayout = new QGridLayout();
+	refreshLabel = new QLabel("Refresh:");
+	refreshLine = new QLineEdit(settings->value("refresh").toString());
+	refreshValidator = new QIntValidator(
+			MIN_REFRESH_INTERVAL, MAX_REFRESH_INTERVAL);
+	refreshLine->setValidator(refreshValidator);
+	playbackLayout->addWidget(refreshLabel, 0, 0);
+	playbackLayout->addWidget(refreshLine, 0, 1);
+	playbackGroup->setLayout(playbackLayout);
+
+	okGroup = new QGroupBox();
+	okGroup->setFlat(true);
+	okButton = new QPushButton("OK");
+	connect(okButton, SIGNAL(clicked()), this, SLOT(applySettings()));
+	connect(okButton, SIGNAL(clicked()), this, SLOT(accept()));
+	applyButton = new QPushButton("Apply");
+	connect(applyButton, SIGNAL(clicked()), this, SLOT(applySettings()));
+	cancelButton = new QPushButton("Cancel");
+	connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
+	okLayout = new QHBoxLayout();
+	okLayout->addWidget(okButton);
+	okLayout->addWidget(applyButton);
+	okLayout->addWidget(cancelButton);
+	okGroup->setLayout(okLayout);
+
+	mainLayout = new QGridLayout();
+	mainLayout->addWidget(displayGroup, 0, 0);
+	mainLayout->addWidget(playbackGroup, 0, 1);
+	mainLayout->addWidget(okGroup, 1, 0);
+	this->setLayout(mainLayout);
+}
+
+SettingsWindow::~SettingsWindow() {
+}
+
+void SettingsWindow::applySettings() {
+	this->settings->setValue("view", 
+			QVariant(VIEW_LABELS.indexOf(this->viewBox->currentText())));
+	this->settings->setValue("refresh",
+			QVariant(this->refreshLine->text().toUInt()));
+	this->settings->setValue("scale",
+			QVariant(this->scaleBox->currentText().toDouble()));
+	this->settings->setValue("pen",
+			QVariant(PEN_MAP[this->penColorBox->currentText()]));
+	qDebug() << this->settings;
 }
 
 
@@ -240,15 +350,15 @@ NewRecordingWindow::NewRecordingWindow(QWidget *parent) : QDialog(parent) {
 	viewLayout = new QVBoxLayout();
 	viewBox = new QComboBox(this);
 	for (auto &view : VIEW_LABELS)
-		viewBox->addItem(QString::fromStdString(view));
-	viewBox->setCurrentIndex(viewBox->findText(QString::fromStdString(DEFAULT_VIEW)));
+		viewBox->addItem(view);
+	viewBox->setCurrentIndex(viewBox->findText(DEFAULT_VIEW));
 	connect(viewBox, SIGNAL(activated()), this, SLOT(setView()));
 	viewLayout->addWidget(viewBox);
 	viewGroup->setLayout(viewLayout);
 
 	/* Select save directory */
 	saveGroup = new QGroupBox("Save directory");
-	saveLine = new QLineEdit(QString::fromStdString(DEFAULT_SAVE_DIR));
+	saveLine = new QLineEdit(DEFAULT_SAVE_DIR);
 	saveLine->setReadOnly(true);
 	browseButton = new QPushButton("Browse");
 	connect(browseButton, SIGNAL(clicked()), this, SLOT(chooseDirectory()));
@@ -259,8 +369,8 @@ NewRecordingWindow::NewRecordingWindow(QWidget *parent) : QDialog(parent) {
 
 	/* Select filename */
 	fileGroup = new QGroupBox(tr("&Filename"));
-	fileLine = new QLineEdit(QString::fromStdString(DEFAULT_SAVE_FILENAME));
-	fileValidator = new QRegExpValidator(QRegExp(QString::fromStdString("(\\w+[-_]*)+")));
+	fileLine = new QLineEdit(DEFAULT_SAVE_FILENAME);
+	fileValidator = new QRegExpValidator(QRegExp("(\\w+[-_]*)+"));
 	fileLine->setValidator(fileValidator);
 	fileLayout = new QVBoxLayout();
 	fileLayout->addWidget(fileLine);
@@ -325,7 +435,7 @@ QString NewRecordingWindow::getFullFilename() {
 	if (!s.endsWith("/"))
 		s.append("/");
 	s.append(this->getSaveFilename());
-	return s.append(QString::fromStdString(SAVE_FILE_EXTENSION));
+	return s.append(SAVE_FILE_EXTENSION);
 }
 
 void NewRecordingWindow::setView() {
@@ -356,7 +466,7 @@ int NewRecordingWindow::validateChoices() {
 }
 
 void NewRecordingWindow::chooseDirectory() {
-	QFileDialog dialog(this, "Choose save directory", QString::fromStdString(DEFAULT_SAVE_DIR));
+	QFileDialog dialog(this, "Choose save directory", DEFAULT_SAVE_DIR);
 	dialog.setOptions(QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 	if (dialog.exec() == QDialog::Rejected)
 		return;

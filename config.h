@@ -8,13 +8,15 @@
 
 /* C++ includes */
 #include <cstring>
-#include <string>
-#include <vector>
-#include <map>
 
-#if QT_VERSION < 0x050000
 /* Qt includes */
-#endif
+#include <QString>
+#include <QColor>
+#include <QList>
+#include <QStringList>
+#include <QPair>
+#include <QMap>
+#include <QPen>
 
 using namespace std;
 
@@ -28,24 +30,22 @@ const int INTRACELLULAR_CHANNEL_VOLTAGE = 1;
 const int INTRACELLULAR_CHANNEL_CURRENT = 2;
 const int EXTRA_INTRACELLULAR_CHANNEL = 3;
 
-/* Simple struct representing the row and column of a plot */
-typedef struct {
-	int row;
-	int col;
-} pos_t;
-
 /* Default location to save new files */
-const string DEFAULT_SAVE_FILENAME("default-data");
-const string SAVE_FILE_EXTENSION(".bin");
+const QString DEFAULT_SAVE_FILENAME("default-data");
+const QString SAVE_FILE_EXTENSION(".bin");
 #ifdef Q_OS_WIN
-const string DEFAULT_SAVE_DIR("C:/Desktop/");
+const QString DEFAULT_SAVE_DIR("C:/Desktop/");
 #else
-const string DEFAULT_SAVE_DIR("~/Desktop");
+const QString DEFAULT_SAVE_DIR("~/Desktop");
 #endif
 const unsigned int DEFAULT_RECORD_LENGTH = 1000; 	// seconds
 const unsigned int MAX_RECORD_LENGTH = 10000; 		// seconds
 
 /* Information about AIB binary files */
+/* NOTE: These are not defined as Qt types, since they
+ * must be written as unencoded binary so that files here
+ * are compatible with traditional AIB files
+ */
 const float SAMPLE_RATE = 10000.0;
 const float GAIN = 0.00015258789;
 const float OFFSET = -5.0;
@@ -60,15 +60,33 @@ const char TIME_FORMAT[] = "h:mm:ss AP"; 		// QTime format
 const char DATE_FORMAT[] = "ddd, MMM dd, yyyy";	// QDate format
 
 /* Display properties for recording/playback */
+const float DISPLAY_RANGE = (2 << 12);
 const float DEFAULT_DISPLAY_SCALE = 0.5;
-const float DISPLAY_SCALES[] {
-	0.125, 0.25, 0.5, 1, 2, 4
+const QList<float> DISPLAY_SCALES {
+		0.125, 0.25, 0.5, 1, 2, 4
 };
 const float DISPLAY_REFRESH_INTERVAL = 2000; // ms
+const float MIN_REFRESH_INTERVAL = 100;
+const float MAX_REFRESH_INTERVAL = 10000;
+const QString DEFAULT_PLOT_COLOR("Black");
+const QMap<QString, QColor> PLOT_COLOR_MAP {
+	{"Black", QColor(Qt::black)}, 
+	{"Blue", QColor(76, 114, 176)}, 
+	{"Green", QColor(85, 168, 104)}, 
+	{"Red", QColor(196, 78, 82)}
+};
+const QMap<QString, QPen> PEN_MAP {
+	{"Black", QPen(QColor(Qt::black))}, 
+	{"Blue", QPen(QColor(76, 114, 176))}, 
+	{"Green", QPen(QColor(85, 168, 104))}, 
+	{"Red", QPen(QColor(196, 78, 82))}
+};
+
+const QStringList PLOT_COLOR_LABELS(PLOT_COLOR_MAP.uniqueKeys());
 
 /* Possible arrangements of the electrodes in the window */
-const string DEFAULT_VIEW("Hexagonal");
-const vector<string> VIEW_LABELS { 
+const QString DEFAULT_VIEW("Hexagonal");
+const QStringList VIEW_LABELS { 
 	"Hexagonal", 
 	"Low density", 
 	"High density", 
@@ -76,74 +94,18 @@ const vector<string> VIEW_LABELS {
 };
 
 /* The arragements themselves */
-const vector<pos_t> HEXAGONAL_VIEW {
-	{.row = 0, .col = 0},
-	{.row = 0, .col = 1},
-	{.row = 0, .col = 2},
-	{.row = 0, .col = 3},
-	{.row = 0, .col = 4},
-	{.row = 0, .col = 5},
-	{.row = 0, .col = 6},
-	{.row = 0, .col = 7},
-	{.row = 1, .col = 0},
-	{.row = 1, .col = 1},
-	{.row = 1, .col = 2},
-	{.row = 1, .col = 3},
-	{.row = 1, .col = 4},
-	{.row = 1, .col = 5},
-	{.row = 1, .col = 6},
-	{.row = 1, .col = 7},
-	{.row = 2, .col = 0},
-	{.row = 2, .col = 1},
-	{.row = 2, .col = 2},
-	{.row = 2, .col = 3},
-	{.row = 2, .col = 4},
-	{.row = 2, .col = 5},
-	{.row = 2, .col = 6},
-	{.row = 2, .col = 7},
-	{.row = 3, .col = 0},
-	{.row = 3, .col = 1},
-	{.row = 3, .col = 2},
-	{.row = 3, .col = 3},
-	{.row = 3, .col = 4},
-	{.row = 3, .col = 5},
-	{.row = 3, .col = 6},
-	{.row = 3, .col = 7},
-	{.row = 4, .col = 0},
-	{.row = 4, .col = 1},
-	{.row = 4, .col = 2},
-	{.row = 4, .col = 3},
-	{.row = 4, .col = 4},
-	{.row = 4, .col = 5},
-	{.row = 4, .col = 6},
-	{.row = 4, .col = 7},
-	{.row = 5, .col = 0},
-	{.row = 5, .col = 1},
-	{.row = 5, .col = 2},
-	{.row = 5, .col = 3},
-	{.row = 5, .col = 4},
-	{.row = 5, .col = 5},
-	{.row = 5, .col = 6},
-	{.row = 5, .col = 7},
-	{.row = 6, .col = 0},
-	{.row = 6, .col = 1},
-	{.row = 6, .col = 2},
-	{.row = 6, .col = 3},
-	{.row = 6, .col = 4},
-	{.row = 6, .col = 5},
-	{.row = 6, .col = 6},
-	{.row = 6, .col = 7},
-	{.row = 7, .col = 0},
-	{.row = 7, .col = 1},
-	{.row = 7, .col = 2},
-	{.row = 7, .col = 3},
-	{.row = 7, .col = 4},
-	{.row = 7, .col = 5},
-	{.row = 7, .col = 6},
-	{.row = 7, .col = 7},
+const QList<QPair<int, int> > HEXAGONAL_VIEW {
+	{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {0, 7},
+	{1, 0}, {1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7},
+	{2, 0}, {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7},
+	{3, 0}, {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7},
+	{4, 0}, {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7},
+	{5, 0}, {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7},
+	{6, 0}, {6, 1}, {6, 2}, {6, 3}, {6, 4}, {6, 5}, {6, 6}, {6, 7},
+	{7, 0}, {7, 1}, {7, 2}, {7, 3}, {7, 4}, {7, 5}, {7, 6}, {7, 7},
 };
 
-const map<string, vector<pos_t> > CHANNEL_VIEWS {
+const QMap<QString, QList<QPair<int, int> > > CHANNEL_VIEWS {
 	{"Hexagonal", HEXAGONAL_VIEW}
 };
 

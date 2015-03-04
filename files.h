@@ -10,13 +10,12 @@
 #include <cstring>
 
 /* Qt includes */
-#if QT_VERSION < 0x050000
 #include <QFile>
 #include <QDataStream>
 #include <QDebug>
 #include <QTime>
 #include <QDate>
-#endif
+#include <QVector>
 
 /* meaview includes */
 #include "config.h"
@@ -81,17 +80,20 @@ class DataFile : public QFile {
 		uint32_t getNumSamples();
 		uint32_t getNumChannels();
 		uint32_t getBlockSize();
+		uint32_t getNumBlocks();
 		float getGain();
 		float getOffset();
 
 	private:
 		/* Methods */
+		void computeNumBlocks();
 
 		/* Attributes */
 		bool newFile;
 		QString filename;
 		QDataStream *dataStream;
 		BinHeader *hdr;
+		uint32_t numBlocks;
 };
 
 /* Stream insertion/extraction operators for DataFile 

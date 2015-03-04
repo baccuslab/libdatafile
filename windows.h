@@ -6,20 +6,6 @@
 #ifndef _WINDOWS_H_
 #define _WINDOWS_H_
 
-/* C++ includes */
-//#include <memory>		// For smart pointers
-
-#if QT_VERSION < 0x050000
-/* Qt includes */
-#include <QMainWindow>
-#include <QGridLayout>
-#include <QMenuBar>
-#include <QMenu>
-#include <QStatusBar>
-#include <QDialog>
-#include <QSettings>
-#endif
-
 /* meaview includes */
 #include "config.h"
 #include "channelplot.h"
@@ -46,6 +32,7 @@ class MainWindow : public QMainWindow {
 		void setScale(int);
 		void togglePlayback();
 		void plotNextDataBlock();
+		void openSettings();
 	
 	private:
 		/* Methods */
@@ -66,6 +53,7 @@ class MainWindow : public QMainWindow {
 		QToolBar *toolbar;
 
 		QPushButton *startButton;
+		QPushButton *settingsButton;
 		QGroupBox *timeGroup;
 		QLabel *timeLabel;
 		QHBoxLayout *timeLayout;
@@ -140,6 +128,60 @@ class NewRecordingWindow : public QDialog {
 		QHBoxLayout *buttonLayout;
 		QGridLayout *layout;
 		QFile *file;
+};
+
+/* class: SettingsWindow
+ * ---------------------
+ * The SettingsWindow class provides a graphical interface for controlling
+ * the various settings for the meaview application. These default values 
+ * for these settings are contained in the header file `config.h`, and stored
+ * in the running application as a QSettings object.
+ */
+class SettingsWindow : public QDialog {
+	Q_OBJECT
+
+	public:
+		SettingsWindow(QWidget *parent = 0);
+		~SettingsWindow();
+
+	public slots:
+		void applySettings();
+
+	private:
+		/* The settings object */
+		QSettings *settings;
+
+		/* GUI components */
+		QGridLayout *mainLayout;
+		QGroupBox *displayGroup; // arrangement, scale, pens
+		QGridLayout *displayLayout;
+		QLabel *viewLabel;
+		QComboBox *viewBox;
+		QLabel *scaleLabel;
+		QComboBox *scaleBox;
+		QLabel *penColorLabel;
+		QComboBox *penColorBox;
+
+		QGroupBox *playbackGroup; // speed of playback, maybe point to new file?
+		QGridLayout *playbackLayout;
+		QLabel *refreshLabel;
+		QLineEdit *refreshLine;
+		QIntValidator *refreshValidator;
+
+		QGroupBox *nidaqGroup; 	// settings related to NI-DAQ interface
+
+		QGroupBox *saveGroup;	// format/location for data to be saved
+		QLabel *savedirLabel;
+		QLineEdit *savedirLine;
+		QPushButton *savedirBrowseButton;
+		QLabel *savefileLabel;
+		QLineEdit *savefileLine;
+
+		QGroupBox *okGroup;
+		QHBoxLayout *okLayout;
+		QPushButton *okButton;
+		QPushButton *applyButton;
+		QPushButton *cancelButton;
 };
 
 /* class: OnlineAnalysisWindow

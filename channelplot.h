@@ -10,9 +10,8 @@
 //#include <memory>			// Smart pointers
 
 /* Qt includes */
-#if QT_VERSION < 0x050000
 #include <QString>
-#endif
+#include <QFont>
 
 /* Other third-party includes */
 #include "qcustomplot.h"
@@ -26,9 +25,9 @@ class ChannelPlot : public QCustomPlot {
 	Q_OBJECT
 
 	public:
-		ChannelPlot(int, pos_t, QWidget *parent = 0);
+		ChannelPlot(int, QPair<int, int>, QWidget *parent = 0);
 		int getChannelIndex();
-		pos_t getPosition();
+		QPair<int, int> &getPosition();
 
 	private:
 		/* Methods */
@@ -36,7 +35,7 @@ class ChannelPlot : public QCustomPlot {
 
 		/* Attributes */
 		int channel;
-		pos_t position;
+		QPair<int, int> position;
 		QString titleString;
 		QCPPlotTitle *title;
 };

@@ -3,13 +3,6 @@
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
 
-/* C++ includes */
-
-#if QT_VERSION < 0x050000
-/* Qt includes */
-#include <QFont>
-#endif
-
 /* meaview includes */
 #include "channelplot.h"
 
@@ -17,7 +10,7 @@ using namespace std;
 
 ChannelPlot::ChannelPlot(
 		int channel,
-		pos_t position,
+		QPair<int, int> position,
 		QWidget *parent) : QCustomPlot(parent) {
 
 	/* Save channel index and position */
@@ -26,6 +19,9 @@ ChannelPlot::ChannelPlot(
 
 	/* Customize the plot itself */
 	this->addGraph();
+	this->graph(0)->setPen(QPen(PLOT_COLOR_MAP[DEFAULT_PLOT_COLOR]));
+	this->yAxis->setRange(-DISPLAY_RANGE, DISPLAY_RANGE);
+	this->xAxis->setRange(0, 20000);
 	this->xAxis->setTicks(false);
 	this->xAxis->setTickLabels(false);
 	this->xAxis->grid()->setVisible(false);
@@ -37,7 +33,8 @@ ChannelPlot::ChannelPlot(
 }
 
 void ChannelPlot::setTitle() {
-	this->titleString = QString("%1%2").arg(this->position.row).arg(this->position.col);
+	this->titleString = QString("%1%2").arg(
+			this->position.first).arg(this->position.second);
 	this->plotLayout()->insertRow(0);
 	this->title = new QCPPlotTitle(this, this->titleString);
 	this->title->setFont(QFont("Helvetica", -1, QFont::Light));
@@ -48,7 +45,7 @@ int ChannelPlot::getChannelIndex() {
 	return this->channel;
 }
 
-pos_t ChannelPlot::getPosition() {
+QPair<int, int> &ChannelPlot::getPosition() {
 	return this->position;
 }
 
