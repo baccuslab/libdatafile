@@ -18,7 +18,7 @@
 #include <QVector>
 
 /* meaview includes */
-#include "config.h"
+#include "settings.h"
 
 /* class: BinHeader
  * ----------------

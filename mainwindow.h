@@ -25,11 +25,11 @@
 #include <QtConcurrent>
 
 /* meaview includes */
-#include "config.h"
 #include "channelplot.h"
 #include "recording.h"
 #include "files.h"
 #include "windows.h"
+#include "settings.h"
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -57,7 +57,7 @@ class MainWindow : public QMainWindow {
 		void initLiveRecording();
 
 		/* Settings */
-		QSettings *settings;
+		Settings settings;
 
 		/* GUI attributes */
 		QMenuBar *menubar;

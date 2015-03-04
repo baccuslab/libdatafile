@@ -17,7 +17,7 @@
 #include "qcustomplot.h"
 
 /* meaview includes */
-#include "config.h"
+#include "settings.h"
 
 using namespace std;
 
@@ -34,6 +34,7 @@ class ChannelPlot : public QCustomPlot {
 		void setTitle();
 
 		/* Attributes */
+		Settings settings;
 		int channel;
 		QPair<int, int> position;
 		QString titleString;

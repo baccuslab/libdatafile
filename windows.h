@@ -7,7 +7,7 @@
 #define _WINDOWS_H_
 
 /* meaview includes */
-#include "config.h"
+#include "settings.h"
 #include "channelplot.h"
 #include "files.h"
 #include "recording.h"
@@ -37,7 +37,7 @@ class NewRecordingWindow : public QDialog {
 		QString getSaveFilename();
 		QString getView();
 
-		QSettings *settings;
+		Settings settings;
 		QGroupBox *viewGroup;
 		QVBoxLayout *viewLayout;
 		QComboBox *viewBox;
@@ -74,6 +74,8 @@ class NewRecordingWindow : public QDialog {
 class SettingsWindow : public QDialog {
 	Q_OBJECT
 
+	friend class MainWindow;
+
 	public:
 		SettingsWindow(QWidget *parent = 0);
 		~SettingsWindow();
@@ -83,7 +85,7 @@ class SettingsWindow : public QDialog {
 
 	private:
 		/* The settings object */
-		QSettings *settings;
+		Settings settings;
 
 		/* GUI components */
 		QGridLayout *mainLayout;

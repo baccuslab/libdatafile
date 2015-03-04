@@ -20,17 +20,18 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::initSettings() {
-	QCoreApplication::setOrganizationName("baccuslab");
-	QCoreApplication::setApplicationName("meaview");
-	settings = new QSettings();
-	settings->setValue("savedir", QVariant(DEFAULT_SAVE_DIR));
-	settings->setValue("filename", QVariant(DEFAULT_SAVE_FILENAME));
-	settings->setValue("view", QVariant(DEFAULT_VIEW));
-	settings->setValue("time", QVariant(DEFAULT_RECORD_LENGTH));
-	settings->setValue("scale", QVariant(DEFAULT_DISPLAY_SCALE));
-	settings->setValue("refresh", QVariant(DISPLAY_REFRESH_INTERVAL));
-	settings->setValue("pen", QVariant(PEN_MAP[DEFAULT_PLOT_COLOR]));
-	settings->setValue("pen-label", QVariant(DEFAULT_PLOT_COLOR));
+	//QCoreApplication::setOrganizationName("baccuslab");
+	//QCoreApplication::setApplicationName("meaview");
+	//settings = new Settings();
+	settings.setSaveDir(DEFAULT_SAVE_DIR);
+	settings.setSaveFilename(DEFAULT_SAVE_FILENAME);
+	settings.setChannelView(DEFAULT_VIEW);
+	settings.setExperimentLength(DEFAULT_EXPERIMENT_LENGTH);
+	settings.setDisplayScale(DEFAULT_DISPLAY_SCALE);
+	settings.setRefreshInterval(DISPLAY_REFRESH_INTERVAL);
+	settings.setPlotColor(DEFAULT_PLOT_COLOR);
+	settings.setObjectName("all-settings");
+	qDebug() << "mainwindow settings: " << settings.objectName();
 }
 
 void MainWindow::initMenuBar() {
@@ -68,7 +69,7 @@ void MainWindow::initToolBar() {
 	timeLabel = new QLabel("Time:");
 	timeLine = new QLineEdit("");
 	timeLine->setMaxLength(5);
-	timeValidator = new QIntValidator(0, MAX_RECORD_LENGTH);
+	timeValidator = new QIntValidator(0, MAX_EXPERIMENT_LENGTH);
 	timeLine->setValidator(timeValidator);
 	timeLine->setReadOnly(true);
 	timeLayout = new QHBoxLayout();
@@ -111,6 +112,8 @@ void MainWindow::initToolBar() {
 void MainWindow::openSettings() {
 	SettingsWindow w;
 	w.exec();
+	this->scaleBox->setCurrentIndex(DISPLAY_SCALES.indexOf(w.settings.getDisplayScale()));
+	//qDebug() << this->settings;
 }
 
 void MainWindow::initStatusBar() {
@@ -125,7 +128,7 @@ void MainWindow::initPlotGroup() {
 	channelLayout = new QGridLayout();
 	channelPlots.resize(NUM_CHANNELS);
 	for (int c = 0; c < NUM_CHANNELS; c++) {
-		QPair<int, int> pos = CHANNEL_VIEWS.value(DEFAULT_VIEW).at(c);
+		QPair<int, int> pos = this->settings.getChannelView().at(c);
 		channelPlots.at(c) = new ChannelPlot(c, pos);
 		channelLayout->addWidget(channelPlots.at(c), pos.first, pos.second, 1, 1);
 		//connect(channelPlots.at(c), SIGNAL(mouseDoubleClick(QMouseEvent *)),
@@ -182,12 +185,12 @@ void MainWindow::initPlaybackRecording() {
 	this->timeLine->setReadOnly(false); // Until play back started
 	connect(this->startButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
 	this->playbackTimer = new QTimer();
-	this->playbackTimer->setInterval(this->settings->value("refresh").toInt());
+	this->playbackTimer->setInterval(this->settings.getRefreshInterval());
 	connect(this->playbackTimer, SIGNAL(timeout()), this, SLOT(plotNextDataBlock()));
 }
 
 void MainWindow::setScale(int s) {
-	this->settings->setValue("scale", QVariant(DISPLAY_SCALES[s]));
+	this->settings.setDisplayScale(DISPLAY_SCALES[s]);
 }
 
 void MainWindow::togglePlayback() {
@@ -211,10 +214,10 @@ void MainWindow::plotNextDataBlock() {
 	QVector<double> x(this->recording->getFile().getBlockSize(), 0);
 	for (auto i = 0; i < AIB_BLOCK_SIZE; i++)
 		x[i] = i;
-	double scale = this->settings->value("scale").toDouble();
-	qDebug() << "Scale :" << scale << "Range: " << scale * DISPLAY_RANGE;
+	double scale = this->settings.getDisplayScale();
 	QVector<QVector<int16_t> > data = this->recording->getNextDataBlock();
-	QPen pen(PEN_MAP[this->settings->value("pen-label").toString()]);
+	QPen pen = this->settings.getPlotPen();
+	qDebug() << "Scale :" << scale << "Pen: " << pen;
 	for (auto i = 0; i < NUM_CHANNELS; i++) {
 		QVector<double> tmp(AIB_BLOCK_SIZE, 0);
 		double min = 1000000;
@@ -224,10 +227,11 @@ void MainWindow::plotNextDataBlock() {
 				min = tmp[j];
 		}
 		this->channelPlots.at(i)->graph(0)->setData(x, tmp);
-		this->channelPlots.at(i)->yAxis->setRange(-(scale * DISPLAY_RANGE),
-				(scale * DISPLAY_RANGE));
+		this->channelPlots.at(i)->yAxis->setRange(-(scale * NEG_DISPLAY_RANGE),
+				(scale * POS_DISPLAY_RANGE));
 		this->channelPlots.at(i)->graph(0)->setPen(pen);
 		this->channelPlots.at(i)->replot();
 	}
-	qDebug() << "Done plotting block";
+	//qDebug() << "Done plotting block";
 }
+

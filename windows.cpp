@@ -27,28 +27,28 @@
  **************** SettingsWindow *******************
  ***************************************************/
 SettingsWindow::SettingsWindow(QWidget *parent) : QDialog(parent) {
-	settings = new QSettings();
-
+	//settings = Settings();
+	
 	displayGroup = new QGroupBox("Display");
 	displayLayout = new QGridLayout();
 	viewLabel = new QLabel("Channel view:");
 	viewBox = new QComboBox();
-	for (auto &view : VIEW_LABELS)
+	for (auto &view : CHANNEL_VIEW_STRINGS)
 		viewBox->addItem(view);
 	viewBox->setCurrentIndex(
-			VIEW_LABELS.indexOf(settings->value("view").toString()));
+			CHANNEL_VIEW_STRINGS.indexOf(settings.getChannelViewString()));
 	scaleLabel = new QLabel("Display scale:");
 	scaleBox = new QComboBox();
 	for (auto &scale : DISPLAY_SCALES)
 		scaleBox->addItem(QString::number(scale));
 	scaleBox->setCurrentIndex(
-			DISPLAY_SCALES.indexOf(settings->value("scale").toFloat()));
+			DISPLAY_SCALES.indexOf(settings.getDisplayScale()));
 	penColorLabel = new QLabel("Plot color:");
 	penColorBox = new QComboBox();
-	for (auto &color : PLOT_COLOR_LABELS)
+	for (auto &color : PLOT_COLOR_STRINGS)
 		penColorBox->addItem(color);
 	penColorBox->setCurrentIndex(
-			PLOT_COLOR_LABELS.indexOf(settings->value("pen-label").toString()));
+			PLOT_COLOR_STRINGS.indexOf(settings.getPlotColorString()));
 	displayLayout->addWidget(viewLabel, 0, 0);
 	displayLayout->addWidget(viewBox, 0, 1);
 	displayLayout->addWidget(scaleLabel, 1, 0);
@@ -60,7 +60,7 @@ SettingsWindow::SettingsWindow(QWidget *parent) : QDialog(parent) {
 	playbackGroup = new QGroupBox("Playback");
 	playbackLayout = new QGridLayout();
 	refreshLabel = new QLabel("Refresh:");
-	refreshLine = new QLineEdit(settings->value("refresh").toString());
+	refreshLine = new QLineEdit(QString::number(settings.getRefreshInterval()));
 	refreshValidator = new QIntValidator(
 			MIN_REFRESH_INTERVAL, MAX_REFRESH_INTERVAL);
 	refreshLine->setValidator(refreshValidator);
@@ -94,18 +94,11 @@ SettingsWindow::~SettingsWindow() {
 }
 
 void SettingsWindow::applySettings() {
-	this->settings->setValue("view", 
-			QVariant(VIEW_LABELS.indexOf(this->viewBox->currentText())));
-	this->settings->setValue("refresh",
-			QVariant(this->refreshLine->text().toUInt()));
-	this->settings->setValue("scale",
-			QVariant(this->scaleBox->currentText().toDouble()));
-	this->settings->setValue("pen",
-			QVariant(PEN_MAP[this->penColorBox->currentText()]));
-	this->settings->setValue("pen-label",
-			QVariant(this->penColorBox->currentText()));
-	//for (auto &key : this->settings->allKeys())
-		//qDebug() << key << this->settings->value(key);
+	qDebug() << this->objectName();
+	this->settings.setChannelView(this->viewBox->currentText());
+	this->settings.setRefreshInterval(this->refreshLine->text().toUInt());
+	this->settings.setDisplayScale(this->scaleBox->currentText().toDouble());
+	this->settings.setPlotColor(this->penColorBox->currentText());
 }
 
 
@@ -113,14 +106,12 @@ void SettingsWindow::applySettings() {
  ************** NewRecordingWindow *****************
  ***************************************************/
 NewRecordingWindow::NewRecordingWindow(QWidget *parent) : QDialog(parent) {
-	/* Default choices */
-	settings = new QSettings();
 
 	/* Selection for plot arrangement */
 	viewGroup = new QGroupBox("Channel view");
 	viewLayout = new QVBoxLayout();
 	viewBox = new QComboBox(this);
-	for (auto &view : VIEW_LABELS)
+	for (auto &view : CHANNEL_VIEW_STRINGS)
 		viewBox->addItem(view);
 	viewBox->setCurrentIndex(viewBox->findText(DEFAULT_VIEW));
 	connect(viewBox, SIGNAL(activated()), this, SLOT(setView()));
@@ -149,8 +140,8 @@ NewRecordingWindow::NewRecordingWindow(QWidget *parent) : QDialog(parent) {
 
 	/* Pick a length of the recording */
 	timeGroup = new QGroupBox("Length of recording");
-	timeValidator = new QIntValidator(0, MAX_RECORD_LENGTH);
-	timeLine = new QLineEdit(QString::number(DEFAULT_RECORD_LENGTH));
+	timeValidator = new QIntValidator(0, settings.getExperimentLength());
+	timeLine = new QLineEdit(QString::number(settings.getExperimentLength()));
 	timeLine->setValidator(timeValidator);
 	timeLayout = new QVBoxLayout();
 	timeLayout->addWidget(timeLine);
@@ -186,19 +177,19 @@ NewRecordingWindow::~NewRecordingWindow() {
 }
 
 QString NewRecordingWindow::getSaveDir() {
-	return (this->settings->value("savedir")).toString();
+	return this->settings.getSaveDir();
 }
 
 QString NewRecordingWindow::getSaveFilename() {
-	return (this->settings->value("filename")).toString();
+	return this->settings.getSaveFilename();
 }
 
 QString NewRecordingWindow::getView() {
-	return (this->settings->value("view")).toString();
+	return this->settings.getChannelViewString();
 }
 
 uint NewRecordingWindow::getTime() {
-	return this->settings->value("time").toUInt();
+	return this->settings.getExperimentLength();
 }
 
 QString NewRecordingWindow::getFullFilename() {
@@ -213,14 +204,14 @@ void NewRecordingWindow::setView() {
 	//QAction *sender = dynamic_cast<QAction *>(QObject::sender());
 	//this->viewButton->setText(sender->text());
 	QComboBox *sender = dynamic_cast<QComboBox *>(QObject::sender());
-	this->settings->value("view", sender->currentText());
+	this->settings.setChannelView(sender->currentText());
 }
 
 int NewRecordingWindow::validateChoices() {
-	this->settings->setValue("savedir", QVariant(this->saveLine->text()));
-	this->settings->setValue("filename", QVariant(this->fileLine->text()));
-	this->settings->setValue("view", QVariant(this->viewBox->currentText()));
-	this->settings->setValue("time", QVariant(this->timeLine->text()));
+	this->settings.setSaveDir(this->saveLine->text());
+	this->settings.setSaveFilename(this->fileLine->text());
+	this->settings.setChannelView(this->viewBox->currentText());
+	this->settings.setExperimentLength(this->timeLine->text().toUInt());
 	QFileInfo finfo(this->saveLine->text());
 	if (!finfo.permission(QFileDevice::ReadOwner | QFileDevice::WriteOwner)) {
 		QMessageBox msg;
@@ -242,7 +233,7 @@ void NewRecordingWindow::chooseDirectory() {
 	if (dialog.exec() == QDialog::Rejected)
 		return;
 	QString path = dialog.directory().absolutePath();
-	this->settings->setValue("savedir", QVariant(path));
+	this->settings.setSaveDir(path);
 	this->saveLine->setText(path);
 }
 

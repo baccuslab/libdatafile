@@ -11,13 +11,14 @@ QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++ -g -Wno-deprecated-register -O0
 
 # Input
 HEADERS += 	channelplot.h \
-			config.h \
+			settings.h \
 			qcustomplot.h \
 			windows.h \
 			mainwindow.h \
 			files.h \
 			recording.h
 SOURCES += 	channelplot.cpp \
+			settings.cpp \
 			main.cpp \
 			qcustomplot.cpp \
 			windows.cpp \

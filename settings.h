@@ -1,16 +1,19 @@
-/* config.h
- * Configuration parameters for the meaview application.
+/* settings.h
+ * This header file defines configuration parameters used throughout
+ * the meaview application, and a custom Settings class that stores
+ * and retrieves that data.
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu.
  */
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef _SETTINGS_H_
+#define _SETTINGS_H_
 
 /* C++ includes */
 #include <cstring>
 #include <numeric>
 
 /* Qt includes */
+#include <QSettings>
 #include <QString>
 #include <QColor>
 #include <QList>
@@ -39,8 +42,8 @@ const QString DEFAULT_SAVE_DIR("C:/Desktop/");
 #else
 const QString DEFAULT_SAVE_DIR("~/Desktop");
 #endif
-const unsigned int DEFAULT_RECORD_LENGTH = 1000; 	// seconds
-const unsigned int MAX_RECORD_LENGTH = 10000; 		// seconds
+const unsigned int DEFAULT_EXPERIMENT_LENGTH = 1000; 	// seconds
+const unsigned int MAX_EXPERIMENT_LENGTH = 10000; 		// seconds
 
 /* Information about AIB binary files */
 /* NOTE: These are not defined as Qt types, since they
@@ -61,32 +64,29 @@ const char TIME_FORMAT[] = "h:mm:ss AP"; 		// QTime format
 const char DATE_FORMAT[] = "ddd, MMM dd, yyyy";	// QDate format
 
 /* Display properties for recording/playback */
-const float DISPLAY_RANGE = (2 << 12);
+const float NEG_DISPLAY_RANGE = (2 << 10);
+const float POS_DISPLAY_RANGE = (2 << 12);
 const float DEFAULT_DISPLAY_SCALE = 0.5;
 const QList<float> DISPLAY_SCALES {
 		0.125, 0.25, 0.5, 1, 2, 4
 };
-const float DISPLAY_REFRESH_INTERVAL = 2000; // ms
-const float MIN_REFRESH_INTERVAL = 100;
-const float MAX_REFRESH_INTERVAL = 10000;
+const unsigned int DISPLAY_REFRESH_INTERVAL = 2000; // ms
+const unsigned int MIN_REFRESH_INTERVAL = 100;
+const unsigned int MAX_REFRESH_INTERVAL = 10000;
+
+/* Plot colors */
 const QString DEFAULT_PLOT_COLOR("Black");
-const QMap<QString, QColor> PLOT_COLOR_MAP {
-	{"Black", QColor(Qt::black)}, 
-	{"Blue", QColor(76, 114, 176)}, 
-	{"Green", QColor(85, 168, 104)}, 
-	{"Red", QColor(196, 78, 82)}
+const QMap<QString, QPair<QColor, QPen> > PLOT_COLOR_MAP {
+	{"Black", {QColor(Qt::black), QPen(QColor(Qt::black))}},
+	{"Blue", {QColor(76, 114, 176), QPen(QColor(76, 114, 176))}}, 
+	{"Green", {QColor(85, 168, 104), QPen(QColor(85, 168, 104))}}, 
+	{"Red", {QColor(196, 78, 82), QPen(QColor(196, 78, 82))}}
 };
-const QMap<QString, QPen> PEN_MAP {
-	{"Black", QPen(QColor(Qt::black))}, 
-	{"Blue", QPen(QColor(76, 114, 176))}, 
-	{"Green", QPen(QColor(85, 168, 104))}, 
-	{"Red", QPen(QColor(196, 78, 82))}
-};
-const QStringList PLOT_COLOR_LABELS(PLOT_COLOR_MAP.uniqueKeys());
+const QStringList PLOT_COLOR_STRINGS(PLOT_COLOR_MAP.uniqueKeys());
 
 /* Possible arrangements of the electrodes in the window */
 const QString DEFAULT_VIEW("Hexagonal");
-const QStringList VIEW_LABELS { 
+const QStringList CHANNEL_VIEW_STRINGS { 
 	"Hexagonal", 
 	"Low density", 
 	"High density", 
@@ -105,8 +105,50 @@ const QList<QPair<int, int> > HEXAGONAL_VIEW {
 	{7, 0}, {7, 1}, {7, 2}, {7, 3}, {7, 4}, {7, 5}, {7, 6}, {7, 7},
 };
 
-const QMap<QString, QList<QPair<int, int> > > CHANNEL_VIEWS {
+const QMap<QString, QList<QPair<int, int> > > CHANNEL_VIEW_MAP {
 	{"Hexagonal", HEXAGONAL_VIEW}
+};
+
+/* class: Settings
+ * ---------------
+ * The `Settings` class is a subclass of QSettings that simplifies
+ * the retrieval and storing of the settings used throughout the
+ * meaview application.
+ */
+class Settings {
+	public:
+		Settings();
+		~Settings();
+		void setObjectName(QString);
+
+		/* Getters */
+		float getDisplayRange();
+		float getDisplayScale();
+		QList<float> getDisplayScales();
+		unsigned int getRefreshInterval();
+		QString getPlotColorString();
+		QColor getPlotColor();
+		QPen getPlotPen();
+		QStringList getPlotColorStrings();
+		QString getChannelViewString();
+		QList<QPair<int, int> > getChannelView();
+		QStringList getChannelViews();
+		QString getSaveDir();
+		QString getSaveFilename();
+		unsigned int getExperimentLength();
+
+		/* Setters */
+		void setDisplayScale(float);
+		void setRefreshInterval(unsigned int);
+		void setPlotColor(QString);
+		void setChannelView(QString);
+		void setSaveDir(QString);
+		void setSaveFilename(QString);
+		void setExperimentLength(unsigned int);
+		
+		QString objectName();
+	private:
+		QSettings settings;
 };
 
 

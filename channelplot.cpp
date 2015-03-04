@@ -19,8 +19,8 @@ ChannelPlot::ChannelPlot(
 
 	/* Customize the plot itself */
 	this->addGraph();
-	this->graph(0)->setPen(QPen(PLOT_COLOR_MAP[DEFAULT_PLOT_COLOR]));
-	this->yAxis->setRange(-DISPLAY_RANGE, DISPLAY_RANGE);
+	this->graph(0)->setPen(settings.getPlotPen());
+	this->yAxis->setRange(-NEG_DISPLAY_RANGE, POS_DISPLAY_RANGE);
 	this->xAxis->setRange(0, 20000);
 	this->xAxis->setTicks(false);
 	this->xAxis->setTickLabels(false);

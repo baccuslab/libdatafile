@@ -15,7 +15,7 @@
 
 /* meaview includes */
 #include "files.h"
-#include "config.h"
+#include "settings.h"
 
 /* class: Recording
  * ----------------

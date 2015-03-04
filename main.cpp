@@ -7,6 +7,8 @@
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
+	app.setOrganizationName("baccuslab");
+	app.setApplicationName("meaview");
 	MainWindow window;
 	window.show();
 	app.exec();
