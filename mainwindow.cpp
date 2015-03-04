@@ -11,6 +11,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	this->setWindowTitle("Meaview: Channel view");
 	initSettings();
 	initMenuBar();
+	//initInfoWidget();
+	//initRecordingControlsWidget();
 	initToolBar();
 	initStatusBar();
 	initPlotGroup();
@@ -20,9 +22,6 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::initSettings() {
-	//QCoreApplication::setOrganizationName("baccuslab");
-	//QCoreApplication::setApplicationName("meaview");
-	//settings = new Settings();
 	settings.setSaveDir(DEFAULT_SAVE_DIR);
 	settings.setSaveFilename(DEFAULT_SAVE_FILENAME);
 	settings.setChannelView(DEFAULT_VIEW);
@@ -30,8 +29,7 @@ void MainWindow::initSettings() {
 	settings.setDisplayScale(DEFAULT_DISPLAY_SCALE);
 	settings.setRefreshInterval(DISPLAY_REFRESH_INTERVAL);
 	settings.setPlotColor(DEFAULT_PLOT_COLOR);
-	settings.setObjectName("all-settings");
-	qDebug() << "mainwindow settings: " << settings.objectName();
+	settings.setAutoscale(false);
 }
 
 void MainWindow::initMenuBar() {
@@ -59,6 +57,30 @@ void MainWindow::initMenuBar() {
 	/* Add menus to bar and bar to MainWindow */
 	this->menubar->addMenu(this->fileMenu);
 	this->setMenuBar(this->menubar);
+}
+
+void MainWindow::initInfoWidget() {
+	infoWidget = new QDockWidget("Info:", this);
+	infoWidgetLayout = new QGridLayout(this);
+
+	timeGroup = new QGroupBox();
+	timeLabel = new QLabel("Time:");
+	timeLine = new QLineEdit("");
+	timeLine->setMaxLength(5);
+	timeValidator = new QIntValidator(0, MAX_EXPERIMENT_LENGTH);
+	timeLine->setValidator(timeValidator);
+	timeLine->setReadOnly(true);
+	infoWidgetLayout->addWidget(timeLabel, 0, 0);
+	infoWidgetLayout->addWidget(timeLine, 0, 1);
+
+	fileLabel = new QLabel("File:");
+	fileLine = new QLineEdit(this->settings.getSaveFilename());
+	fileLine->setReadOnly(true);
+	infoWidgetLayout->addWidget(fileLabel, 1, 0);
+	infoWidgetLayout->addWidget(fileLine, 1, 1);
+	timeGroup->setLayout(infoWidgetLayout);
+	infoWidget->setWidget(timeGroup);
+	this->addDockWidget(Qt::TopDockWidgetArea, infoWidget);
 }
 
 void MainWindow::initToolBar() {
@@ -93,6 +115,7 @@ void MainWindow::initToolBar() {
 
 	toolbar->addSeparator();
 
+	autoscale = false;
 	scaleGroup = new QGroupBox();
 	scaleLayout = new QHBoxLayout();
 	scaleLabel = new QLabel("Scale:");
@@ -101,7 +124,12 @@ void MainWindow::initToolBar() {
 		scaleBox->addItem(QString::number(s), QVariant(s));
 	scaleBox->setCurrentIndex(scaleBox->findData(QVariant(DEFAULT_DISPLAY_SCALE)));
 	connect(scaleBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setScale(int)));
+	autoscaleCheckBox = new QCheckBox("Autoscale");
+	autoscaleCheckBox->setTristate(false);
+	autoscaleCheckBox->setCheckState(Qt::Unchecked);
+	connect(autoscaleCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setAutoscale(int)));
 	scaleLayout->addWidget(scaleLabel);
+	scaleLayout->addWidget(autoscaleCheckBox);
 	scaleLayout->addWidget(scaleBox);
 	scaleGroup->setLayout(scaleLayout);
 	toolbar->addWidget(scaleGroup);
@@ -110,15 +138,13 @@ void MainWindow::initToolBar() {
 }
 
 void MainWindow::openSettings() {
-	SettingsWindow w;
+	SettingsWindow w(this);
 	w.exec();
-	this->scaleBox->setCurrentIndex(DISPLAY_SCALES.indexOf(w.settings.getDisplayScale()));
-	//qDebug() << this->settings;
 }
 
 void MainWindow::initStatusBar() {
 	this->statusBar = new QStatusBar();
-	QLabel *statusLabel = new QLabel("Ready");
+	statusLabel = new QLabel("Ready");
 	this->statusBar->addWidget(statusLabel);
 	this->setStatusBar(this->statusBar);
 }
@@ -141,7 +167,7 @@ void MainWindow::initPlotGroup() {
 	QVector<double> tmpX(SAMPLE_RATE * (DISPLAY_REFRESH_INTERVAL / 1000));
 	double start = 0.0;
 	iota(tmpX.begin(), tmpX.end(), start);
-	const QVector<double> PLOT_X(tmpX);
+	this->PLOT_X = tmpX;
 }
 
 void MainWindow::openNewRecording() {
@@ -167,6 +193,7 @@ void MainWindow::openNewRecording() {
 }
 
 void MainWindow::loadRecording() {
+	this->statusLabel->setText("Loading recording");
 	QString filename = QFileDialog::getOpenFileName(
 			this, tr("Load recording"),
 			DEFAULT_SAVE_DIR, tr("Recordings (*.bin)"));
@@ -175,8 +202,8 @@ void MainWindow::loadRecording() {
 	
 	/* Open the recording */
 	this->recording = new PlaybackRecording(filename);
-	qDebug() << "Block size: " << this->recording->getFile().getBlockSize();
 	this->initPlaybackRecording();
+	this->statusLabel->setText("Ready");
 }
 
 void MainWindow::initPlaybackRecording() {
@@ -191,10 +218,10 @@ void MainWindow::initPlaybackRecording() {
 
 void MainWindow::setScale(int s) {
 	this->settings.setDisplayScale(DISPLAY_SCALES[s]);
+	this->scaleBox->setCurrentIndex(s);
 }
 
 void MainWindow::togglePlayback() {
-	qDebug() << "Playback toggled";
 	if (this->isPlaying) {
 		this->playbackTimer->stop();
 		this->startButton->setText("Start");
@@ -208,30 +235,32 @@ void MainWindow::togglePlayback() {
 }
 
 void MainWindow::plotNextDataBlock() {
-	qDebug() << "Getting next data block";
 	//QFuture<QVector<QVector<int16_t> > > dataFuture = QtConcurrent::run(
 			//this->recording, &PlaybackRecording::getNextDataBlock);
-	QVector<double> x(this->recording->getFile().getBlockSize(), 0);
-	for (auto i = 0; i < AIB_BLOCK_SIZE; i++)
-		x[i] = i;
+	QPen pen = this->settings.getPlotPen();
 	double scale = this->settings.getDisplayScale();
 	QVector<QVector<int16_t> > data = this->recording->getNextDataBlock();
-	QPen pen = this->settings.getPlotPen();
-	qDebug() << "Scale :" << scale << "Pen: " << pen;
 	for (auto i = 0; i < NUM_CHANNELS; i++) {
 		QVector<double> tmp(AIB_BLOCK_SIZE, 0);
-		double min = 1000000;
-		for (auto j = 0; j < AIB_BLOCK_SIZE; j++) {
+		for (auto j = 0; j < AIB_BLOCK_SIZE; j++)
 			tmp[j] = data.at(i).at(j);
-			if (tmp[j] < min)
-				min = tmp[j];
+		this->channelPlots.at(i)->graph(0)->setData(PLOT_X, tmp);
+		if (this->autoscale) {
+			this->channelPlots.at(i)->yAxis->rescale();
+		} else {
+			this->channelPlots.at(i)->yAxis->setRange(-(scale * NEG_DISPLAY_RANGE),
+					(scale * POS_DISPLAY_RANGE));
 		}
-		this->channelPlots.at(i)->graph(0)->setData(x, tmp);
-		this->channelPlots.at(i)->yAxis->setRange(-(scale * NEG_DISPLAY_RANGE),
-				(scale * POS_DISPLAY_RANGE));
 		this->channelPlots.at(i)->graph(0)->setPen(pen);
 		this->channelPlots.at(i)->replot();
 	}
-	//qDebug() << "Done plotting block";
+}
+
+void MainWindow::setAutoscale(int state) {
+	bool set = state == Qt::Checked;
+	autoscale = set;
+	this->autoscaleCheckBox->setChecked(set);
+	this->scaleBox->setEnabled(!set);
+	this->settings.setAutoscale(set);
 }
 

@@ -103,3 +103,10 @@ void Settings::setExperimentLength(unsigned int len) {
 	this->settings.setValue("experiment-length", QVariant(len));
 }
 
+bool Settings::getAutoscale() {
+	return this->settings.value("autoscale").toBool();
+}
+
+void Settings::setAutoscale(bool on) {
+	this->settings.setValue("autoscale", QVariant(on));
+}

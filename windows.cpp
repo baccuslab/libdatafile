@@ -43,6 +43,11 @@ SettingsWindow::SettingsWindow(QWidget *parent) : QDialog(parent) {
 		scaleBox->addItem(QString::number(scale));
 	scaleBox->setCurrentIndex(
 			DISPLAY_SCALES.indexOf(settings.getDisplayScale()));
+	connect(scaleBox, SIGNAL(currentIndexChanged(int)), this->parent(), SLOT(setScale(int)));
+	autoscaleBox = new QCheckBox("Autoscale");
+	autoscaleBox->setTristate(false);
+	autoscaleBox->setChecked(this->settings.getAutoscale());
+	connect(autoscaleBox, SIGNAL(stateChanged(int)), this->parent(), SLOT(setAutoscale(int)));
 	penColorLabel = new QLabel("Plot color:");
 	penColorBox = new QComboBox();
 	for (auto &color : PLOT_COLOR_STRINGS)
@@ -53,6 +58,7 @@ SettingsWindow::SettingsWindow(QWidget *parent) : QDialog(parent) {
 	displayLayout->addWidget(viewBox, 0, 1);
 	displayLayout->addWidget(scaleLabel, 1, 0);
 	displayLayout->addWidget(scaleBox, 1, 1);
+	displayLayout->addWidget(autoscaleBox, 1, 2);
 	displayLayout->addWidget(penColorLabel, 2, 0);
 	displayLayout->addWidget(penColorBox, 2, 1);
 	displayGroup->setLayout(displayLayout);
@@ -94,11 +100,12 @@ SettingsWindow::~SettingsWindow() {
 }
 
 void SettingsWindow::applySettings() {
-	qDebug() << this->objectName();
+	//qDebug() << this->objectName();
 	this->settings.setChannelView(this->viewBox->currentText());
 	this->settings.setRefreshInterval(this->refreshLine->text().toUInt());
 	this->settings.setDisplayScale(this->scaleBox->currentText().toDouble());
 	this->settings.setPlotColor(this->penColorBox->currentText());
+	this->settings.setAutoscale(this->autoscaleBox->checkState() == Qt::Checked);
 }
 
 

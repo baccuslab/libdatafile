@@ -64,7 +64,7 @@ const char TIME_FORMAT[] = "h:mm:ss AP"; 		// QTime format
 const char DATE_FORMAT[] = "ddd, MMM dd, yyyy";	// QDate format
 
 /* Display properties for recording/playback */
-const float NEG_DISPLAY_RANGE = (2 << 10);
+const float NEG_DISPLAY_RANGE = (2 << 11);
 const float POS_DISPLAY_RANGE = (2 << 12);
 const float DEFAULT_DISPLAY_SCALE = 0.5;
 const QList<float> DISPLAY_SCALES {
@@ -136,6 +136,7 @@ class Settings {
 		QString getSaveDir();
 		QString getSaveFilename();
 		unsigned int getExperimentLength();
+		bool getAutoscale();
 
 		/* Setters */
 		void setDisplayScale(float);
@@ -145,6 +146,7 @@ class Settings {
 		void setSaveDir(QString);
 		void setSaveFilename(QString);
 		void setExperimentLength(unsigned int);
+		void setAutoscale(bool);
 		
 		QString objectName();
 	private:

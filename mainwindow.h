@@ -45,21 +45,28 @@ class MainWindow : public QMainWindow {
 		void togglePlayback();
 		void plotNextDataBlock();
 		void openSettings();
+		void setAutoscale(int);
 	
 	private:
 		/* Methods */
 		void initSettings();
 		void initMenuBar();
 		void initToolBar();
+		void initInfoWidget();
+		void initRecordingControlsWidget();
 		void initPlotGroup();
 		void initStatusBar();
 		void initPlaybackRecording();
 		void initLiveRecording();
 
+		bool autoscale;
+
 		/* Settings */
 		Settings settings;
+		QVector<double> PLOT_X;
 
 		/* GUI attributes */
+		QDockWidget *infoWidget;
 		QMenuBar *menubar;
 		QMenu *fileMenu;
 		QToolBar *toolbar;
@@ -71,13 +78,19 @@ class MainWindow : public QMainWindow {
 		QHBoxLayout *timeLayout;
 		QLineEdit *timeLine;
 		QIntValidator *timeValidator;
+		QLabel *fileLabel;
+		QLineEdit *fileLine;
+		QGridLayout *infoWidgetLayout;
 
 		QGroupBox *scaleGroup;
 		QHBoxLayout *scaleLayout;
 		QLabel *scaleLabel;
 		QComboBox *scaleBox;
+		QLabel *autoscaleLabel;
+		QCheckBox *autoscaleCheckBox;
 
 		QStatusBar *statusBar;
+		QLabel *statusLabel;
 
 		QWidget *channelPlotGroup;
 		QGridLayout *channelLayout;

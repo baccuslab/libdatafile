@@ -95,6 +95,7 @@ class SettingsWindow : public QDialog {
 		QComboBox *viewBox;
 		QLabel *scaleLabel;
 		QComboBox *scaleBox;
+		QCheckBox *autoscaleBox;
 		QLabel *penColorLabel;
 		QComboBox *penColorBox;
 
