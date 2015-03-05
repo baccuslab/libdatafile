@@ -110,3 +110,23 @@ bool Settings::getAutoscale() {
 void Settings::setAutoscale(bool on) {
 	this->settings.setValue("autoscale", QVariant(on));
 }
+
+unsigned int Settings::getOnlineAnalysisLength() {
+	return this->settings.value("online-analysis-length").toUInt();
+}
+
+void Settings::setOnlineAnalysisLength(unsigned int len) {
+	unsigned int val = qMax(qMin(len, ONLINE_ANALYSIS_MAX_LENGTH), 
+			ONLINE_ANALYSIS_MIN_LENGTH);
+	this->settings.setValue("online-analysis-length", QVariant(val));
+}
+
+unsigned int Settings::getJump() {
+	return this->settings.value("jump").toUInt();
+}
+
+void Settings::setJump(unsigned int jump) {
+	unsigned int val = qMax(qMin(jump, JUMP_MAX), JUMP_MIN);
+	this->settings.setValue("jump", QVariant(val));
+}
+

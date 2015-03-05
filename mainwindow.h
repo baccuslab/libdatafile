@@ -29,6 +29,7 @@
 #include "recording.h"
 #include "files.h"
 #include "windows.h"
+#include "ctrlwindow.h"
 #include "settings.h"
 
 class MainWindow : public QMainWindow {
@@ -58,6 +59,7 @@ class MainWindow : public QMainWindow {
 		void initStatusBar();
 		void initPlaybackRecording();
 		void initLiveRecording();
+		void initCtrlWindow();
 
 		bool autoscale;
 
@@ -101,6 +103,8 @@ class MainWindow : public QMainWindow {
 
 		/* Recording attributes */
 		PlaybackRecording *recording;
+
+		CtrlWindow *ctrlWindow;
 };
 
 #endif

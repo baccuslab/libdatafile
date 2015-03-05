@@ -24,9 +24,11 @@
 
 using namespace std;
 
-/* Parameters of the main window */
-const int WINDOW_HEIGHT = 1000;
-const int WINDOW_WIDTH = 1000;
+/* Window sizes */
+const int WINDOW_HEIGHT = 1000; // MainWindow
+const int WINDOW_WIDTH = 1000;	// MainWindow
+const int CTRL_WINDOW_WIDTH = 300;
+const int CTRL_WINDOW_HEIGHT = WINDOW_HEIGHT;
 
 /* Information about channels */
 const int PHOTODIODE_CHANNEL = 0;
@@ -73,6 +75,14 @@ const QList<float> DISPLAY_SCALES {
 const unsigned int DISPLAY_REFRESH_INTERVAL = 2000; // ms
 const unsigned int MIN_REFRESH_INTERVAL = 100;
 const unsigned int MAX_REFRESH_INTERVAL = 10000;
+const unsigned int JUMP_MIN = 100;		// ms
+const unsigned int JUMP_MAX = 10 * AIB_BLOCK_SIZE;
+const unsigned int JUMP_STEP_SIZE = 100;
+
+/* Online analysis parameters */
+const unsigned int ONLINE_ANALYSIS_MAX_LENGTH = 30;
+const unsigned int ONLINE_ANALYSIS_MIN_LENGTH = 5;
+const unsigned int DEFAULT_ONLINE_ANALYSIS_LENGTH = 15;
 
 /* Plot colors */
 const QString DEFAULT_PLOT_COLOR("Black");
@@ -85,7 +95,7 @@ const QMap<QString, QPair<QColor, QPen> > PLOT_COLOR_MAP {
 const QStringList PLOT_COLOR_STRINGS(PLOT_COLOR_MAP.uniqueKeys());
 
 /* Possible arrangements of the electrodes in the window */
-const QString DEFAULT_VIEW("Hexagonal");
+const QString DEFAULT_VIEW("Channel order");
 const QStringList CHANNEL_VIEW_STRINGS { 
 	"Hexagonal", 
 	"Low density", 
@@ -94,7 +104,7 @@ const QStringList CHANNEL_VIEW_STRINGS {
 };
 
 /* The arragements themselves */
-const QList<QPair<int, int> > HEXAGONAL_VIEW {
+const QList<QPair<int, int> > CHANNEL_ORDER_VIEW {
 	{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {0, 7},
 	{1, 0}, {1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7},
 	{2, 0}, {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7},
@@ -106,7 +116,7 @@ const QList<QPair<int, int> > HEXAGONAL_VIEW {
 };
 
 const QMap<QString, QList<QPair<int, int> > > CHANNEL_VIEW_MAP {
-	{"Hexagonal", HEXAGONAL_VIEW}
+	{"Channel order", CHANNEL_ORDER_VIEW}
 };
 
 /* class: Settings
@@ -137,6 +147,8 @@ class Settings {
 		QString getSaveFilename();
 		unsigned int getExperimentLength();
 		bool getAutoscale();
+		unsigned int getOnlineAnalysisLength();
+		unsigned int getJump();
 
 		/* Setters */
 		void setDisplayScale(float);
@@ -147,6 +159,8 @@ class Settings {
 		void setSaveFilename(QString);
 		void setExperimentLength(unsigned int);
 		void setAutoscale(bool);
+		void setOnlineAnalysisLength(unsigned int);
+		void setJump(unsigned int);
 		
 		QString objectName();
 	private:

@@ -13,7 +13,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	initMenuBar();
 	//initInfoWidget();
 	//initRecordingControlsWidget();
-	initToolBar();
+	initCtrlWindow();
+	//initToolBar();
 	initStatusBar();
 	initPlotGroup();
 }
@@ -30,6 +31,13 @@ void MainWindow::initSettings() {
 	settings.setRefreshInterval(DISPLAY_REFRESH_INTERVAL);
 	settings.setPlotColor(DEFAULT_PLOT_COLOR);
 	settings.setAutoscale(false);
+	settings.setOnlineAnalysisLength(DEFAULT_ONLINE_ANALYSIS_LENGTH);
+	settings.setJump(AIB_BLOCK_SIZE);
+}
+
+void MainWindow::initCtrlWindow() {
+	this->ctrlWindow = new CtrlWindow(this);
+	this->ctrlWindow->show();
 }
 
 void MainWindow::initMenuBar() {
@@ -207,10 +215,10 @@ void MainWindow::loadRecording() {
 }
 
 void MainWindow::initPlaybackRecording() {
-	this->startButton->setEnabled(true);
-	this->timeLine->setText("0");
-	this->timeLine->setReadOnly(false); // Until play back started
-	connect(this->startButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
+	this->ctrlWindow->startPauseButton->setEnabled(true);
+	this->ctrlWindow->timeLine->setText("0");
+	this->ctrlWindow->timeLine->setReadOnly(false); // Until play back started
+	connect(this->ctrlWindow->startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
 	this->playbackTimer = new QTimer();
 	this->playbackTimer->setInterval(this->settings.getRefreshInterval());
 	connect(this->playbackTimer, SIGNAL(timeout()), this, SLOT(plotNextDataBlock()));
@@ -224,12 +232,12 @@ void MainWindow::setScale(int s) {
 void MainWindow::togglePlayback() {
 	if (this->isPlaying) {
 		this->playbackTimer->stop();
-		this->startButton->setText("Start");
-		this->startButton->setStyleSheet("QPushButton {color : black}");
+		this->ctrlWindow->startPauseButton->setText("Start");
+		this->ctrlWindow->startPauseButton->setStyleSheet("QPushButton {color : black}");
 	} else {
 		this->playbackTimer->start();
-		this->startButton->setText("Stop");
-		this->startButton->setStyleSheet("QPushButton {color : rgb(178, 51, 51)}");
+		this->ctrlWindow->startPauseButton->setText("Stop");
+		this->ctrlWindow->startPauseButton->setStyleSheet("QPushButton {color : rgb(178, 51, 51)}");
 	}
 	this->isPlaying = !this->isPlaying;
 }
@@ -245,7 +253,7 @@ void MainWindow::plotNextDataBlock() {
 		for (auto j = 0; j < AIB_BLOCK_SIZE; j++)
 			tmp[j] = data.at(i).at(j);
 		this->channelPlots.at(i)->graph(0)->setData(PLOT_X, tmp);
-		if (this->autoscale) {
+		if (this->ctrlWindow->autoscale) {
 			this->channelPlots.at(i)->yAxis->rescale();
 		} else {
 			this->channelPlots.at(i)->yAxis->setRange(-(scale * NEG_DISPLAY_RANGE),
