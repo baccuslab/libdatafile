@@ -25,20 +25,22 @@ class ChannelPlot : public QCustomPlot {
 	Q_OBJECT
 
 	public:
-		ChannelPlot(int, QPair<int, int>, QWidget *parent = 0);
-		int getChannelIndex();
-		QPair<int, int> &getPosition();
+		ChannelPlot(int numRows, int numCols, QWidget *parent = 0);
+		QCPGraph *getSubplot(int index);
+		QCPGraph *getSubplot(int row, int col);
+		QCPAxisRect *getSubplotAxis(int index);
+		QCPAxisRect *getSubplotAxis(int row, int col);
+		void constructXData();
+		void plotData(QVector<QVector<int16_t> > data);
 
 	private:
 		/* Methods */
-		void setTitle();
+		int posToIndex(int row, int col);
 
 		/* Attributes */
 		Settings settings;
-		int channel;
-		QPair<int, int> position;
-		QString titleString;
-		QCPPlotTitle *title;
+		QVector<double> xData;
+
 };
 
 #endif

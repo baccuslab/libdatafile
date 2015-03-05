@@ -12,14 +12,6 @@ Settings::Settings() {
 Settings::~Settings() {
 }
 
-void Settings::setObjectName(QString s) {
-	this->settings.setObjectName(s);
-}
-
-QString Settings::objectName() {
-	return this->settings.objectName();
-}
-
 float Settings::getDisplayRange() {
 	return this->settings.value("display-range").toFloat();
 }
@@ -128,5 +120,21 @@ unsigned int Settings::getJump() {
 void Settings::setJump(unsigned int jump) {
 	unsigned int val = qMax(qMin(jump, JUMP_MAX), JUMP_MIN);
 	this->settings.setValue("jump", QVariant(val));
+}
+
+int Settings::getNumRows() {
+	return this->settings.value("num-rows").toInt();
+}
+
+int Settings::getNumCols() {
+	return this->settings.value("num-cols").toInt();
+}
+
+void Settings::setNumRows(int rows) {
+	this->settings.setValue("num-rows", QVariant(rows));
+}
+
+void Settings::setNumCols(int cols) {
+	this->settings.setValue("num-cols", QVariant(cols));
 }
 

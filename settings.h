@@ -86,11 +86,12 @@ const unsigned int DEFAULT_ONLINE_ANALYSIS_LENGTH = 15;
 
 /* Plot colors */
 const QString DEFAULT_PLOT_COLOR("Black");
+const double PEN_SIZE = 0.5;
 const QMap<QString, QPair<QColor, QPen> > PLOT_COLOR_MAP {
-	{"Black", {QColor(Qt::black), QPen(QColor(Qt::black))}},
-	{"Blue", {QColor(76, 114, 176), QPen(QColor(76, 114, 176))}}, 
-	{"Green", {QColor(85, 168, 104), QPen(QColor(85, 168, 104))}}, 
-	{"Red", {QColor(196, 78, 82), QPen(QColor(196, 78, 82))}}
+	{"Black", {QColor(Qt::black), QPen(QBrush(QColor(Qt::black)), PEN_SIZE)}},
+	{"Blue", {QColor(76, 114, 176), QPen(QBrush(QColor(76, 114, 176)), PEN_SIZE)}}, 
+	{"Green", {QColor(85, 168, 104), QPen(QBrush(QColor(85, 168, 104)), PEN_SIZE)}}, 
+	{"Red", {QColor(196, 78, 82), QPen(QBrush(QColor(196, 78, 82)), PEN_SIZE)}}
 };
 const QStringList PLOT_COLOR_STRINGS(PLOT_COLOR_MAP.uniqueKeys());
 
@@ -119,6 +120,10 @@ const QMap<QString, QList<QPair<int, int> > > CHANNEL_VIEW_MAP {
 	{"Channel order", CHANNEL_ORDER_VIEW}
 };
 
+const QMap<QString, QPair<int, int> > CHANNEL_COL_ROW_MAP {
+	{"Channel order", {8, 8}}
+};
+
 /* class: Settings
  * ---------------
  * The `Settings` class is a subclass of QSettings that simplifies
@@ -129,7 +134,6 @@ class Settings {
 	public:
 		Settings();
 		~Settings();
-		void setObjectName(QString);
 
 		/* Getters */
 		float getDisplayRange();
@@ -149,6 +153,8 @@ class Settings {
 		bool getAutoscale();
 		unsigned int getOnlineAnalysisLength();
 		unsigned int getJump();
+		int getNumRows();
+		int getNumCols();
 
 		/* Setters */
 		void setDisplayScale(float);
@@ -161,8 +167,9 @@ class Settings {
 		void setAutoscale(bool);
 		void setOnlineAnalysisLength(unsigned int);
 		void setJump(unsigned int);
+		void setNumRows(int);
+		void setNumCols(int);
 		
-		QString objectName();
 	private:
 		QSettings settings;
 };

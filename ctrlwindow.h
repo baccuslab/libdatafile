@@ -1,4 +1,5 @@
 /* ctrlwindow.h
+ * ------------
  * Header file for the CtrlWindow class, which is the main interface
  * used for controlling a recording.
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu

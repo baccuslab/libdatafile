@@ -44,7 +44,7 @@ class MainWindow : public QMainWindow {
 		void loadRecording();
 		void setScale(int);
 		void togglePlayback();
-		void plotNextDataBlock();
+		//void plotNextDataBlock();
 		void openSettings();
 		void setAutoscale(int);
 
@@ -64,12 +64,17 @@ class MainWindow : public QMainWindow {
 		void initPlaybackRecording();
 		void initLiveRecording();
 		void initCtrlWindow();
+		
+		//void transferDataToPlots(QVector<QVector<int16_t> >);
 
 		bool autoscale;
 
+		/* TMP */
+		ChannelPlot *channelPlot;
+
 		/* Settings */
 		Settings settings;
-		QVector<double> PLOT_X;
+		//QVector<double> PLOT_X;
 
 		/* GUI attributes */
 		QDockWidget *infoWidget;
@@ -98,10 +103,6 @@ class MainWindow : public QMainWindow {
 
 		QStatusBar *statusBar;
 		QLabel *statusLabel;
-
-		QWidget *channelPlotGroup;
-		QGridLayout *channelLayout;
-		vector<ChannelPlot *> channelPlots;
 
 		QTimer *playbackTimer;
 		bool isPlaying = false;

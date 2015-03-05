@@ -1,4 +1,5 @@
 /* ctrlwindow.cpp
+ * --------------
  * Implementation of the main control interface in the meaview application.
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
