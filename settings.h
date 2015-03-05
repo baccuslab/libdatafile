@@ -25,10 +25,10 @@
 using namespace std;
 
 /* Window sizes */
-const int WINDOW_HEIGHT = 1000; // MainWindow
-const int WINDOW_WIDTH = 1000;	// MainWindow
 const int CTRL_WINDOW_WIDTH = 300;
-const int CTRL_WINDOW_HEIGHT = WINDOW_HEIGHT;
+const int CTRL_WINDOW_HEIGHT = 700;
+const int PLOT_WINDOW_HEIGHT = 1000;
+const int PLOT_WINDOW_WIDTH = 1000;
 
 /* Information about channels */
 const int PHOTODIODE_CHANNEL = 0;

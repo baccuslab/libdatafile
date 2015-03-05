@@ -6,20 +6,91 @@
 
 #include "ctrlwindow.h"
 
-CtrlWindow::CtrlWindow(QWidget *parent) : QWidget(parent, Qt::Window) {
-	this->setWindowTitle("Meaview: Controls");
-	QRect rect = parent->geometry();
-	this->setGeometry(rect.right() + 10, rect.top(), 
-			CTRL_WINDOW_WIDTH, CTRL_WINDOW_HEIGHT);
-
-	this->initUI();
-	this->initSignalsAndSlots();
+CtrlWindow::CtrlWindow(QWidget *parent) : QMainWindow(parent) {
+	setWindowTitle("Meaview: Controls");
+	setGeometry(PLOT_WINDOW_WIDTH + 10, 0, CTRL_WINDOW_WIDTH, CTRL_WINDOW_HEIGHT);
+	initSettings();
+	initCtrlWindowUI();
+	initPlotWindow();
+	initMenuBar();
+	initStatusBar();
+	initSignalsAndSlots();
 }
 
 CtrlWindow::~CtrlWindow() {
 }
 
-void CtrlWindow::initUI() {
+void CtrlWindow::initSettings() {
+	settings.setSaveDir(DEFAULT_SAVE_DIR);
+	settings.setSaveFilename(DEFAULT_SAVE_FILENAME);
+	settings.setChannelView(DEFAULT_VIEW);
+	settings.setExperimentLength(DEFAULT_EXPERIMENT_LENGTH);
+	settings.setDisplayScale(DEFAULT_DISPLAY_SCALE);
+	settings.setRefreshInterval(DISPLAY_REFRESH_INTERVAL);
+	settings.setPlotColor(DEFAULT_PLOT_COLOR);
+	settings.setAutoscale(false);
+	settings.setOnlineAnalysisLength(DEFAULT_ONLINE_ANALYSIS_LENGTH);
+	settings.setJump(AIB_BLOCK_SIZE);
+	QPair<int, int> plotSize = CHANNEL_COL_ROW_MAP.value(
+			settings.getChannelViewString());
+	settings.setNumRows(plotSize.first);
+	settings.setNumCols(plotSize.second);
+	playbackTimer = new QTimer();
+	playbackTimer->setInterval(settings.getRefreshInterval());
+}
+
+void CtrlWindow::initPlotWindow() {
+	plotWindow = new PlotWindow(this);
+	plotWindow->show();
+}
+
+void CtrlWindow::initMenuBar() {
+	this->menubar = new QMenuBar(0);
+
+	/* File menu */
+	this->fileMenu = new QMenu(tr("&File"));
+
+	/* About menu item */
+	//QMenu *aboutMenu = new QMenu("About Meaview");
+	//this->menubar->addMenu(aboutMenu);
+
+	/* New recording menu item */
+	QAction *newRecordingAction = new QAction(tr("&New"), this->fileMenu);
+	newRecordingAction->setShortcut(QKeySequence("Ctrl+N"));
+	connect(newRecordingAction, SIGNAL(triggered()), this, SLOT(openNewRecording()));
+	this->fileMenu->addAction(newRecordingAction);
+
+	/* Load recording for replay */
+	QAction *loadRecordingAction = new QAction(tr("&Open"), this->fileMenu);
+	loadRecordingAction->setShortcut(QKeySequence("Ctrl+O"));
+	connect(loadRecordingAction, SIGNAL(triggered()), this, SLOT(loadRecording()));
+	this->fileMenu->addAction(loadRecordingAction);
+
+	/* Windows menu */
+	this->windowsMenu = new QMenu(tr("&Windows"));
+	QAction *showPlotWindow = new QAction(tr("&Channel view"), this->windowsMenu);
+	showPlotWindow->setShortcut(QKeySequence("Ctrl+0"));
+	showPlotWindow->setCheckable(true);
+	showPlotWindow->setChecked(true);
+	connect(showPlotWindow, SIGNAL(triggered()), this->plotWindow, SLOT(toggleVisible()));
+	this->windowsMenu->addAction(showPlotWindow);
+
+	QAction *showControlsWindow = new QAction(tr("Control window"), this->windowsMenu);
+	showControlsWindow->setShortcut(QKeySequence("Ctrl+1"));
+	showControlsWindow->setCheckable(true);
+	showControlsWindow->setChecked(true);
+	connect(showControlsWindow, SIGNAL(triggered()), this, SLOT(toggleVisible()));
+	this->windowsMenu->addAction(showControlsWindow);
+
+	/* eventually same for online analysis and channel inspector */
+
+	/* Add menus to bar and bar to PlotWindow */
+	this->menubar->addMenu(this->fileMenu);
+	this->menubar->addMenu(this->windowsMenu);
+	this->setMenuBar(this->menubar);
+}
+
+void CtrlWindow::initCtrlWindowUI() {
 	/* Set up GUI */
 	mainLayout = new QGridLayout();
 
@@ -179,10 +250,79 @@ void CtrlWindow::initUI() {
 	mainLayout->addWidget(playbackGroup, 1, 0);
 	mainLayout->addWidget(displayGroup, 2, 0);
 	mainLayout->addWidget(onlineAnalysisGroup, 3, 0);
-	this->setLayout(mainLayout);
+	this->setCentralWidget(new QWidget(this));
+	centralWidget()->setLayout(mainLayout);
 }
 
+void CtrlWindow::initStatusBar() {
+	this->statusBar = new QStatusBar();
+	statusLabel = new QLabel("Ready");
+	this->statusBar->addWidget(statusLabel);
+	this->setStatusBar(this->statusBar);
+}
+
+void CtrlWindow::togglePlayback() {
+	if (this->isPlaying) {
+		this->playbackTimer->stop();
+		this->startPauseButton->setText("Start");
+		this->startPauseButton->setStyleSheet("QPushButton {color : black}");
+	} else {
+		this->playbackTimer->start();
+		this->startPauseButton->setText("Stop");
+		this->startPauseButton->setStyleSheet("QPushButton {color : rgb(178, 51, 51)}");
+	}
+	this->isPlaying = !this->isPlaying;
+}
+
+void CtrlWindow::loadRecording() {
+	statusLabel->setText("Loading recording");
+	QString filename = QFileDialog::getOpenFileName(
+			this, tr("Load recording"),
+			DEFAULT_SAVE_DIR, tr("Recordings (*.bin)"));
+	if (filename.isNull())
+		return;
+	
+	/* Open the recording */
+	recording = new PlaybackRecording(filename);
+	this->plotWindow->recording = recording;
+	initPlaybackRecording();
+	statusLabel->setText("Ready");
+}
+
+void CtrlWindow::initPlaybackRecording() {
+	startPauseButton->setEnabled(true);
+	timeLine->setText("0");
+	timeLine->setReadOnly(false); // Until play back started
+	connect(startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
+	connect(playbackTimer, SIGNAL(timeout()), this->plotWindow, SLOT(plotNextDataBlock()));
+}
+
+void CtrlWindow::openNewRecording() {
+	NewRecordingWindow w(this);
+	int ret;
+
+	while (true) {
+		ret = w.exec();
+		if (ret == QDialog::Rejected)
+			return;
+		if ((ret = w.validateChoices()) != 0)
+			w.close();
+		else
+			break;
+	}
+
+	/* Validated file name */
+	QString filename = w.getFullFilename();
+	qDebug() << "File: " << filename << endl;
+
+	/* Make a file */
+	//this->recording = new LiveRecording(filename, w.getTime());
+}
+
+
 void CtrlWindow::initSignalsAndSlots() {
+	connect(this->playbackTimer, SIGNAL(timeout()),
+			this->plotWindow, SLOT(plotNextDataBlock()));
 	connect(this->filenameLine, SIGNAL(editingFinished()), 
 			this, SLOT(updateFilename()));
 	connect(this->chooseSavedirButton, SIGNAL(clicked()), 
@@ -205,6 +345,7 @@ void CtrlWindow::initSignalsAndSlots() {
 			this, SLOT(setOnlineAnalysisTargetChannel()));
 }
 
+/* SIGNALS AND SLOT */
 void CtrlWindow::updateFilename() {
 	this->settings.setSaveFilename(this->filenameLine->text());
 }
@@ -241,10 +382,9 @@ void CtrlWindow::updateColor(QString color) {
 
 void CtrlWindow::updateAutoscale(int state) {
 	bool checked = (state == Qt::Checked);
-	this->autoscale = checked;
-	this->autoscaleBox->setChecked(checked);
-	this->scaleBox->setEnabled(!checked);
-	this->settings.setAutoscale(checked);
+	autoscaleBox->setChecked(checked);
+	scaleBox->setEnabled(!checked);
+	settings.setAutoscale(checked);
 }
 
 void CtrlWindow::setOnlineAnalysisTargetChannel() {

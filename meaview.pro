@@ -14,7 +14,7 @@ HEADERS += 	channelplot.h \
 			settings.h \
 			qcustomplot.h \
 			windows.h \
-			mainwindow.h \
+			plotwindow.h \
 			files.h \
 			recording.h \
 			ctrlwindow.h
@@ -23,7 +23,7 @@ SOURCES += 	channelplot.cpp \
 			main.cpp \
 			qcustomplot.cpp \
 			windows.cpp \
-			mainwindow.cpp \
+			plotwindow.cpp \
 			files.cpp \
 			recording.cpp \
 			ctrlwindow.cpp

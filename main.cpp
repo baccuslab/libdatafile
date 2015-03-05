@@ -3,13 +3,13 @@
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
 
-#include "mainwindow.h"
+#include "ctrlwindow.h"
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
 	app.setOrganizationName("baccuslab");
 	app.setApplicationName("meaview");
-	MainWindow window;
+	CtrlWindow window;
 	window.show();
 	app.exec();
 	return 0;

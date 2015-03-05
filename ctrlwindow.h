@@ -11,7 +11,12 @@
 /* C++ includes */
 
 /* Qt includes */
+#include <QMainWindow>
 #include <QGridLayout>
+#include <QMenuBar>
+#include <QMenu>
+#include <QAction>
+#include <QStatusBar>
 #include <QGroupBox>
 #include <QLabel>
 #include <QPushButton>
@@ -27,6 +32,10 @@
 
 /* meaview includes */
 #include "settings.h"
+#include "plotwindow.h"
+#include "windows.h"
+#include "files.h"
+#include "recording.h"
 
 /* class: CtrlWindow
  * -----------------
@@ -35,10 +44,10 @@
  * provides controls to start, stop and navigate the recording, and control
  * the playback display
  */
-class CtrlWindow : public QWidget {
+class CtrlWindow : public QMainWindow {
 	Q_OBJECT
 
-	friend class MainWindow;
+	friend class PlotWindow;
 	public:
 		CtrlWindow(QWidget *parent = 0);
 		~CtrlWindow();
@@ -54,22 +63,44 @@ class CtrlWindow : public QWidget {
 		void updateAutoscale(int);
 		void setOnlineAnalysisTargetChannel();
 		void toggleVisible();
+		void togglePlayback();
+
+		void loadRecording();
+		void openNewRecording();
+
 
 	private:
 
-		/* Methods */
-		void initUI();
+		/* Initialization methods */
+		void initSettings();
+		void initCtrlWindowUI();
+		void initMenuBar();
+		void initPlotWindow();
+		void initStatusBar();
+		void initPlaybackRecording();
+		void initLiveRecording();
 		void initSignalsAndSlots();
 
-		/* Attributes */
-		bool autoscale = false;
+		/* General attributes */
+		Settings settings;
 		QFile stimulusFile;
 		unsigned int targetChannel;
-		Settings settings;
+		QTimer *playbackTimer;
+		bool isPlaying = false;
 
-		/* GUI attributes */
+		/* Data interface attributes */
+		PlaybackRecording *recording;
+
+		/* Main window GUI attributes */
+		PlotWindow *plotWindow;
 		QGridLayout *mainLayout;
+		QMenuBar *menubar;
+		QMenu *fileMenu;
+		QMenu *windowsMenu;
+		QStatusBar *statusBar;
+		QLabel *statusLabel;
 
+		/* Information display group */
 		QGroupBox *infoGroup;
 		QGridLayout *infoLayout;
 		QLabel *filenameLabel;
@@ -82,6 +113,7 @@ class CtrlWindow : public QWidget {
 		QLineEdit *timeLine;
 		QIntValidator *timeLineValidator;
 
+		/* Playback controls group */
 		QGroupBox *playbackGroup;
 		QGridLayout *playbackLayout;
 		QPushButton *restartButton;
@@ -93,6 +125,7 @@ class CtrlWindow : public QWidget {
 		QLabel *jumpLabel;
 		QSpinBox *jumpSpinBox;
 
+		/* Display control group */
 		QGroupBox *displayGroup;
 		QGridLayout *displayLayout;
 		QLabel *viewLabel;
@@ -104,6 +137,7 @@ class CtrlWindow : public QWidget {
 		QLabel *autoscaleLabel;
 		QCheckBox *autoscaleBox;
 
+		/* Online analysis controls group */
 		QGroupBox *onlineAnalysisGroup;
 		QGridLayout *onlineAnalysisLayout;
 		QRadioButton *noneAnalysisButton;
@@ -118,6 +152,7 @@ class CtrlWindow : public QWidget {
 		QLabel *lengthLabel;
 		QSpinBox *lengthSpinBox;
 
+		/* Interface with Nidaq */
 		QGroupBox *nidaqGroup;
 		QGridLayout *nidaqLayout;
 };
