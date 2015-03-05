@@ -12,7 +12,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	initSettings();
 	initCtrlWindow();
 	initMenuBar();
-	//initToolBar();
 	initStatusBar();
 	initPlotGroup();
 }
@@ -102,47 +101,9 @@ void MainWindow::initStatusBar() {
 }
 
 void MainWindow::initPlotGroup() {
-	//channelPlotGroup = new QWidget(this);
-	//channelLayout = new QGridLayout();
-	//channelPlots.resize(NUM_CHANNELS);
-	//for (int c = 0; c < NUM_CHANNELS; c++) {
-		//QPair<int, int> pos = this->settings.getChannelView().at(c);
-		//channelPlots.at(c) = new ChannelPlot(c, pos);
-		//channelLayout->addWidget(channelPlots.at(c), pos.first, pos.second, 1, 1);
-		////connect(channelPlots.at(c), SIGNAL(mouseDoubleClick(QMouseEvent *)),
-				////this, SLOT(openSingleChannel()));
-	//}
-	//channelPlotGroup->setLayout(channelLayout);
-	//this->setCentralWidget(channelPlotGroup);
 	this->channelPlot = new ChannelPlot(this->settings.getNumRows(),
 			this->settings.getNumCols(), this);
 	this->setCentralWidget(this->channelPlot);
-	//this->p = new QCustomPlot(this);
-	//QCPLayoutGrid *l = this->p->plotLayout();
-	//l->removeAt(0);
-	//l->expandTo(this->settings.getNumRows(), this->settings.getNumCols());
-	//for (int c = 0; c < NUM_CHANNELS; c++) {
-		//QPair<int, int> pos = this->settings.getChannelView().at(c);
-		//QCPAxisRect *r = new QCPAxisRect(this->p);
-		//l->addElement(pos.first, pos.second, r);
-		//QCPGraph *g = new QCPGraph(r->axis(QCPAxis::atBottom), r->axis(QCPAxis::atLeft));
-		//p->addPlottable(g);
-		//g->keyAxis()->setTicks(false);
-		//g->keyAxis()->setTickLabels(false);
-		//g->keyAxis()->grid()->setVisible(false);
-		//g->keyAxis()->setRange(0, 20000);
-		//g->valueAxis()->setTicks(false);
-		//g->valueAxis()->setTickLabels(false);
-		//g->valueAxis()->grid()->setVisible(false);
-		//g->valueAxis()->setRange(-NEG_DISPLAY_RANGE, POS_DISPLAY_RANGE);
-	//}
-
-	//this->setCentralWidget(p);
-	//[> X-values for all plots <]
-	//QVector<double> tmpX(SAMPLE_RATE * (DISPLAY_REFRESH_INTERVAL / 1000));
-	//double start = 0.0;
-	//iota(tmpX.begin(), tmpX.end(), start);
-	//this->PLOT_X = tmpX;
 }
 
 void MainWindow::openNewRecording() {
@@ -188,13 +149,7 @@ void MainWindow::initPlaybackRecording() {
 	connect(this->ctrlWindow->startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
 	this->playbackTimer = new QTimer();
 	this->playbackTimer->setInterval(this->settings.getRefreshInterval());
-	//connect(this->playbackTimer, SIGNAL(timeout()), this, SLOT(plotNextDataBlock()));
-	connect(this->playbackTimer, SIGNAL(timeout()), this, SLOT(plot()));
-}
-
-void MainWindow::setScale(int s) {
-	this->settings.setDisplayScale(DISPLAY_SCALES[s]);
-	this->scaleBox->setCurrentIndex(s);
+	connect(this->playbackTimer, SIGNAL(timeout()), this, SLOT(plotNextDataBlock()));
 }
 
 void MainWindow::togglePlayback() {
@@ -210,80 +165,9 @@ void MainWindow::togglePlayback() {
 	this->isPlaying = !this->isPlaying;
 }
 
-void MainWindow::plot() {
-	//QtConcurrent::run(this, &MainWindow::plotNextDataBlock);
+void MainWindow::plotNextDataBlock() {
 	QVector<QVector<int16_t> > data = this->recording->getNextDataBlock();
 	QtConcurrent::run(this->channelPlot, &ChannelPlot::plotData, data);
-}
-
-//void MainWindow::plotNextDataBlock() {
-
-	//[> Trying concurrent move of data. Doesn't really seem to work, though.
-	 //* Doesn't crash, but the plots are only updated when we click on them.
-	 //* The finished() signal might not really be connected to the replot()
-	 //* slot, could be because these are on the stack?
-	 //*
-	//QFutureWatcher<void> watcher;
-	//connect(&watcher, SIGNAL(finished()), this->p, SLOT(replot()));
-	//QFuture<void> future = QtConcurrent::run(this, &MainWindow::transferDataToPlots, data);
-	//qDebug() << "Load finished, future dispatched: " << QTime::currentTime();
-	//*/
-
-	//QPen pen = this->settings.getPlotPen();
-	//double scale = this->settings.getDisplayScale();
-	//qDebug() << "Load start: " << QTime::currentTime();
-	//QVector<QVector<int16_t> > data = this->recording->getNextDataBlock();
-	//qDebug() << "Load end: " << QTime::currentTime();
-	//qDebug() << "Set data start: " << QTime::currentTime();
-	//for (auto i = 0; i < NUM_CHANNELS; i++) {
-		//QVector<double> tmp(AIB_BLOCK_SIZE, 0);
-		//for (auto j = 0; j < AIB_BLOCK_SIZE; j++)
-			//tmp[j] = data.at(i).at(j);
-		//QCPGraph *g = this->p->graph(i);
-		//g->setData(PLOT_X, tmp);
-		//if (this->ctrlWindow->autoscale) {
-			//g->valueAxis()->rescale();
-		//} else {
-			//g->valueAxis()->setRange(-(scale * NEG_DISPLAY_RANGE), (scale * POS_DISPLAY_RANGE));
-		//}
-		//g->setPen(pen);
-	//}
-	//qDebug() << "Set data end: " << QTime::currentTime();
-	//qDebug() << "Replot start: " << QTime::currentTime();
-	//this->p->replot();
-	//qDebug() << "Replot end: " << QTime::currentTime() << endl;
-//}
-
-
-/* Naive asynchronous function for transferring data to plots
- * in a separate thread.
- *
-void MainWindow::transferDataToPlots(QVector<QVector<int16_t> > data) {
-	QVector<double> tmp(AIB_BLOCK_SIZE, 0);
-	QPen pen = this->settings.getPlotPen();
-	double scale = this->settings.getDisplayScale();
-	for (auto i = 0; i < NUM_CHANNELS; i++) {
-		for (auto j = 0; j < AIB_BLOCK_SIZE; j++)
-			tmp[j] = data.at(i).at(j);
-		QCPGraph *g = this->p->graph(i);
-		g->setData(PLOT_X, tmp);
-		if (this->ctrlWindow->autoscale) {
-			g->valueAxis()->rescale();
-		} else {
-			g->valueAxis()->setRange(-(scale * NEG_DISPLAY_RANGE), (scale * POS_DISPLAY_RANGE));
-		}
-		g->setPen(pen);
-	}
-	qDebug() << "Finished async run" << QTime::currentTime() << endl;
-}
-*/
-
-void MainWindow::setAutoscale(int state) {
-	bool set = state == Qt::Checked;
-	autoscale = set;
-	this->autoscaleCheckBox->setChecked(set);
-	this->scaleBox->setEnabled(!set);
-	this->settings.setAutoscale(set);
 }
 
 void MainWindow::toggleVisible() {

@@ -42,23 +42,16 @@ class MainWindow : public QMainWindow {
 	public slots:
 		void openNewRecording();
 		void loadRecording();
-		void setScale(int);
 		void togglePlayback();
-		//void plotNextDataBlock();
-		void openSettings();
-		void setAutoscale(int);
+		void plotNextDataBlock();
 
 	private slots:
 		void toggleVisible();
-		void plot();
 	
 	private:
 		/* Methods */
 		void initSettings();
 		void initMenuBar();
-		void initToolBar();
-		void initInfoWidget();
-		void initRecordingControlsWidget();
 		void initPlotGroup();
 		void initStatusBar();
 		void initPlaybackRecording();
@@ -74,36 +67,13 @@ class MainWindow : public QMainWindow {
 
 		/* Settings */
 		Settings settings;
-		//QVector<double> PLOT_X;
 
 		/* GUI attributes */
-		QDockWidget *infoWidget;
 		QMenuBar *menubar;
 		QMenu *fileMenu;
 		QMenu *windowsMenu;
-		QToolBar *toolbar;
-
-		QPushButton *startButton;
-		QPushButton *settingsButton;
-		QGroupBox *timeGroup;
-		QLabel *timeLabel;
-		QHBoxLayout *timeLayout;
-		QLineEdit *timeLine;
-		QIntValidator *timeValidator;
-		QLabel *fileLabel;
-		QLineEdit *fileLine;
-		QGridLayout *infoWidgetLayout;
-
-		QGroupBox *scaleGroup;
-		QHBoxLayout *scaleLayout;
-		QLabel *scaleLabel;
-		QComboBox *scaleBox;
-		QLabel *autoscaleLabel;
-		QCheckBox *autoscaleCheckBox;
-
 		QStatusBar *statusBar;
 		QLabel *statusLabel;
-
 		QTimer *playbackTimer;
 		bool isPlaying = false;
 
