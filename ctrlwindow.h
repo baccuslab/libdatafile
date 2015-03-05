@@ -51,6 +51,8 @@ class CtrlWindow : public QWidget {
 		void updateScale(QString);
 		void updateJump(int);
 		void updateAutoscale(int);
+		void setOnlineAnalysisTargetChannel();
+		void toggleVisible();
 
 	private:
 
@@ -60,9 +62,11 @@ class CtrlWindow : public QWidget {
 
 		/* Attributes */
 		bool autoscale = false;
-
+		QFile stimulusFile;
+		unsigned int targetChannel;
 		Settings settings;
 
+		/* GUI attributes */
 		QGridLayout *mainLayout;
 
 		QGroupBox *infoGroup;
@@ -106,6 +110,10 @@ class CtrlWindow : public QWidget {
 		QRadioButton *linesAnalysisButton;
 		QRadioButton *spatiotemporalAnalysisButton;
 		QPushButton *loadStimulusButton;
+		QPushButton *showAnalysisWindowButton;
+		QLabel *targetChannelLabel;
+		QLineEdit *targetChannelLine;
+		QIntValidator *targetChannelValidator;
 		QLabel *lengthLabel;
 		QSpinBox *lengthSpinBox;
 

@@ -133,26 +133,40 @@ void CtrlWindow::initUI() {
 	noneAnalysisButton->setToolTip("Do not compute any online analysis");
 	noneAnalysisButton->setChecked(true);
 	temporalAnalysisButton = new QRadioButton("Temporal kernel");
-	temporalAnalysisButton->setToolTip("This computes a 1D kernel of a purely temporal stimulus");
+	temporalAnalysisButton->setToolTip(
+			"This computes a 1D kernel of a purely temporal stimulus");
 	linesAnalysisButton = new QRadioButton("Lines kernel");
-	linesAnalysisButton->setToolTip("This computes a kernel with one temporal and \none spatial dimension, e.g., white noise lines");
+	linesAnalysisButton->setToolTip("This computes a kernel with one temporal and" \
+			"\none spatial dimension, e.g., white noise lines");
 	spatiotemporalAnalysisButton = new QRadioButton("Spatiotemporal kernel");
-	spatiotemporalAnalysisButton->setToolTip("Compute a full 2D spatiotemporal kernel, e.g., from white noise checkers");
+	spatiotemporalAnalysisButton->setToolTip(
+			"Compute a full 2D spatiotemporal kernel, e.g., from white noise checkers");
 	loadStimulusButton = new QPushButton("Load stimulus");
 	loadStimulusButton->setToolTip("Choose a stimulus from which to compute the kernel");
 	lengthLabel = new QLabel("Length:");
 	lengthSpinBox = new QSpinBox();
-	lengthSpinBox->setToolTip("Set the number of time points computed in the online analysis");
+	lengthSpinBox->setToolTip(
+			"Set the number of time points computed in the online analysis");
 	lengthSpinBox->setRange(
 			ONLINE_ANALYSIS_MIN_LENGTH, ONLINE_ANALYSIS_MAX_LENGTH);
 	lengthSpinBox->setValue(settings.getOnlineAnalysisLength());
+	showAnalysisWindowButton = new QPushButton("Show analysis");
+	showAnalysisWindowButton->setToolTip(
+			"Open the window showing the running results of the online analysis");
+	targetChannelLabel = new QLabel("Target channel:");
+	targetChannelLine = new QLineEdit("0");
+	targetChannelValidator = new QIntValidator(0, NUM_CHANNELS - 1);
+	targetChannelLine->setToolTip("Choose the channel whose kernel should be computed");
 	onlineAnalysisLayout->addWidget(noneAnalysisButton, 0, 0);
+	onlineAnalysisLayout->addWidget(lengthLabel, 0, 1);
+	onlineAnalysisLayout->addWidget(lengthSpinBox, 0, 2);
+	onlineAnalysisLayout->addWidget(targetChannelLabel, 1, 1);
+	onlineAnalysisLayout->addWidget(targetChannelLine, 1, 2);
 	onlineAnalysisLayout->addWidget(temporalAnalysisButton, 1, 0);
 	onlineAnalysisLayout->addWidget(linesAnalysisButton, 2, 0);
 	onlineAnalysisLayout->addWidget(spatiotemporalAnalysisButton, 3, 0);
 	onlineAnalysisLayout->addWidget(loadStimulusButton, 4, 0);
-	onlineAnalysisLayout->addWidget(lengthLabel, 4, 1);
-	onlineAnalysisLayout->addWidget(lengthSpinBox, 4, 2);
+	onlineAnalysisLayout->addWidget(showAnalysisWindowButton, 4, 2);
 	onlineAnalysisGroup->setLayout(onlineAnalysisLayout);
 
 	/* Nidaq... */
@@ -184,6 +198,10 @@ void CtrlWindow::initSignalsAndSlots() {
 			this, SLOT(updateScale(QString)));
 	connect(this->autoscaleBox, SIGNAL(stateChanged(int)), 
 			this, SLOT(updateAutoscale(int)));
+	//connect(this->chooseSavedirButton, SIGNAL(clicked()),
+			//this, SLOT(openNewRecordingWindow()));
+	connect(this->targetChannelLine, SIGNAL(editingFinished()),
+			this, SLOT(setOnlineAnalysisTargetChannel()));
 }
 
 void CtrlWindow::updateFilename() {
@@ -226,5 +244,13 @@ void CtrlWindow::updateAutoscale(int state) {
 	this->autoscaleBox->setChecked(checked);
 	this->scaleBox->setEnabled(!checked);
 	this->settings.setAutoscale(checked);
+}
+
+void CtrlWindow::setOnlineAnalysisTargetChannel() {
+	this->targetChannel = this->targetChannelLine->text().toUInt();
+}
+
+void CtrlWindow::toggleVisible() {
+	this->setVisible(!this->isVisible());
 }
 

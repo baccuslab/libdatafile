@@ -47,6 +47,10 @@ class MainWindow : public QMainWindow {
 		void plotNextDataBlock();
 		void openSettings();
 		void setAutoscale(int);
+
+	private slots:
+		void toggleVisible();
+		void plot();
 	
 	private:
 		/* Methods */
@@ -71,6 +75,7 @@ class MainWindow : public QMainWindow {
 		QDockWidget *infoWidget;
 		QMenuBar *menubar;
 		QMenu *fileMenu;
+		QMenu *windowsMenu;
 		QToolBar *toolbar;
 
 		QPushButton *startButton;

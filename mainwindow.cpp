@@ -10,10 +10,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	this->setGeometry(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 	this->setWindowTitle("Meaview: Channel view");
 	initSettings();
+	initCtrlWindow();
 	initMenuBar();
 	//initInfoWidget();
 	//initRecordingControlsWidget();
-	initCtrlWindow();
 	//initToolBar();
 	initStatusBar();
 	initPlotGroup();
@@ -62,8 +62,27 @@ void MainWindow::initMenuBar() {
 	connect(loadRecordingAction, SIGNAL(triggered()), this, SLOT(loadRecording()));
 	this->fileMenu->addAction(loadRecordingAction);
 
+	/* Windows menu */
+	this->windowsMenu = new QMenu(tr("&Windows"));
+	QAction *showMainWindow = new QAction(tr("&Channel view"), this->windowsMenu);
+	showMainWindow->setShortcut(QKeySequence("Ctrl+0"));
+	showMainWindow->setCheckable(true);
+	showMainWindow->setChecked(true);
+	connect(showMainWindow, SIGNAL(triggered()), this, SLOT(toggleVisible()));
+	this->windowsMenu->addAction(showMainWindow);
+
+	QAction *showControlsWindow = new QAction(tr("Control window"), this->windowsMenu);
+	showControlsWindow->setShortcut(QKeySequence("Ctrl+1"));
+	showControlsWindow->setCheckable(true);
+	showControlsWindow->setChecked(true);
+	connect(showControlsWindow, SIGNAL(triggered()), this->ctrlWindow, SLOT(toggleVisible()));
+	this->windowsMenu->addAction(showControlsWindow);
+
+	/* eventually same for online analysis and channel inspector */
+
 	/* Add menus to bar and bar to MainWindow */
 	this->menubar->addMenu(this->fileMenu);
+	this->menubar->addMenu(this->windowsMenu);
 	this->setMenuBar(this->menubar);
 }
 
@@ -221,7 +240,8 @@ void MainWindow::initPlaybackRecording() {
 	connect(this->ctrlWindow->startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
 	this->playbackTimer = new QTimer();
 	this->playbackTimer->setInterval(this->settings.getRefreshInterval());
-	connect(this->playbackTimer, SIGNAL(timeout()), this, SLOT(plotNextDataBlock()));
+	//connect(this->playbackTimer, SIGNAL(timeout()), this, SLOT(plotNextDataBlock()));
+	connect(this->playbackTimer, SIGNAL(timeout()), this, SLOT(plot()));
 }
 
 void MainWindow::setScale(int s) {
@@ -240,6 +260,10 @@ void MainWindow::togglePlayback() {
 		this->ctrlWindow->startPauseButton->setStyleSheet("QPushButton {color : rgb(178, 51, 51)}");
 	}
 	this->isPlaying = !this->isPlaying;
+}
+
+void MainWindow::plot() {
+	QtConcurrent::run(this, &MainWindow::plotNextDataBlock);
 }
 
 void MainWindow::plotNextDataBlock() {
@@ -272,3 +296,6 @@ void MainWindow::setAutoscale(int state) {
 	this->settings.setAutoscale(set);
 }
 
+void MainWindow::toggleVisible() {
+	this->setVisible(!this->isVisible());
+}
