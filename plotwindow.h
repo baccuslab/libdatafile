@@ -10,18 +10,7 @@
 /* C++ includes */
 
 /* Qt includes */
-#include <QMainWindow>
-#include <QGridLayout>
-#include <QMenuBar>
-#include <QMenu>
-#include <QStatusBar>
-#include <QDialog>
-#include <QSettings>
-#include <QMenu>
-#include <QToolBar>
-#include <QAction>
-#include <QLabel>
-#include <QDebug>
+#include <QHBoxLayout>
 #include <QtConcurrent>
 
 /* meaview includes */
@@ -48,7 +37,7 @@ class PlotWindow : public QWidget {
 		ChannelPlot *channelPlot;
 		Settings settings;
 		PlaybackRecording *recording;
-		QGridLayout *layout;
+		QHBoxLayout *layout;
 };
 
 #endif

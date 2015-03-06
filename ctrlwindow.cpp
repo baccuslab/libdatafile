@@ -35,6 +35,7 @@ void CtrlWindow::initSettings() {
 			settings.getChannelViewString());
 	settings.setNumRows(plotSize.first);
 	settings.setNumCols(plotSize.second);
+	settings.setAutoMean(false);
 	playbackTimer = new QTimer();
 	playbackTimer->setInterval(settings.getRefreshInterval());
 }
@@ -116,12 +117,12 @@ void CtrlWindow::initCtrlWindowUI() {
 	timeLineValidator = new QIntValidator(0, MAX_EXPERIMENT_LENGTH);
 	timeLine->setValidator(timeLineValidator);
 	infoLayout->addWidget(savedirLabel, 0, 0);
-	infoLayout->addWidget(savedirLine, 0, 1);
+	infoLayout->addWidget(savedirLine, 0, 1, 1, 2);
 	infoLayout->addWidget(chooseSavedirButton, 0, 3);
 	infoLayout->addWidget(filenameLabel, 1, 0);
 	infoLayout->addWidget(filenameLine, 1, 1);
-	infoLayout->addWidget(timeLabel, 2, 0);
-	infoLayout->addWidget(timeLine, 2, 1);
+	infoLayout->addWidget(timeLabel, 1, 2);
+	infoLayout->addWidget(timeLine, 1, 3);
 	infoGroup->setLayout(infoLayout);
 
 	/* Playback group */
@@ -149,15 +150,24 @@ void CtrlWindow::initCtrlWindowUI() {
 	jumpSpinBox = new QSpinBox();
 	jumpSpinBox->setRange(JUMP_MIN, JUMP_MAX);
 	jumpSpinBox->setSingleStep(JUMP_STEP_SIZE);
+	jumpSpinBox->setReadOnly(true);
 	jumpSpinBox->setValue(AIB_BLOCK_SIZE);
-	playbackLayout->addWidget(restartButton, 0, 0);
-	playbackLayout->addWidget(rewindButton, 1, 0);
+	refreshLabel = new QLabel("Refresh (ms):");
+	refreshSpinBox = new QSpinBox();
+	refreshSpinBox->setRange(MIN_REFRESH_INTERVAL, MAX_REFRESH_INTERVAL);
+	refreshSpinBox->setValue(DISPLAY_REFRESH_INTERVAL);
+	refreshSpinBox->setSingleStep(MIN_REFRESH_INTERVAL);
+	refreshSpinBox->setReadOnly(true);
+	playbackLayout->addWidget(rewindButton, 0, 0);
 	playbackLayout->addWidget(startPauseButton, 0, 1);
+	playbackLayout->addWidget(forwardButton, 0, 2);
+	playbackLayout->addWidget(restartButton, 1, 0);
 	playbackLayout->addWidget(stopButton, 1, 1);
-	playbackLayout->addWidget(forwardButton, 2, 0);
-	playbackLayout->addWidget(endButton, 2, 1);
+	playbackLayout->addWidget(endButton, 1, 2);
 	playbackLayout->addWidget(jumpLabel, 3, 0);
 	playbackLayout->addWidget(jumpSpinBox, 3, 1);
+	playbackLayout->addWidget(refreshLabel, 4, 0);
+	playbackLayout->addWidget(refreshSpinBox, 4, 1);
 	playbackGroup->setLayout(playbackLayout);
 
 	/* Display parameters */
@@ -188,14 +198,22 @@ void CtrlWindow::initCtrlWindowUI() {
 	autoscaleBox->setToolTip("If checked, each subplot will scale to fit its data");
 	autoscaleBox->setTristate(false);
 	autoscaleBox->setChecked(false);
-	displayLayout->addWidget(viewLabel, 0, 0);
-	displayLayout->addWidget(viewBox, 0, 1);
-	displayLayout->addWidget(colorLabel, 1, 0);
-	displayLayout->addWidget(colorBox, 1, 1);
-	displayLayout->addWidget(scaleLabel, 2, 0);
-	displayLayout->addWidget(scaleBox, 2, 1);
+	autoMeanLabel = new QLabel("Automean:");
+	autoMeanBox = new QCheckBox();
+	autoMeanBox->setToolTip("If checked, mean-subtract each plot individually"\
+			"\nThis may be very inefficient");
+	autoMeanBox->setTristate(false);
+	autoMeanBox->setChecked(false);
+	displayLayout->addWidget(viewLabel, 0, 0, 1, 2);
+	displayLayout->addWidget(viewBox, 0, 2, 1, 2);
+	displayLayout->addWidget(colorLabel, 1, 0, 1, 2);
+	displayLayout->addWidget(colorBox, 1, 2, 1, 2);
+	displayLayout->addWidget(scaleLabel, 2, 0, 1, 2);
+	displayLayout->addWidget(scaleBox, 2, 2, 1, 2);
 	displayLayout->addWidget(autoscaleLabel, 3, 0);
 	displayLayout->addWidget(autoscaleBox, 3, 1);
+	displayLayout->addWidget(autoMeanLabel, 3, 2);
+	displayLayout->addWidget(autoMeanBox, 3, 3);
 	displayGroup->setLayout(displayLayout);
 
 	/* Online analysis */
@@ -291,8 +309,12 @@ void CtrlWindow::loadRecording() {
 
 void CtrlWindow::initPlaybackRecording() {
 	startPauseButton->setEnabled(true);
-	timeLine->setText("0");
-	timeLine->setReadOnly(false); // Until play back started
+	timeLine->setText(QString::number(
+				this->recording->getFile().getNumSamples() / SAMPLE_RATE));
+	timeLine->setReadOnly(true);
+	QFileInfo finfo(this->recording->getFile().getFilename());
+	savedirLine->setText(finfo.dir().absolutePath());
+	filenameLine->setText(finfo.baseName()); 
 	connect(startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
 	connect(playbackTimer, SIGNAL(timeout()), this->plotWindow, SLOT(plotNextDataBlock()));
 }
@@ -339,13 +361,26 @@ void CtrlWindow::initSignalsAndSlots() {
 			this, SLOT(updateScale(QString)));
 	connect(this->autoscaleBox, SIGNAL(stateChanged(int)), 
 			this, SLOT(updateAutoscale(int)));
-	//connect(this->chooseSavedirButton, SIGNAL(clicked()),
-			//this, SLOT(openNewRecordingWindow()));
+	connect(this->chooseSavedirButton, SIGNAL(clicked()),
+			this, SLOT(openNewRecordingWindow()));
 	connect(this->targetChannelLine, SIGNAL(editingFinished()),
 			this, SLOT(setOnlineAnalysisTargetChannel()));
+	connect(this->refreshSpinBox, SIGNAL(valueChanged(int)),
+			this, SLOT(updateRefreshInterval(int)));
+	connect(this->autoMeanBox, SIGNAL(stateChanged(int)),
+			this, SLOT(updateAutoMean(int)));
 }
 
-/* SIGNALS AND SLOT */
+/* SIGNALS AND SLOTS */
+
+void CtrlWindow::updateAutoMean(int checked) {
+	this->settings.setAutoMean(checked == Qt::Checked);
+}
+
+void CtrlWindow::updateRefreshInterval(int i) {
+	this->settings.setRefreshInterval(i);
+}
+
 void CtrlWindow::updateFilename() {
 	this->settings.setSaveFilename(this->filenameLine->text());
 }

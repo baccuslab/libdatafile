@@ -17,6 +17,7 @@
 #include <QString>
 #include <QColor>
 #include <QList>
+#include <QSet>
 #include <QStringList>
 #include <QPair>
 #include <QMap>
@@ -35,6 +36,12 @@ const int PHOTODIODE_CHANNEL = 0;
 const int INTRACELLULAR_CHANNEL_VOLTAGE = 1;
 const int INTRACELLULAR_CHANNEL_CURRENT = 2;
 const int EXTRA_INTRACELLULAR_CHANNEL = 3;
+const QSet<int> RESCALED_CHANNELS {
+		PHOTODIODE_CHANNEL,
+		INTRACELLULAR_CHANNEL_VOLTAGE,
+		INTRACELLULAR_CHANNEL_CURRENT,
+		EXTRA_INTRACELLULAR_CHANNEL
+};
 
 /* Default location to save new files */
 const QString DEFAULT_SAVE_FILENAME("default-data");
@@ -86,7 +93,7 @@ const unsigned int DEFAULT_ONLINE_ANALYSIS_LENGTH = 15;
 
 /* Plot colors */
 const QString DEFAULT_PLOT_COLOR("Black");
-const double PEN_SIZE = 0.5;
+const double PEN_SIZE = 1;
 const QMap<QString, QPair<QColor, QPen> > PLOT_COLOR_MAP {
 	{"Black", {QColor(Qt::black), QPen(QBrush(QColor(Qt::black)), PEN_SIZE)}},
 	{"Blue", {QColor(76, 114, 176), QPen(QBrush(QColor(76, 114, 176)), PEN_SIZE)}}, 
@@ -155,6 +162,7 @@ class Settings {
 		unsigned int getJump();
 		int getNumRows();
 		int getNumCols();
+		bool getAutoMean();
 
 		/* Setters */
 		void setDisplayScale(float);
@@ -169,7 +177,8 @@ class Settings {
 		void setJump(unsigned int);
 		void setNumRows(int);
 		void setNumCols(int);
-		
+		void setAutoMean(bool);
+
 	private:
 		QSettings settings;
 };

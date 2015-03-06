@@ -52,6 +52,10 @@ DataFile::~DataFile() {
 	this->close();
 }
 
+QString DataFile::getFilename() {
+	return this->filename;
+}
+
 QVector<int16_t> DataFile::getData(int block, int channel) {
 	if (!(this->seek(this->hdr->size + 
 			block * this->hdr->blockSize * this->hdr->numChannels * sizeof(int16_t) + 

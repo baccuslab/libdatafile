@@ -83,6 +83,7 @@ class DataFile : public QFile {
 		uint32_t getNumBlocks();
 		float getGain();
 		float getOffset();
+		QString getFilename();
 
 	private:
 		/* Methods */

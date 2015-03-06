@@ -18,7 +18,7 @@ PlotWindow::~PlotWindow() {
 void PlotWindow::initPlotGroup() {
 	channelPlot = new ChannelPlot(settings.getNumRows(),
 			settings.getNumCols(), this);
-	layout = new QGridLayout();
+	layout = new QHBoxLayout();
 	layout->addWidget(channelPlot);
 	this->setLayout(layout);
 }

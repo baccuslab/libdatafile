@@ -13,6 +13,8 @@ ChannelPlot::ChannelPlot(int numRows, int numCols, QWidget *parent)
 	/* Set up the subplots */
 	this->plotLayout()->removeAt(0);
 	this->plotLayout()->expandTo(numRows, numCols);
+	this->plotLayout()->setRowSpacing(-10);
+	this->plotLayout()->setColumnSpacing(-10);
 	for (int chan = 0; chan < NUM_CHANNELS; chan++) {
 
 		/* Create axes and graph for the subplot */
@@ -75,13 +77,22 @@ void ChannelPlot::plotData(QVector<QVector<int16_t> > data) {
 	QVector<double> plotData(data.at(0).size());
 
 	for (auto i = 0; i < data.size(); i++) {
-		for(auto j = 0; j < data.at(0).size(); j++)
-			plotData[j] = data.at(i).at(j);
+		if (settings.getAutoMean()) {
+			double mean = 0.0;
+			for (auto j = 0; j < data.at(0).size(); j++)
+				mean += data.at(i).at(j);
+			mean /= data.at(0).size();
+			for (auto j = 0; j < data.at(0).size(); j++)
+				plotData[j] = data.at(i).at(j) - mean;
+		} else {
+			for (auto j = 0; j < data.at(0).size(); j++)
+				plotData[j] = data.at(i).at(j);
+		}
 
 		QCPGraph *graph = getSubplot(i);
 		graph->setData(xData, plotData);
 
-		if (this->settings.getAutoscale())
+		if (this->settings.getAutoscale() || RESCALED_CHANNELS.contains(i))
 			graph->valueAxis()->rescale();
 		else
 			graph->valueAxis()->setRange(\
@@ -95,21 +106,4 @@ inline int ChannelPlot::posToIndex(int row, int col) {
 	QPair<int, int> tmp(row, col);
 	return this->settings.getChannelView().indexOf(tmp);
 }
-
-//void ChannelPlot::setTitle() {
-	//this->titleString = QString("%1%2").arg(
-			//this->position.first).arg(this->position.second);
-	//this->plotLayout()->insertRow(0);
-	//this->title = new QCPPlotTitle(this, this->titleString);
-	//this->title->setFont(QFont("Helvetica", -1, QFont::Light));
-	//this->plotLayout()->addElement(0, 0, this->title);
-//}
-
-//int ChannelPlot::getChannelIndex() {
-	//return this->channel;
-//}
-
-//QPair<int, int> &ChannelPlot::getPosition() {
-	//return this->position;
-//}
 

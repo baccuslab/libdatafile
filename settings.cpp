@@ -138,3 +138,11 @@ void Settings::setNumCols(int cols) {
 	this->settings.setValue("num-cols", QVariant(cols));
 }
 
+bool Settings::getAutoMean() {
+	return this->settings.value("automean").toBool();
+}
+
+void Settings::setAutoMean(bool b) {
+	this->settings.setValue("automean", QVariant(b));
+}
+

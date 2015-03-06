@@ -64,6 +64,8 @@ class CtrlWindow : public QMainWindow {
 		void setOnlineAnalysisTargetChannel();
 		void toggleVisible();
 		void togglePlayback();
+		void updateRefreshInterval(int);
+		void updateAutoMean(int);
 
 		void loadRecording();
 		void openNewRecording();
@@ -124,6 +126,8 @@ class CtrlWindow : public QMainWindow {
 		QPushButton *endButton;
 		QLabel *jumpLabel;
 		QSpinBox *jumpSpinBox;
+		QLabel *refreshLabel;
+		QSpinBox *refreshSpinBox;
 
 		/* Display control group */
 		QGroupBox *displayGroup;
@@ -136,6 +140,8 @@ class CtrlWindow : public QMainWindow {
 		QComboBox *scaleBox;
 		QLabel *autoscaleLabel;
 		QCheckBox *autoscaleBox;
+		QLabel *autoMeanLabel;
+		QCheckBox *autoMeanBox;
 
 		/* Online analysis controls group */
 		QGroupBox *onlineAnalysisGroup;

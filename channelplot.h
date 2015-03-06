@@ -30,8 +30,10 @@ class ChannelPlot : public QCustomPlot {
 		QCPGraph *getSubplot(int row, int col);
 		QCPAxisRect *getSubplotAxis(int index);
 		QCPAxisRect *getSubplotAxis(int row, int col);
-		void constructXData();
 		void plotData(QVector<QVector<int16_t> > data);
+
+	public slots:
+		void constructXData();
 
 	private:
 		/* Methods */
