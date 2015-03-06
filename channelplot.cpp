@@ -30,7 +30,8 @@ ChannelPlot::ChannelPlot(int numRows, int numCols, QWidget *parent)
 		graph->keyAxis()->setTicks(false);
 		graph->keyAxis()->setTickLabels(false);
 		graph->keyAxis()->grid()->setVisible(false);
-		graph->keyAxis()->setRange(0, 20000);
+		graph->keyAxis()->setRange(0, SAMPLE_RATE * 
+				this->settings.getRefreshInterval() / 1000);
 		graph->valueAxis()->setTicks(false);
 		graph->valueAxis()->setTickLabels(false);
 		graph->valueAxis()->grid()->setVisible(false);
@@ -105,5 +106,26 @@ void ChannelPlot::plotData(QVector<QVector<int16_t> > data) {
 inline int ChannelPlot::posToIndex(int row, int col) {
 	QPair<int, int> tmp(row, col);
 	return this->settings.getChannelView().indexOf(tmp);
+}
+
+int ChannelPlot::findRectIndex(QPoint p) {
+	QList<QCPAxisRect *> rects = this->axisRects();
+	for (auto i = 0; i < rects.size(); i++) {
+		if (rects.at(i)->rect().contains(p))
+			return i;
+	}
+	return -1;
+}
+
+void ChannelPlot::mouseDoubleClickEvent(QMouseEvent *event) {
+	qDebug() << "Position: " << event->globalPos();
+	int index = findRectIndex(event->globalPos());
+	if (index == -1)
+		return;
+	qDebug() << "Index: " << index;
+	//qDebug() << "Inner rect: " << this->axisRects().at(index)->rect();
+	//qDebug() << "Outer rect: " << this->axisRects().at(index)->outerRect();
+	qDebug() << "(x,y) = " << event->x() << event->y() << endl;
+	emit subplotDoubleClicked(index);
 }
 

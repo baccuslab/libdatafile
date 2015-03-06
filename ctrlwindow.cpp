@@ -223,12 +223,15 @@ void CtrlWindow::initCtrlWindowUI() {
 	noneAnalysisButton->setToolTip("Do not compute any online analysis");
 	noneAnalysisButton->setChecked(true);
 	temporalAnalysisButton = new QRadioButton("Temporal kernel");
+	temporalAnalysisButton->setEnabled(false);
 	temporalAnalysisButton->setToolTip(
 			"This computes a 1D kernel of a purely temporal stimulus");
 	linesAnalysisButton = new QRadioButton("Lines kernel");
+	linesAnalysisButton->setEnabled(false);
 	linesAnalysisButton->setToolTip("This computes a kernel with one temporal and" \
 			"\none spatial dimension, e.g., white noise lines");
 	spatiotemporalAnalysisButton = new QRadioButton("Spatiotemporal kernel");
+	spatiotemporalAnalysisButton->setEnabled(false); // until we load a stimulus 
 	spatiotemporalAnalysisButton->setToolTip(
 			"Compute a full 2D spatiotemporal kernel, e.g., from white noise checkers");
 	loadStimulusButton = new QPushButton("Load stimulus");
@@ -317,6 +320,8 @@ void CtrlWindow::initPlaybackRecording() {
 	filenameLine->setText(finfo.baseName()); 
 	connect(startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
 	connect(playbackTimer, SIGNAL(timeout()), this->plotWindow, SLOT(plotNextDataBlock()));
+	connect(this->plotWindow->getChannelPlot(), SIGNAL(afterReplot()), 
+			this, SLOT(updateTimeLine()));
 }
 
 void CtrlWindow::openNewRecording() {
@@ -340,7 +345,6 @@ void CtrlWindow::openNewRecording() {
 	/* Make a file */
 	//this->recording = new LiveRecording(filename, w.getTime());
 }
-
 
 void CtrlWindow::initSignalsAndSlots() {
 	connect(this->playbackTimer, SIGNAL(timeout()),
@@ -369,9 +373,21 @@ void CtrlWindow::initSignalsAndSlots() {
 			this, SLOT(updateRefreshInterval(int)));
 	connect(this->autoMeanBox, SIGNAL(stateChanged(int)),
 			this, SLOT(updateAutoMean(int)));
+	connect(this->plotWindow->getChannelPlot(), SIGNAL(subplotDoubleClicked(int)),
+			this, SLOT(openChannelInspectWindow(int)));
+	connect(this->recording, SIGNAL(endOfPlaybackFile()),
+			this->playbackTimer, SLOT(stop()));
 }
 
 /* SIGNALS AND SLOTS */
+
+void CtrlWindow::updateTimeLine() {
+	int block = this->recording->getBlock();
+	this->timeLine->setText(QString("%1 - %2 / %3").arg(
+				(block / (AIB_BLOCK_SIZE / SAMPLE_RATE)) - 1).arg(
+				block / (AIB_BLOCK_SIZE / SAMPLE_RATE)).arg(
+				this->recording->getRecordingLength()));
+}
 
 void CtrlWindow::updateAutoMean(int checked) {
 	this->settings.setAutoMean(checked == Qt::Checked);
@@ -428,5 +444,13 @@ void CtrlWindow::setOnlineAnalysisTargetChannel() {
 
 void CtrlWindow::toggleVisible() {
 	this->setVisible(!this->isVisible());
+}
+
+void CtrlWindow::openChannelInspectWindow(int index) {
+	ChannelInspectWindow *w = new ChannelInspectWindow(
+			this->plotWindow->getChannelPlot(), index, this);
+	connect(this->playbackTimer, SIGNAL(timeout()), 
+			w, SLOT(replot()));
+	w->show();
 }
 

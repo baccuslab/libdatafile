@@ -25,6 +25,7 @@ class PlotWindow : public QWidget {
 	public:
 		PlotWindow(QWidget *parent = 0);
 		~PlotWindow();
+		ChannelPlot *getChannelPlot();
 
 	public slots:
 		void plotNextDataBlock();

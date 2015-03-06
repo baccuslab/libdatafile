@@ -31,3 +31,7 @@ void PlotWindow::plotNextDataBlock() {
 void PlotWindow::toggleVisible() {
 	this->setVisible(!this->isVisible());
 }
+
+ChannelPlot *PlotWindow::getChannelPlot() {
+	return this->channelPlot;
+}

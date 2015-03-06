@@ -24,7 +24,9 @@
  * The `LiveRecording` and `PlaybackRecording` classes inherit from this,
  * and should be preferred.
  */
-class Recording {
+class Recording : public QObject {
+	//Q_OBJECT
+
 	public:
 		Recording(QString &filename, bool live, unsigned int time = 0);
 		~Recording();
@@ -34,7 +36,9 @@ class Recording {
 		QString &getFilename();
 		unsigned int getTime();
 		void setBlock(unsigned int);
-
+		unsigned int getBlock();
+		unsigned int getRecordingLength();
+	
 	protected:
 		/* Methods */
 		void setTime(unsigned int);
@@ -44,6 +48,9 @@ class Recording {
 		bool isLive;
 		DataFile *dataFile;
 		unsigned long currentBlock;
+
+	private:
+		unsigned int recordingLength;
 };
 
 /* class: LiveRecording
@@ -52,6 +59,8 @@ class Recording {
  * which streams data from the NI-DAQ ADC, and writes out to disk.
  */
 class LiveRecording : public Recording {
+	//Q_OBJECT
+
 	public:
 		LiveRecording(QString &filename, unsigned int time);
 		~LiveRecording();
@@ -67,12 +76,18 @@ class LiveRecording : public Recording {
  * to disk. Data is simply streamed from the given disk file.
  */
 class PlaybackRecording : public Recording {
+	//Q_OBJECT
+
 	public:
 		PlaybackRecording(QString &filename);
 		~PlaybackRecording();
 		QVector<int16_t> getData(int block, int channel);
 		QVector<QVector<int16_t> > getDataBlock(int block);
 		QVector<QVector<int16_t> > getNextDataBlock();
+
+	signals:
+		void endOfPlaybackFile();
+
 };
 
 

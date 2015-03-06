@@ -12,6 +12,9 @@
 #include "files.h"
 #include "recording.h"
 
+/* Forward declarations */
+class CtrlWindow;
+
 /* class: NewRecordingWindow
  * -------------------------
  * A subclass of QDialog that allows the user to create
@@ -64,61 +67,28 @@ class NewRecordingWindow : public QDialog {
 		QFile *file;
 };
 
-/* class: SettingsWindow
- * ---------------------
- * The SettingsWindow class provides a graphical interface for controlling
- * the various settings for the meaview application. These default values 
- * for these settings are contained in the header file `config.h`, and stored
- * in the running application as a QSettings object.
+/* class: ChanneInspectWindow 
+ * --------------------------
+ * Window for zooming in on a single channel.
  */
-class SettingsWindow : public QDialog {
+class ChannelInspectWindow : public QWidget{
 	Q_OBJECT
-
-	friend class MainWindow;
-
 	public:
-		SettingsWindow(QWidget *parent = 0);
-		~SettingsWindow();
-
+		ChannelInspectWindow(ChannelPlot *p, int channel,
+				QWidget *parent = 0);
+		~ChannelInspectWindow();
 	public slots:
-		void applySettings();
+		void replot();
 
 	private:
-		/* The settings object */
 		Settings settings;
-
-		/* GUI components */
-		QGridLayout *mainLayout;
-		QGroupBox *displayGroup; // arrangement, scale, pens
-		QGridLayout *displayLayout;
-		QLabel *viewLabel;
-		QComboBox *viewBox;
-		QLabel *scaleLabel;
-		QComboBox *scaleBox;
-		QCheckBox *autoscaleBox;
-		QLabel *penColorLabel;
-		QComboBox *penColorBox;
-
-		QGroupBox *playbackGroup; // speed of playback, maybe point to new file?
-		QGridLayout *playbackLayout;
-		QLabel *refreshLabel;
-		QLineEdit *refreshLine;
-		QIntValidator *refreshValidator;
-
-		QGroupBox *nidaqGroup; 	// settings related to NI-DAQ interface
-
-		QGroupBox *saveGroup;	// format/location for data to be saved
-		QLabel *savedirLabel;
-		QLineEdit *savedirLine;
-		QPushButton *savedirBrowseButton;
-		QLabel *savefileLabel;
-		QLineEdit *savefileLine;
-
-		QGroupBox *okGroup;
-		QHBoxLayout *okLayout;
-		QPushButton *okButton;
-		QPushButton *applyButton;
-		QPushButton *cancelButton;
+		ChannelPlot *channelPlot;
+		QCustomPlot *plot;
+		QCPAxisRect *rect;
+		QCPGraph *graph;
+		QGridLayout *layout;
+		int index;
+		QVector<double> yData;
 };
 
 /* class: OnlineAnalysisWindow

@@ -23,91 +23,62 @@
 /* meaview includes */
 #include "windows.h"
 
-/***************************************************
- **************** SettingsWindow *******************
- ***************************************************/
-SettingsWindow::SettingsWindow(QWidget *parent) : QDialog(parent) {
-	//settings = Settings();
-	
-	displayGroup = new QGroupBox("Display");
-	displayLayout = new QGridLayout();
-	viewLabel = new QLabel("Channel view:");
-	viewBox = new QComboBox();
-	for (auto &view : CHANNEL_VIEW_STRINGS)
-		viewBox->addItem(view);
-	viewBox->setCurrentIndex(
-			CHANNEL_VIEW_STRINGS.indexOf(settings.getChannelViewString()));
-	scaleLabel = new QLabel("Display scale:");
-	scaleBox = new QComboBox();
-	for (auto &scale : DISPLAY_SCALES)
-		scaleBox->addItem(QString::number(scale));
-	scaleBox->setCurrentIndex(
-			DISPLAY_SCALES.indexOf(settings.getDisplayScale()));
-	connect(scaleBox, SIGNAL(currentIndexChanged(int)), this->parent(), SLOT(setScale(int)));
-	autoscaleBox = new QCheckBox("Autoscale");
-	autoscaleBox->setTristate(false);
-	autoscaleBox->setChecked(this->settings.getAutoscale());
-	connect(autoscaleBox, SIGNAL(stateChanged(int)), this->parent(), SLOT(setAutoscale(int)));
-	penColorLabel = new QLabel("Plot color:");
-	penColorBox = new QComboBox();
-	for (auto &color : PLOT_COLOR_STRINGS)
-		penColorBox->addItem(color);
-	penColorBox->setCurrentIndex(
-			PLOT_COLOR_STRINGS.indexOf(settings.getPlotColorString()));
-	displayLayout->addWidget(viewLabel, 0, 0);
-	displayLayout->addWidget(viewBox, 0, 1);
-	displayLayout->addWidget(scaleLabel, 1, 0);
-	displayLayout->addWidget(scaleBox, 1, 1);
-	displayLayout->addWidget(autoscaleBox, 1, 2);
-	displayLayout->addWidget(penColorLabel, 2, 0);
-	displayLayout->addWidget(penColorBox, 2, 1);
-	displayGroup->setLayout(displayLayout);
+ChannelInspectWindow::ChannelInspectWindow(
+		ChannelPlot *p, int index, QWidget *parent) : QWidget(parent, Qt::Window) {
+	/* Save parent data */
+	channelPlot = p;
+	this->index = index;
 
-	playbackGroup = new QGroupBox("Playback");
-	playbackLayout = new QGridLayout();
-	refreshLabel = new QLabel("Refresh:");
-	refreshLine = new QLineEdit(QString::number(settings.getRefreshInterval()));
-	refreshValidator = new QIntValidator(
-			MIN_REFRESH_INTERVAL, MAX_REFRESH_INTERVAL);
-	refreshLine->setValidator(refreshValidator);
-	playbackLayout->addWidget(refreshLabel, 0, 0);
-	playbackLayout->addWidget(refreshLine, 0, 1);
-	playbackGroup->setLayout(playbackLayout);
+	/* Create a plot, axis, and graph */
+	plot = new QCustomPlot(this);
+	rect = new QCPAxisRect(plot);
+	plot->plotLayout()->removeAt(0);
+	plot->plotLayout()->addElement(0, 0, rect);
+	graph = new QCPGraph(rect->axis(QCPAxis::atBottom),
+			rect->axis(QCPAxis::atLeft));
+	plot->addPlottable(graph);
 
-	okGroup = new QGroupBox();
-	okGroup->setFlat(true);
-	okButton = new QPushButton("OK");
-	connect(okButton, SIGNAL(clicked()), this, SLOT(applySettings()));
-	connect(okButton, SIGNAL(clicked()), this, SLOT(accept()));
-	applyButton = new QPushButton("Apply");
-	connect(applyButton, SIGNAL(clicked()), this, SLOT(applySettings()));
-	cancelButton = new QPushButton("Cancel");
-	connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
-	okLayout = new QHBoxLayout();
-	okLayout->addWidget(okButton);
-	okLayout->addWidget(applyButton);
-	okLayout->addWidget(cancelButton);
-	okGroup->setLayout(okLayout);
+	/* Style graph */
+	graph->keyAxis()->setTicks(false);
+	graph->keyAxis()->setTicks(false);
+	graph->keyAxis()->setTickLabels(false);
+	graph->keyAxis()->grid()->setVisible(false);
+	graph->keyAxis()->setRange(0, SAMPLE_RATE * 
+			this->settings.getRefreshInterval() / 1000);
+	graph->valueAxis()->setTicks(false);
+	graph->valueAxis()->setTickLabels(false);
+	graph->valueAxis()->grid()->setVisible(false);
+	graph->setPen(settings.getPlotPen());
 
-	mainLayout = new QGridLayout();
-	mainLayout->addWidget(displayGroup, 0, 0);
-	mainLayout->addWidget(playbackGroup, 0, 1);
-	mainLayout->addWidget(okGroup, 1, 0);
-	this->setLayout(mainLayout);
+	/* Assign the data from the requested subplot. Would like to avoid
+	 * copying here, but not sure how to share data across plots (and threads)
+	 * without segfault. Doesn't seem to hinder performance.
+	 */
+	QCPDataMap *dataMap = channelPlot->getSubplot(index)->data();
+	graph->setData(dataMap, true);
+	graph->rescaleValueAxis();
+	plot->replot();
+
+	/* Put plot in window and arrange window */
+	layout = new QGridLayout();
+	layout->addWidget(plot);
+	this->setLayout(layout);
+	this->setGeometry(PLOT_WINDOW_WIDTH + 10, CTRL_WINDOW_HEIGHT + 70, 
+			INSPECTOR_WINDOW_WIDTH, INSPECTOR_WINDOW_HEIGHT);
+	this->setWindowTitle(QString("Meaview: Channel %1").arg(index));
+	this->setAttribute(Qt::WA_DeleteOnClose);
 }
 
-SettingsWindow::~SettingsWindow() {
+ChannelInspectWindow::~ChannelInspectWindow() {
 }
 
-void SettingsWindow::applySettings() {
-	//qDebug() << this->objectName();
-	this->settings.setChannelView(this->viewBox->currentText());
-	this->settings.setRefreshInterval(this->refreshLine->text().toUInt());
-	this->settings.setDisplayScale(this->scaleBox->currentText().toDouble());
-	this->settings.setPlotColor(this->penColorBox->currentText());
-	this->settings.setAutoscale(this->autoscaleBox->checkState() == Qt::Checked);
+void ChannelInspectWindow::replot() {
+	qDebug() << "signaled subplot " << this->index;
+	graph->setData(this->channelPlot->getSubplot(this->index)->data(), true);
+	graph->setPen(settings.getPlotPen());
+	graph->rescaleValueAxis();
+	this->plot->replot();
 }
-
 
 /***************************************************
  ************** NewRecordingWindow *****************

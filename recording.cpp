@@ -6,7 +6,7 @@
 
 #include "recording.h"
 
-Recording::Recording(QString &filename, bool live, unsigned int time) {
+Recording::Recording(QString &filename, bool live, unsigned int time) : QObject() {
 	isLive = live;
 	if (live)
 		dataFile = new DataFile(filename, time);
@@ -15,6 +15,7 @@ Recording::Recording(QString &filename, bool live, unsigned int time) {
 	//qDebug() << "File: " << filename;
 	//qDebug() << dataFile->getNumChannels() << endl;
 	currentBlock = 0;
+	recordingLength = dataFile->getNumSamples() / SAMPLE_RATE;
 }
 
 Recording::~Recording() {
@@ -22,6 +23,14 @@ Recording::~Recording() {
 
 DataFile &Recording::getFile() {
 	return *(this->dataFile);
+}
+
+unsigned int Recording::getBlock() {
+	return this->currentBlock;
+}
+
+unsigned int Recording::getRecordingLength() {
+	return this->recordingLength;
 }
 
 void Recording::setBlock(unsigned int block) {
@@ -51,10 +60,17 @@ QVector<QVector<int16_t> > PlaybackRecording::getDataBlock(int block) {
 	QVector<QVector<int16_t> > data(this->getFile().getNumChannels());
 	for (auto chan = 0; chan < this->getFile().getNumChannels(); chan++)
 		data[chan] = this->getData(block, chan);
-	this->currentBlock += 1;
 	return data;
 }
 
 QVector<QVector<int16_t> > PlaybackRecording::getNextDataBlock() {
-	return this->getDataBlock(this->currentBlock);
+	QVector<QVector<int16_t> > data = this->getDataBlock(this->currentBlock);
+	this->currentBlock += 1;
+	if (this->currentBlock == this->getFile().getNumBlocks())
+		emit endOfPlaybackFile();
+	return data;
 }
+
+void PlaybackRecording::endOfPlaybackFile() {
+}
+

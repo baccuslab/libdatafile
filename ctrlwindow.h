@@ -66,6 +66,8 @@ class CtrlWindow : public QMainWindow {
 		void togglePlayback();
 		void updateRefreshInterval(int);
 		void updateAutoMean(int);
+		void openChannelInspectWindow(int);
+		void updateTimeLine();
 
 		void loadRecording();
 		void openNewRecording();

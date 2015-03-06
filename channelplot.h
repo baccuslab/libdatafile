@@ -32,16 +32,22 @@ class ChannelPlot : public QCustomPlot {
 		QCPAxisRect *getSubplotAxis(int row, int col);
 		void plotData(QVector<QVector<int16_t> > data);
 
+		QVector<double> xData;
+
+	signals:
+		void subplotDoubleClicked(int);
+
 	public slots:
 		void constructXData();
 
 	private:
 		/* Methods */
 		int posToIndex(int row, int col);
+		void mouseDoubleClickEvent(QMouseEvent *);
+		int findRectIndex(QPoint);
 
 		/* Attributes */
 		Settings settings;
-		QVector<double> xData;
 
 };
 
