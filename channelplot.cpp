@@ -72,12 +72,53 @@ QCPAxisRect *ChannelPlot::getSubplotAxis(int row, int col) {
 	return this->axisRect(posToIndex(row, col));
 }
 
-void ChannelPlot::plotData(QVector<QVector<int16_t> > data) {
+void ChannelPlot::distributedPlotData(QVector<QVector<double> > &data) {
+
+	for (auto i = 0; i < 8; i++)
+		QtConcurrent::run(this, &ChannelPlot::plotDataSubBlock, data, i);
+}
+
+void ChannelPlot::plotDataSubBlock(QVector<QVector<double> > &data, int block) {
+	qDebug() << "Plotting sub-block " << block << "in thread" << QThread::currentThread();
 	QPen pen = this->settings.getPlotPen();
+	bool automean = this->settings.getAutoMean();
+	bool autoscale = this->settings.getAutoscale();
 	double scale = this->settings.getDisplayScale();
 	QVector<double> plotData(data.at(0).size());
+	for (auto j = 8 * block ; j < 8 * (block + 1); j++) {
+		QCPGraph *graph = getSubplot(j);
+		if (automean) {
+			double mean = 0.0;
+			for (auto k = 0; k < plotData.size(); k++)
+				mean += data.at(j).at(k);
+			mean /= data.at(0).size();
+			for (auto k = 0; k < plotData.size(); k++) 
+				plotData[k] = data.at(j).at(k) - mean;
+			graph->setData(xData, plotData);
+		} else {
+			graph->setData(xData, data.at(j));
+		}
+		graph->setPen(pen);
 
+		if ((autoscale) || RESCALED_CHANNELS.contains(j))
+			graph->valueAxis()->rescale();
+		else
+			graph->valueAxis()->setRange(-scale * NEG_DISPLAY_RANGE,
+					scale * POS_DISPLAY_RANGE);
+	}
+	this->replot();
+}
+
+//void ChannelPlot::plotData(QVector<QVector<int16_t> > data) {
+void ChannelPlot::plotData(QVector<QVector<double> > &data) {
+	QPen pen = this->settings.getPlotPen();
+	double scale = this->settings.getDisplayScale();
+
+	//qDebug() << "Starting data transfer at:" << QTime::currentTime();
+	QVector<double> plotData(data.at(0).size());
 	for (auto i = 0; i < data.size(); i++) {
+		QCPGraph *graph = getSubplot(i);
+		qDebug() << "Channel" << i << "transfer start: " << QTime::currentTime();
 		if (settings.getAutoMean()) {
 			double mean = 0.0;
 			for (auto j = 0; j < data.at(0).size(); j++)
@@ -85,13 +126,33 @@ void ChannelPlot::plotData(QVector<QVector<int16_t> > data) {
 			mean /= data.at(0).size();
 			for (auto j = 0; j < data.at(0).size(); j++)
 				plotData[j] = data.at(i).at(j) - mean;
+
+
+
+
 		} else {
-			for (auto j = 0; j < data.at(0).size(); j++)
-				plotData[j] = data.at(i).at(j);
+			//for (auto j = 0; j < data.at(0).size(); j++)
+				//plotData[j] = data.at(i).at(j);
+			
+			/* XXX: If not auto-meaning, no need to copy data to new
+			 * array plotData, just use array already in `data`. 
+			 */
+			graph->setData(xData, data.at(i));
 		}
 
-		QCPGraph *graph = getSubplot(i);
-		graph->setData(xData, plotData);
+
+		// Implementation 1
+		//graph->setData(xData, plotData);
+		//
+
+		// Implementation 2
+		//QCPDataMap *newMap = new QCPDataMap();
+		//for (auto j = 0; j < data.at(i).size(); j++)
+			//newMap->insert(j, QCPData(j, plotData.at(j)));
+		//graph->setData(newMap);
+		//
+		
+		qDebug() << "Channel" << i << "transfer end: " << QTime::currentTime();
 
 		if (this->settings.getAutoscale() || RESCALED_CHANNELS.contains(i))
 			graph->valueAxis()->rescale();
@@ -100,7 +161,9 @@ void ChannelPlot::plotData(QVector<QVector<int16_t> > data) {
 					-scale * NEG_DISPLAY_RANGE, scale * POS_DISPLAY_RANGE);
 		graph->setPen(pen);
 	}
+	//qDebug() << "Switch transfer to render:" << QTime::currentTime();
 	this->replot();
+	//qDebug() << "Done rendering: " << QTime::currentTime();
 }
 
 inline int ChannelPlot::posToIndex(int row, int col) {

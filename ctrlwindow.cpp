@@ -319,7 +319,7 @@ void CtrlWindow::initPlaybackRecording() {
 	savedirLine->setText(finfo.dir().absolutePath());
 	filenameLine->setText(finfo.baseName()); 
 	connect(startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
-	connect(playbackTimer, SIGNAL(timeout()), this->plotWindow, SLOT(plotNextDataBlock()));
+	//connect(playbackTimer, SIGNAL(timeout()), this->plotWindow, SLOT(plotNextDataBlock()));
 	connect(this->plotWindow->getChannelPlot(), SIGNAL(afterReplot()), 
 			this, SLOT(updateTimeLine()));
 }

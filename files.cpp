@@ -56,19 +56,34 @@ QString DataFile::getFilename() {
 	return this->filename;
 }
 
-QVector<int16_t> DataFile::getData(int block, int channel) {
+//QVector<int16_t> DataFile::getData(int block, int channel) {
+	//if (!(this->seek(this->hdr->size + 
+			//block * this->hdr->blockSize * this->hdr->numChannels * sizeof(int16_t) + 
+			//channel * this->hdr->blockSize * sizeof(int16_t))))
+		//throw;
+	////qDebug() << "Read start pos: " << this->pos();
+	//QVector<int16_t> data(this->hdr->blockSize);
+	//for (auto i = 0; i < this->hdr->blockSize; i++)
+		//*(this->dataStream) >> data[i];
+	////qDebug() << "Read end pos: " << this->pos();
+	//return data;
+//}
+
+QVector<double> DataFile::getData(int block, int channel) {
 	if (!(this->seek(this->hdr->size + 
 			block * this->hdr->blockSize * this->hdr->numChannels * sizeof(int16_t) + 
 			channel * this->hdr->blockSize * sizeof(int16_t))))
 		throw;
 	//qDebug() << "Read start pos: " << this->pos();
-	QVector<int16_t> data(this->hdr->blockSize);
-	for (auto i = 0; i < this->hdr->blockSize; i++)
-		*(this->dataStream) >> data[i];
+	QVector<double> data(this->hdr->blockSize);
+	int16_t tmp;
+	for (auto i = 0; i < this->hdr->blockSize; i++) {
+		*(this->dataStream) >> tmp;
+		data[i] = tmp;
+	}
 	//qDebug() << "Read end pos: " << this->pos();
 	return data;
 }
-
 void DataFile::computeNumBlocks() {
 	this->numBlocks = this->getNumSamples() / this->getBlockSize();
 }

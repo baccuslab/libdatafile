@@ -74,7 +74,8 @@ class DataFile : public QFile {
 		DataFile(QString &filename, QObject *parent = 0);
 		DataFile(QString &filename, unsigned int length, QObject *parent = 0);
 		~DataFile();
-		QVector<int16_t> getData(int block, int channel);
+		//QVector<int16_t> getData(int block, int channel);
+		QVector<double> getData(int block, int channel);
 
 		uint32_t getHeaderSize();
 		uint32_t getNumSamples();

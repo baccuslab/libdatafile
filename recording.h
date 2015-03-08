@@ -81,10 +81,13 @@ class PlaybackRecording : public Recording {
 	public:
 		PlaybackRecording(QString &filename);
 		~PlaybackRecording();
-		QVector<int16_t> getData(int block, int channel);
-		QVector<QVector<int16_t> > getDataBlock(int block);
-		QVector<QVector<int16_t> > getNextDataBlock();
+		//QVector<int16_t> getData(int block, int channel);
+		//QVector<QVector<int16_t> > getDataBlock(int block);
+		//QVector<QVector<int16_t> > getNextDataBlock();
 
+		QVector<double> getData(int block, int channel);
+		QVector<QVector<double> > getDataBlock(int block);
+		QVector<QVector<double> > getNextDataBlock();
 	signals:
 		void endOfPlaybackFile();
 

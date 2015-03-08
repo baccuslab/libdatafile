@@ -73,8 +73,9 @@ ChannelInspectWindow::~ChannelInspectWindow() {
 }
 
 void ChannelInspectWindow::replot() {
-	qDebug() << "signaled subplot " << this->index;
+	qDebug() << "Data transfer start: " << QTime::currentTime();
 	graph->setData(this->channelPlot->getSubplot(this->index)->data(), true);
+	qDebug() << "Data transfer end: " << QTime::currentTime();
 	graph->setPen(settings.getPlotPen());
 	graph->rescaleValueAxis();
 	this->plot->replot();

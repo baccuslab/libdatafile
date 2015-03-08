@@ -12,6 +12,7 @@
 /* Qt includes */
 #include <QString>
 #include <QFont>
+#include <QtConcurrent>
 
 /* Other third-party includes */
 #include "qcustomplot.h"
@@ -30,9 +31,13 @@ class ChannelPlot : public QCustomPlot {
 		QCPGraph *getSubplot(int row, int col);
 		QCPAxisRect *getSubplotAxis(int index);
 		QCPAxisRect *getSubplotAxis(int row, int col);
-		void plotData(QVector<QVector<int16_t> > data);
+		//void plotData(QVector<QVector<int16_t> > data);
+		void plotData(QVector<QVector<double> > &data);
 
 		QVector<double> xData;
+
+		void distributedPlotData(QVector<QVector<double> > &data);
+		void plotDataSubBlock(QVector<QVector<double> > &data, int i);
 
 	signals:
 		void subplotDoubleClicked(int);
