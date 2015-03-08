@@ -67,6 +67,9 @@ ChannelInspectWindow::ChannelInspectWindow(
 			INSPECTOR_WINDOW_WIDTH, INSPECTOR_WINDOW_HEIGHT);
 	this->setWindowTitle(QString("Meaview: Channel %1").arg(index));
 	this->setAttribute(Qt::WA_DeleteOnClose);
+
+	connect(channelPlot, SIGNAL(afterReplot()),
+			this, SLOT(replot()));
 }
 
 ChannelInspectWindow::~ChannelInspectWindow() {

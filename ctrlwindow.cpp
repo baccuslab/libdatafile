@@ -30,7 +30,7 @@ void CtrlWindow::initSettings() {
 	settings.setPlotColor(DEFAULT_PLOT_COLOR);
 	settings.setAutoscale(false);
 	settings.setOnlineAnalysisLength(DEFAULT_ONLINE_ANALYSIS_LENGTH);
-	settings.setJump(AIB_BLOCK_SIZE);
+	settings.setJump(DISPLAY_REFRESH_INTERVAL);
 	QPair<int, int> plotSize = CHANNEL_COL_ROW_MAP.value(
 			settings.getChannelViewString());
 	settings.setNumRows(plotSize.first);
@@ -449,8 +449,8 @@ void CtrlWindow::toggleVisible() {
 void CtrlWindow::openChannelInspectWindow(int index) {
 	ChannelInspectWindow *w = new ChannelInspectWindow(
 			this->plotWindow->getChannelPlot(), index, this);
-	connect(this->playbackTimer, SIGNAL(timeout()), 
-			w, SLOT(replot()));
+	//connect(this->playbackTimer, SIGNAL(timeout()), 
+			//w, SLOT(replot()));
 	w->show();
 }
 
