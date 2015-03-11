@@ -159,7 +159,7 @@ QDataStream &operator>>(QDataStream &s, BinHeader &hdr) {
 	s >> hdr.timeSize;
 	if ((hdr.timeStr = (char *) calloc(1, hdr.timeSize + 1)) == nullptr)
 		throw;
-	s.readRawData(hdr.dateStr, hdr.dateSize); 
+	s.readRawData(hdr.timeStr, hdr.timeSize); 
 	s >> hdr.roomSize;
 	if ((hdr.roomStr = (char *) calloc(1, hdr.roomSize + 1)) == nullptr)
 		throw;
