@@ -16,6 +16,7 @@
 /* meaview includes */
 #include "channelplot.h"
 #include "recording.h"
+#include "playback.h"
 #include "settings.h"
 
 class PlotWindow : public QWidget {
@@ -37,7 +38,8 @@ class PlotWindow : public QWidget {
 		void initPlotGroup();
 		ChannelPlot *channelPlot;
 		Settings settings;
-		PlaybackRecording *recording;
+		Playback *playback = nullptr;
+		Recording *recording = nullptr;
 		QHBoxLayout *layout;
 };
 

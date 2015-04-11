@@ -17,7 +17,8 @@ HEADERS += 	channelplot.h \
 			plotwindow.h \
 			files.h \
 			recording.h \
-			ctrlwindow.h
+			ctrlwindow.h \
+			playback.h
 SOURCES += 	channelplot.cpp \
 			settings.cpp \
 			main.cpp \
@@ -26,4 +27,5 @@ SOURCES += 	channelplot.cpp \
 			plotwindow.cpp \
 			files.cpp \
 			recording.cpp \
-			ctrlwindow.cpp
+			ctrlwindow.cpp \
+			playback.cpp

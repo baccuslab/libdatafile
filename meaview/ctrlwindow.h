@@ -36,6 +36,7 @@
 #include "windows.h"
 #include "files.h"
 #include "recording.h"
+#include "playback.h"
 
 /* class: CtrlWindow
  * -----------------
@@ -81,7 +82,7 @@ class CtrlWindow : public QMainWindow {
 		void initMenuBar();
 		void initPlotWindow();
 		void initStatusBar();
-		void initPlaybackRecording();
+		void initPlayback();
 		void initLiveRecording();
 		void initSignalsAndSlots();
 
@@ -93,7 +94,7 @@ class CtrlWindow : public QMainWindow {
 		bool isPlaying = false;
 
 		/* Data interface attributes */
-		PlaybackRecording *recording;
+		Playback *playback;
 
 		/* Main window GUI attributes */
 		PlotWindow *plotWindow;

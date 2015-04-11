@@ -46,7 +46,7 @@ void CtrlWindow::initPlotWindow() {
 }
 
 void CtrlWindow::initMenuBar() {
-	this->menubar = new QMenuBar(0);
+	this->menubar = new QMenuBar(this);
 
 	/* File menu */
 	this->fileMenu = new QMenu(tr("&File"));
@@ -304,18 +304,18 @@ void CtrlWindow::loadRecording() {
 		return;
 	
 	/* Open the recording */
-	recording = new PlaybackRecording(filename);
-	this->plotWindow->recording = recording;
-	initPlaybackRecording();
+	playback = new Playback(filename);
+	this->plotWindow->playback = playback;
+	initPlayback();
 	statusLabel->setText("Ready");
 }
 
-void CtrlWindow::initPlaybackRecording() {
+void CtrlWindow::initPlayback() {
 	startPauseButton->setEnabled(true);
 	timeLine->setText(QString::number(
-				this->recording->getFile().getNumSamples() / SAMPLE_RATE));
+				this->playback->getFile().getNumSamples() / SAMPLE_RATE));
 	timeLine->setReadOnly(true);
-	QFileInfo finfo(this->recording->getFile().getFilename());
+	QFileInfo finfo(this->playback->getFile().getFilename());
 	savedirLine->setText(finfo.dir().absolutePath());
 	filenameLine->setText(finfo.baseName()); 
 	connect(startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
@@ -375,18 +375,18 @@ void CtrlWindow::initSignalsAndSlots() {
 			this, SLOT(updateAutoMean(int)));
 	connect(this->plotWindow->getChannelPlot(), SIGNAL(subplotDoubleClicked(int)),
 			this, SLOT(openChannelInspectWindow(int)));
-	connect(this->recording, SIGNAL(endOfPlaybackFile()),
+	connect(this->playback, SIGNAL(endOfPlaybackFile()),
 			this->playbackTimer, SLOT(stop()));
 }
 
 /* SIGNALS AND SLOTS */
 
 void CtrlWindow::updateTimeLine() {
-	int block = this->recording->getBlock();
+	int block = this->playback->getBlock();
 	this->timeLine->setText(QString("%1 - %2 / %3").arg(
 				(block / (AIB_BLOCK_SIZE / SAMPLE_RATE)) - 1).arg(
 				block / (AIB_BLOCK_SIZE / SAMPLE_RATE)).arg(
-				this->recording->getRecordingLength()));
+				this->playback->getRecordingLength()));
 }
 
 void CtrlWindow::updateAutoMean(int checked) {

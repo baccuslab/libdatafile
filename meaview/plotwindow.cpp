@@ -24,9 +24,16 @@ void PlotWindow::initPlotGroup() {
 }
 
 void PlotWindow::plotNextDataBlock() {
-	//QVector<QVector<int16_t> > data = this->recording->getNextDataBlock();
+	//QVector<QVector<int16_t> > data = this->playback->getNextDataBlock();
 	//qDebug() << "Data read start: " << QTime::currentTime();
-	QVector<QVector<double> > data = this->recording->getNextDataBlock();
+	
+
+	//if (this->playback != nullptr) 
+	QVector<QVector<double> > data = this->playback->getNextDataBlock();
+	//else
+		//QVector<QVector<double> > data = this->recording->getNextDataBlock();
+
+
 	//qDebug() << "Data read end: " << QTime::currentTime();
 	//QtConcurrent::run(this->channelPlot, &ChannelPlot::plotData, data);
 	this->channelPlot->distributedPlotData(data);

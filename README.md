@@ -1,10 +1,14 @@
-meaview
-Application for recording data using the Baccus lab MCS array system.
-(C) 2015 Benjamin Naecker bnaecker@stanford.edu
+mearec
+======
 
-Overview
-========
+The `mearec` library is a set of applications and tools for recording data from
+the Multichannel Systems arrays using the National Instruments USB-6225 in the
+Baccus Lab.
 
-I'm annoyed with the Igor recording software breaking all the time, so I'm 
-writing a custom application to do the job.
+Components
+==========
 
+- `meaview` - Play data recordings, either live or pre-recorded
+- `mealog` - Create and save experiments, logging the data in HDF5 files
+- `daq-client` - A client interface to the `daqsrv` remote NI-DAQ server
+- `tools` - Miscellaneous tools
