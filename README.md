@@ -12,3 +12,9 @@ Components
 - `mealog` - Create and save experiments, logging the data in HDF5 files
 - `daq-client` - A client interface to the `daqsrv` remote NI-DAQ server
 - `tools` - Miscellaneous tools
+
+Dependencies
+============
+
+- Qt5
+- HDF5

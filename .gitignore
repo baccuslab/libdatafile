@@ -1,7 +1,7 @@
 *.swp
 *.app
 *.stash
-Makefile
+./meaview/Makefile
 *.bin
 *.o
 moc_*
