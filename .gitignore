@@ -5,3 +5,8 @@ Makefile
 *.bin
 *.o
 moc_*
+*.h5
+*.so
+*.dylib
+hdf2bin
+bin2hdf
