@@ -304,7 +304,7 @@ int write_recording_attrs(hid_t file_id, bin_hdr_t *hdr) {
 	 * as they are being written.
 	 */
 	uint64_t idx = hdr->nsamples;
-	attr_id = H5Acreate(file_id, "latest-idx",
+	attr_id = H5Acreate(file_id, "last-valid-sample",
 			H5T_STD_U64LE, space_id, H5P_DEFAULT, H5P_DEFAULT);
 	H5Awrite(attr_id, H5T_STD_U64LE, &idx);
 	status = H5Aclose(attr_id);
