@@ -20,52 +20,52 @@ class CtrlWindow;
  * A subclass of QDialog that allows the user to create
  * a new recording, choosing a few basic parameters of the recording.
  */
-class NewRecordingWindow : public QDialog {
-	Q_OBJECT
-	public:
-		NewRecordingWindow(QWidget *parent = 0);
-		~NewRecordingWindow();
+//class NewRecordingWindow : public QDialog {
+	//Q_OBJECT
+	//public:
+		//NewRecordingWindow(QWidget *parent = 0);
+		//~NewRecordingWindow();
 
-		QString getFullFilename();
-		uint getTime();
-		void openBinFile(QString &filename);
-		int validateChoices();
+		//QString getFullFilename();
+		//uint getTime();
+		//void openBinFile(QString &filename);
+		//int validateChoices();
 
-	private slots:
-		void setView();
-		void chooseDirectory();
+	//private slots:
+		//void setView();
+		//void chooseDirectory();
 
-	private:
-		QString getSaveDir();
-		QString getSaveFilename();
-		QString getView();
+	//private:
+		//QString getSaveDir();
+		//QString getSaveFilename();
+		//QString getView();
 
-		Settings settings;
-		QGroupBox *viewGroup;
-		QVBoxLayout *viewLayout;
-		QComboBox *viewBox;
-		//QPushButton *viewButton;
-		//QActionGroup *viewActionGroup;
-		//QMenu *viewMenu;
-		QGroupBox *saveGroup;
-		QGridLayout *saveLayout;
-		QLineEdit *saveLine;
-		QPushButton *browseButton;
-		QGroupBox *fileGroup;
-		QRegExpValidator *fileValidator;
-		QLineEdit *fileLine;
-		QVBoxLayout *fileLayout;
-		QGroupBox *timeGroup;
-		QVBoxLayout *timeLayout;
-		QLineEdit *timeLine;
-		QIntValidator *timeValidator;
-		QGroupBox *buttonGroup;
-		QPushButton *okButton;
-		QPushButton *cancelButton;
-		QHBoxLayout *buttonLayout;
-		QGridLayout *layout;
-		QFile *file;
-};
+		//Settings settings;
+		//QGroupBox *viewGroup;
+		//QVBoxLayout *viewLayout;
+		//QComboBox *viewBox;
+		////QPushButton *viewButton;
+		////QActionGroup *viewActionGroup;
+		////QMenu *viewMenu;
+		//QGroupBox *saveGroup;
+		//QGridLayout *saveLayout;
+		//QLineEdit *saveLine;
+		//QPushButton *browseButton;
+		//QGroupBox *fileGroup;
+		//QRegExpValidator *fileValidator;
+		//QLineEdit *fileLine;
+		//QVBoxLayout *fileLayout;
+		//QGroupBox *timeGroup;
+		//QVBoxLayout *timeLayout;
+		//QLineEdit *timeLine;
+		//QIntValidator *timeValidator;
+		//QGroupBox *buttonGroup;
+		//QPushButton *okButton;
+		//QPushButton *cancelButton;
+		//QHBoxLayout *buttonLayout;
+		//QGridLayout *layout;
+		//QFile *file;
+//};
 
 /* class: ChanneInspectWindow 
  * --------------------------

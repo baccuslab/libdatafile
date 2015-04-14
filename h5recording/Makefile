@@ -11,7 +11,13 @@ LDFLAGS = -lhdf5 -lhdf5_cpp -lboost_container
 
 all: h5recording
 
-h5recording: $(SRC_DIR)/h5recording.cpp $(INCLUDE_DIR)/h5recording.h
+h5recording: 
 	$(CC) -c -fPIC $(CXXFLAGS) -o $(LIB_DIR)/$@.o $(SRC_DIR)/$@.cpp
-	$(CC) -shared $(LDFLAGS) $(LIB_DIR)/$@.o -o $(LIB_DIR)/lib$@.so
+	$(CC) -shared $(LDFLAGS) $(LIB_DIR)/$@.o -o lib$@.dylib
+	mv lib$@.dylib ./lib/
 
+clean:
+	rm ./lib/*.o ./lib/*.dylib ./lib/*.so
+
+install: h5recording
+	ln -sf $(shell pwd)/lib/libh5recording.dylib /usr/local/lib/

@@ -12,7 +12,7 @@ CtrlWindow::CtrlWindow(QWidget *parent) : QMainWindow(parent) {
 	initSettings();
 	initCtrlWindowUI();
 	initPlotWindow();
-	initMenuBar();
+	//initMenuBar();
 	initStatusBar();
 	initSignalsAndSlots();
 }
@@ -21,8 +21,7 @@ CtrlWindow::~CtrlWindow() {
 }
 
 void CtrlWindow::initSettings() {
-	settings.setSaveDir(DEFAULT_SAVE_DIR);
-	settings.setSaveFilename(DEFAULT_SAVE_FILENAME);
+	settings.setSaveDir(STARTING_SAVE_DIR);
 	settings.setChannelView(DEFAULT_VIEW);
 	settings.setExperimentLength(DEFAULT_EXPERIMENT_LENGTH);
 	settings.setDisplayScale(DEFAULT_DISPLAY_SCALE);
@@ -96,34 +95,18 @@ void CtrlWindow::initCtrlWindowUI() {
 	mainLayout = new QGridLayout();
 
 	/* Information group */
-	infoGroup = new QGroupBox("Info");
-	infoLayout = new QGridLayout();
-	infoLayout->setColumnStretch(1, 3);
-	filenameLabel = new QLabel("File:");
+	fileGroup = new QGroupBox("File");
+	fileLayout = new QGridLayout();
 	filenameLine = new QLineEdit(settings.getSaveFilename());
 	filenameLine->setToolTip("Name of current recording data file");
 	filenameLine->setReadOnly(true);
 	filenameValidator = new QRegExpValidator(QRegExp("(\\w+[-_]*)+"));
 	filenameLine->setValidator(filenameValidator);
-	savedirLabel = new QLabel("Save dir:");
-	savedirLine = new QLineEdit(settings.getSaveDir());
-	savedirLine->setToolTip("Directory of current recording data file");
-	savedirLine->setReadOnly(true);
-	chooseSavedirButton = new QPushButton("Choose");
-	chooseSavedirButton->setToolTip("Choose save directory");
-	timeLabel = new QLabel("Time:");
-	timeLine = new QLineEdit("");
-	timeLine->setToolTip("Current time in experiment");
-	timeLineValidator = new QIntValidator(0, MAX_EXPERIMENT_LENGTH);
-	timeLine->setValidator(timeLineValidator);
-	infoLayout->addWidget(savedirLabel, 0, 0);
-	infoLayout->addWidget(savedirLine, 0, 1, 1, 2);
-	infoLayout->addWidget(chooseSavedirButton, 0, 3);
-	infoLayout->addWidget(filenameLabel, 1, 0);
-	infoLayout->addWidget(filenameLine, 1, 1);
-	infoLayout->addWidget(timeLabel, 1, 2);
-	infoLayout->addWidget(timeLine, 1, 3);
-	infoGroup->setLayout(infoLayout);
+	chooseFileButton = new QPushButton("Choose");
+	chooseFileButton->setToolTip("Choose a recording file to play");
+	fileLayout->addWidget(filenameLine, 0, 0, 1, 5);
+	fileLayout->addWidget(chooseFileButton, 0, 6);
+	fileGroup->setLayout(fileLayout);
 
 	/* Playback group */
 	playbackGroup = new QGroupBox("Playback");
@@ -147,17 +130,24 @@ void CtrlWindow::initCtrlWindowUI() {
 	endButton->setToolTip("Jump to end of recording");
 	endButton->setEnabled(false);
 	jumpLabel = new QLabel("Jump (ms):");
+	jumpLabel->setAlignment(Qt::AlignRight);
 	jumpSpinBox = new QSpinBox();
 	jumpSpinBox->setRange(JUMP_MIN, JUMP_MAX);
 	jumpSpinBox->setSingleStep(JUMP_STEP_SIZE);
 	jumpSpinBox->setReadOnly(true);
 	jumpSpinBox->setValue(AIB_BLOCK_SIZE);
 	refreshLabel = new QLabel("Refresh (ms):");
+	refreshLabel->setAlignment(Qt::AlignRight);
 	refreshSpinBox = new QSpinBox();
 	refreshSpinBox->setRange(MIN_REFRESH_INTERVAL, MAX_REFRESH_INTERVAL);
 	refreshSpinBox->setValue(DISPLAY_REFRESH_INTERVAL);
 	refreshSpinBox->setSingleStep(MIN_REFRESH_INTERVAL);
-	refreshSpinBox->setReadOnly(true);
+	//refreshSpinBox->setReadOnly(true);
+	timeLabel = new QLabel("Time:");
+	timeLabel->setAlignment(Qt::AlignCenter);
+	timeLine = new QLabel("");
+	timeLine->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
+	timeLine->setToolTip("Current time in experiment");
 	playbackLayout->addWidget(rewindButton, 0, 0);
 	playbackLayout->addWidget(startPauseButton, 0, 1);
 	playbackLayout->addWidget(forwardButton, 0, 2);
@@ -168,6 +158,8 @@ void CtrlWindow::initCtrlWindowUI() {
 	playbackLayout->addWidget(jumpSpinBox, 3, 1);
 	playbackLayout->addWidget(refreshLabel, 4, 0);
 	playbackLayout->addWidget(refreshSpinBox, 4, 1);
+	playbackLayout->addWidget(timeLabel, 3, 2);
+	playbackLayout->addWidget(timeLine, 4, 2);
 	playbackGroup->setLayout(playbackLayout);
 
 	/* Display parameters */
@@ -262,12 +254,8 @@ void CtrlWindow::initCtrlWindowUI() {
 	onlineAnalysisLayout->addWidget(showAnalysisWindowButton, 4, 2);
 	onlineAnalysisGroup->setLayout(onlineAnalysisLayout);
 
-	/* Nidaq... */
-	nidaqGroup = new QGroupBox("NI-DAQ");
-	nidaqLayout = new QGridLayout();
-
 	/* Add all to window */
-	mainLayout->addWidget(infoGroup, 0, 0);
+	mainLayout->addWidget(fileGroup, 0, 0);
 	mainLayout->addWidget(playbackGroup, 1, 0);
 	mainLayout->addWidget(displayGroup, 2, 0);
 	mainLayout->addWidget(onlineAnalysisGroup, 3, 0);
@@ -296,54 +284,55 @@ void CtrlWindow::togglePlayback() {
 }
 
 void CtrlWindow::loadRecording() {
+	QString tmp = this->filenameLine->text();
+	this->filenameLine->clear();
 	statusLabel->setText("Loading recording");
 	QString filename = QFileDialog::getOpenFileName(
 			this, tr("Load recording"),
-			DEFAULT_SAVE_DIR, tr("Recordings (*.bin)"));
-	if (filename.isNull())
+			STARTING_SAVE_DIR, tr("Recordings (*.h5)"));
+	if (filename.isNull()) {
+		this->filenameLine->setText(tmp);
+		statusLabel->setText("Ready");
 		return;
+	}
 	
 	/* Open the recording */
-	playback = new Playback(filename);
-	this->plotWindow->playback = playback;
+	if (recording != nullptr)
+		delete recording;
+	recording = new H5Recording(filename.toStdString());
+	this->plotWindow->recording = recording;
+	this->filenameLine->setText(filename);
+	this->updateFilename();
+	//playback = new Playback(filename);
+	//this->plotWindow->playback = playback;
 	initPlayback();
 	statusLabel->setText("Ready");
 }
 
 void CtrlWindow::initPlayback() {
 	startPauseButton->setEnabled(true);
-	timeLine->setText(QString::number(
-				this->playback->getFile().getNumSamples() / SAMPLE_RATE));
-	timeLine->setReadOnly(true);
-	QFileInfo finfo(this->playback->getFile().getFilename());
-	savedirLine->setText(finfo.dir().absolutePath());
-	filenameLine->setText(finfo.baseName()); 
+	//timeLine->setText(QString::number(
+				//this->playback->getFile().getNumSamples() / SAMPLE_RATE));
+	//timeLine->setReadOnly(true);
+	//QFileInfo finfo(this->playback->getFile().getFilename());
+	//savedirLine->setText(finfo.dir().absolutePath());
+	//filenameLine->setText(finfo.baseName()); 
 	connect(startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
-	//connect(playbackTimer, SIGNAL(timeout()), this->plotWindow, SLOT(plotNextDataBlock()));
+	connect(playbackTimer, SIGNAL(timeout()), this, SLOT(plotNextDataBlock()));
 	connect(this->plotWindow->getChannelPlot(), SIGNAL(afterReplot()), 
 			this, SLOT(updateTimeLine()));
 }
 
-void CtrlWindow::openNewRecording() {
-	NewRecordingWindow w(this);
-	int ret;
+void CtrlWindow::plotNextDataBlock() {
+	/* Compute next sample we should plot */
+	float sampleRate = this->recording->sampleRate();
+	float refreshInterval = this->settings.getRefreshInterval();
+	size_t nsamples = (refreshInterval / 1000) * sampleRate;
 
-	while (true) {
-		ret = w.exec();
-		if (ret == QDialog::Rejected)
-			return;
-		if ((ret = w.validateChoices()) != 0)
-			w.close();
-		else
-			break;
-	}
-
-	/* Validated file name */
-	QString filename = w.getFullFilename();
-	qDebug() << "File: " << filename << endl;
-
-	/* Make a file */
-	//this->recording = new LiveRecording(filename, w.getTime());
+	samples s = this->recording->data(this->lastSampleIndex, 
+			this->lastSampleIndex + nsamples);
+	this->plotWindow->plotData(s);
+	this->lastSampleIndex += nsamples;
 }
 
 void CtrlWindow::initSignalsAndSlots() {
@@ -351,8 +340,8 @@ void CtrlWindow::initSignalsAndSlots() {
 			this->plotWindow, SLOT(plotNextDataBlock()));
 	connect(this->filenameLine, SIGNAL(editingFinished()), 
 			this, SLOT(updateFilename()));
-	connect(this->chooseSavedirButton, SIGNAL(clicked()), 
-			this, SLOT(chooseSaveDir()));
+	connect(this->chooseFileButton, SIGNAL(clicked()), 
+			this, SLOT(loadRecording()));
 	connect(this->timeLine, SIGNAL(editingFinished()), 
 			this, SLOT(updateTime()));
 	connect(this->jumpSpinBox, SIGNAL(valueChanged(int)),
@@ -365,8 +354,6 @@ void CtrlWindow::initSignalsAndSlots() {
 			this, SLOT(updateScale(QString)));
 	connect(this->autoscaleBox, SIGNAL(stateChanged(int)), 
 			this, SLOT(updateAutoscale(int)));
-	connect(this->chooseSavedirButton, SIGNAL(clicked()),
-			this, SLOT(openNewRecordingWindow()));
 	connect(this->targetChannelLine, SIGNAL(editingFinished()),
 			this, SLOT(setOnlineAnalysisTargetChannel()));
 	connect(this->refreshSpinBox, SIGNAL(valueChanged(int)),
@@ -375,18 +362,24 @@ void CtrlWindow::initSignalsAndSlots() {
 			this, SLOT(updateAutoMean(int)));
 	connect(this->plotWindow->getChannelPlot(), SIGNAL(subplotDoubleClicked(int)),
 			this, SLOT(openChannelInspectWindow(int)));
-	connect(this->playback, SIGNAL(endOfPlaybackFile()),
-			this->playbackTimer, SLOT(stop()));
+	//connect(this->playback, SIGNAL(endOfPlaybackFile()),
+			//this->playbackTimer, SLOT(stop()));
 }
 
 /* SIGNALS AND SLOTS */
 
 void CtrlWindow::updateTimeLine() {
-	int block = this->playback->getBlock();
-	this->timeLine->setText(QString("%1 - %2 / %3").arg(
-				(block / (AIB_BLOCK_SIZE / SAMPLE_RATE)) - 1).arg(
-				block / (AIB_BLOCK_SIZE / SAMPLE_RATE)).arg(
-				this->playback->getRecordingLength()));
+	float sampleRate = this->recording->sampleRate();
+	float refreshInterval = this->settings.getRefreshInterval();
+	size_t nsamples = (refreshInterval / 1000) * sampleRate;
+	this->timeLine->setText(QString("%1 / %3").arg(
+				(this->lastSampleIndex - nsamples) / sampleRate).arg(
+				(int) this->recording->length()));
+	//int block = this->playback->getBlock();
+	//this->timeLine->setText(QString("%1 - %2 / %3").arg(
+				//(block / (AIB_BLOCK_SIZE / SAMPLE_RATE)) - 1).arg(
+				//block / (AIB_BLOCK_SIZE / SAMPLE_RATE)).arg(
+				//this->playback->getRecordingLength()));
 }
 
 void CtrlWindow::updateAutoMean(int checked) {
@@ -394,6 +387,10 @@ void CtrlWindow::updateAutoMean(int checked) {
 }
 
 void CtrlWindow::updateRefreshInterval(int i) {
+	try {
+		this->playbackTimer->setInterval(i);
+	} catch (exception &e) {
+	}
 	this->settings.setRefreshInterval(i);
 }
 
@@ -401,14 +398,18 @@ void CtrlWindow::updateFilename() {
 	this->settings.setSaveFilename(this->filenameLine->text());
 }
 
-void CtrlWindow::chooseSaveDir() {
-	QFileDialog dialog(this, "Choose save directory", DEFAULT_SAVE_DIR);
-	dialog.setOptions(QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+void CtrlWindow::chooseFile() {
+	QFileDialog dialog(this, "Choose recording file", 
+			STARTING_SAVE_DIR, 
+			QString::fromStdString("*" + RECORDING_FILE_EXTENSION));
+	dialog.setFileMode(QFileDialog::ExistingFiles);
+	dialog.setOptions(QFileDialog::DontResolveSymlinks);
 	if (dialog.exec() == QDialog::Rejected)
 		return;
+	QString file = dialog.selectedFiles().at(0);
 	QString path = dialog.directory().absolutePath();
 	this->settings.setSaveDir(path);
-	this->savedirLine->setText(path);
+	this->filenameLine->setText(file);
 }
 
 void CtrlWindow::updateTime() {

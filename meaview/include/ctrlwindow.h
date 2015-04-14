@@ -34,9 +34,8 @@
 #include "settings.h"
 #include "plotwindow.h"
 #include "windows.h"
-#include "files.h"
-#include "recording.h"
-#include "playback.h"
+
+#include "h5recording/include/h5recording.h"
 
 /* class: CtrlWindow
  * -----------------
@@ -55,7 +54,7 @@ class CtrlWindow : public QMainWindow {
 
 	private slots:
 		void updateFilename();
-		void chooseSaveDir();
+		void chooseFile();
 		void updateTime();
 		void updateView(QString);
 		void updateColor(QString);
@@ -69,10 +68,8 @@ class CtrlWindow : public QMainWindow {
 		void updateAutoMean(int);
 		void openChannelInspectWindow(int);
 		void updateTimeLine();
-
+		void plotNextDataBlock();
 		void loadRecording();
-		void openNewRecording();
-
 
 	private:
 
@@ -83,7 +80,7 @@ class CtrlWindow : public QMainWindow {
 		void initPlotWindow();
 		void initStatusBar();
 		void initPlayback();
-		void initLiveRecording();
+		//void initLiveRecording();
 		void initSignalsAndSlots();
 
 		/* General attributes */
@@ -92,9 +89,11 @@ class CtrlWindow : public QMainWindow {
 		unsigned int targetChannel;
 		QTimer *playbackTimer;
 		bool isPlaying = false;
+		size_t lastSampleIndex; // last sample plotted
 
 		/* Data interface attributes */
-		Playback *playback;
+		//Playback *playback;
+		H5Recording *recording = nullptr;
 
 		/* Main window GUI attributes */
 		PlotWindow *plotWindow;
@@ -105,22 +104,19 @@ class CtrlWindow : public QMainWindow {
 		QStatusBar *statusBar;
 		QLabel *statusLabel;
 
-		/* Information display group */
-		QGroupBox *infoGroup;
-		QGridLayout *infoLayout;
+		/* File display group */
+		QGroupBox *fileGroup;
+		QGridLayout *fileLayout;
 		QLabel *filenameLabel;
 		QRegExpValidator *filenameValidator;
-		QLabel *savedirLabel;
-		QPushButton *chooseSavedirButton;
-		QLabel *timeLabel;
+		QPushButton *chooseFileButton;
 		QLineEdit *filenameLine;
-		QLineEdit *savedirLine;
-		QLineEdit *timeLine;
-		QIntValidator *timeLineValidator;
 
 		/* Playback controls group */
 		QGroupBox *playbackGroup;
 		QGridLayout *playbackLayout;
+		QLabel *timeLabel;
+		QLabel *timeLine;
 		QPushButton *restartButton;
 		QPushButton *rewindButton;
 		QPushButton *startPauseButton;
@@ -160,10 +156,6 @@ class CtrlWindow : public QMainWindow {
 		QIntValidator *targetChannelValidator;
 		QLabel *lengthLabel;
 		QSpinBox *lengthSpinBox;
-
-		/* Interface with Nidaq */
-		QGroupBox *nidaqGroup;
-		QGridLayout *nidaqLayout;
 };
 
 #endif

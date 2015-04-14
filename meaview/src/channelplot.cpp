@@ -72,8 +72,47 @@ QCPAxisRect *ChannelPlot::getSubplotAxis(int row, int col) {
 	return this->axisRect(posToIndex(row, col));
 }
 
-void ChannelPlot::distributedPlotData(QVector<QVector<double> > &data) {
+void ChannelPlot::distributedPlot(samples &s) {
+	this->constructXData();
+	qDebug() << "X data size: " << xData.size();
+	for (auto i = 0; i < 8; i++)
+		QtConcurrent::run(this, &ChannelPlot::plotSubBlock, s, i);
+}
 
+void ChannelPlot::plotSubBlock(samples &s, int block) {
+	QPen pen = this->settings.getPlotPen();
+	bool automean = this->settings.getAutoMean();
+	bool autoscale = this->settings.getAutoscale();
+	double scale = this->settings.getDisplayScale();
+	QVector<double> plotData(s.shape()[1]);
+	for (auto j = 8 * block ; j < 8 * (block + 1); j++) {
+		QCPGraph *graph = getSubplot(j);
+		if (automean) {
+			double mean = 0.0;
+			for (auto k = 0; k < plotData.size(); k++)
+				mean += s[j][k];
+			mean /= s.shape()[1];
+			for (auto k = 0; k < plotData.size(); k++) 
+				plotData[k] = s[j][k] - mean;
+			graph->setData(xData, plotData);
+		} else {
+			for (auto k = 0; k < plotData.size(); k++)
+				plotData[k] = s[j][k];
+			graph->setData(xData, plotData);
+		}
+		graph->setPen(pen);
+
+		if ((autoscale) || RESCALED_CHANNELS.contains(j))
+			graph->valueAxis()->rescale();
+		else
+			graph->valueAxis()->setRange(-scale * NEG_DISPLAY_RANGE,
+					scale * POS_DISPLAY_RANGE);
+		graph->keyAxis()->rescale();
+	}
+	this->replot();
+}
+
+void ChannelPlot::distributedPlotData(QVector<QVector<double> > &data) {
 	for (auto i = 0; i < 8; i++)
 		QtConcurrent::run(this, &ChannelPlot::plotDataSubBlock, data, i);
 }

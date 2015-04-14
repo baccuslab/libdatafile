@@ -51,6 +51,9 @@ H5Recording::H5Recording(string filename) {
 		readTime();
 		readRoom();
 
+		/* Compute length of experiment */
+		setLength(nsamples() / sampleRate());
+
 	} else {
 		/* New file. This needs to be only called by mealog... */
 		readOnly = false;

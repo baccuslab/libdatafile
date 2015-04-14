@@ -87,135 +87,135 @@ void ChannelInspectWindow::replot() {
 /***************************************************
  ************** NewRecordingWindow *****************
  ***************************************************/
-NewRecordingWindow::NewRecordingWindow(QWidget *parent) : QDialog(parent) {
+//NewRecordingWindow::NewRecordingWindow(QWidget *parent) : QDialog(parent) {
 
-	/* Selection for plot arrangement */
-	viewGroup = new QGroupBox("Channel view");
-	viewLayout = new QVBoxLayout();
-	viewBox = new QComboBox(this);
-	for (auto &view : CHANNEL_VIEW_STRINGS)
-		viewBox->addItem(view);
-	viewBox->setCurrentIndex(viewBox->findText(DEFAULT_VIEW));
-	connect(viewBox, SIGNAL(activated()), this, SLOT(setView()));
-	viewLayout->addWidget(viewBox);
-	viewGroup->setLayout(viewLayout);
+	//[> Selection for plot arrangement <]
+	//viewGroup = new QGroupBox("Channel view");
+	//viewLayout = new QVBoxLayout();
+	//viewBox = new QComboBox(this);
+	//for (auto &view : CHANNEL_VIEW_STRINGS)
+		//viewBox->addItem(view);
+	//viewBox->setCurrentIndex(viewBox->findText(DEFAULT_VIEW));
+	//connect(viewBox, SIGNAL(activated()), this, SLOT(setView()));
+	//viewLayout->addWidget(viewBox);
+	//viewGroup->setLayout(viewLayout);
 
-	/* Select save directory */
-	saveGroup = new QGroupBox("Save directory");
-	saveLine = new QLineEdit(DEFAULT_SAVE_DIR);
-	saveLine->setReadOnly(true);
-	browseButton = new QPushButton("Browse");
-	connect(browseButton, SIGNAL(clicked()), this, SLOT(chooseDirectory()));
-	saveLayout = new QGridLayout();
-	saveLayout->addWidget(saveLine, 0, 0);
-	saveLayout->addWidget(browseButton, 0, 1);
-	saveGroup->setLayout(saveLayout);
+	//[> Select save directory <]
+	//saveGroup = new QGroupBox("Save directory");
+	//saveLine = new QLineEdit(DEFAULT_SAVE_DIR);
+	//saveLine->setReadOnly(true);
+	//browseButton = new QPushButton("Browse");
+	//connect(browseButton, SIGNAL(clicked()), this, SLOT(chooseDirectory()));
+	//saveLayout = new QGridLayout();
+	//saveLayout->addWidget(saveLine, 0, 0);
+	//saveLayout->addWidget(browseButton, 0, 1);
+	//saveGroup->setLayout(saveLayout);
 
-	/* Select filename */
-	fileGroup = new QGroupBox(tr("&Filename"));
-	fileLine = new QLineEdit(DEFAULT_SAVE_FILENAME);
-	fileValidator = new QRegExpValidator(QRegExp("(\\w+[-_]*)+"));
-	fileLine->setValidator(fileValidator);
-	fileLayout = new QVBoxLayout();
-	fileLayout->addWidget(fileLine);
-	fileGroup->setLayout(fileLayout);
+	//[> Select filename <]
+	//fileGroup = new QGroupBox(tr("&Filename"));
+	//fileLine = new QLineEdit(DEFAULT_SAVE_FILENAME);
+	//fileValidator = new QRegExpValidator(QRegExp("(\\w+[-_]*)+"));
+	//fileLine->setValidator(fileValidator);
+	//fileLayout = new QVBoxLayout();
+	//fileLayout->addWidget(fileLine);
+	//fileGroup->setLayout(fileLayout);
 
-	/* Pick a length of the recording */
-	timeGroup = new QGroupBox("Length of recording");
-	timeValidator = new QIntValidator(0, settings.getExperimentLength());
-	timeLine = new QLineEdit(QString::number(settings.getExperimentLength()));
-	timeLine->setValidator(timeValidator);
-	timeLayout = new QVBoxLayout();
-	timeLayout->addWidget(timeLine);
-	timeGroup->setLayout(timeLayout);
+	//[> Pick a length of the recording <]
+	//timeGroup = new QGroupBox("Length of recording");
+	//timeValidator = new QIntValidator(0, settings.getExperimentLength());
+	//timeLine = new QLineEdit(QString::number(settings.getExperimentLength()));
+	//timeLine->setValidator(timeValidator);
+	//timeLayout = new QVBoxLayout();
+	//timeLayout->addWidget(timeLine);
+	//timeGroup->setLayout(timeLayout);
 
-	/* OK/cancel buttons */
-	buttonGroup = new QGroupBox();
-	buttonGroup->setFlat(true);
-	okButton = new QPushButton("OK");
-	connect(okButton, SIGNAL(clicked()), this, SLOT(accept()));
-	okButton->setDefault(true);
-	cancelButton = new QPushButton("Cancel");
-	connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
-	buttonLayout = new QHBoxLayout();
-	buttonLayout->addWidget(okButton);
-	buttonLayout->addWidget(cancelButton);
-	buttonGroup->setLayout(buttonLayout);
+	//[> OK/cancel buttons <]
+	//buttonGroup = new QGroupBox();
+	//buttonGroup->setFlat(true);
+	//okButton = new QPushButton("OK");
+	//connect(okButton, SIGNAL(clicked()), this, SLOT(accept()));
+	//okButton->setDefault(true);
+	//cancelButton = new QPushButton("Cancel");
+	//connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
+	//buttonLayout = new QHBoxLayout();
+	//buttonLayout->addWidget(okButton);
+	//buttonLayout->addWidget(cancelButton);
+	//buttonGroup->setLayout(buttonLayout);
 
-	/* Layout */
-	layout = new QGridLayout();
-	layout->addWidget(buttonGroup, 2, 0);
-	layout->addWidget(viewGroup, 0, 0, 1, 2);
-	layout->addWidget(fileGroup, 0, 2, 1, 2);
-	layout->addWidget(timeGroup, 0, 4, 1, 1);
-	layout->addWidget(saveGroup, 1, 0, 1, 5);
+	//[> Layout <]
+	//layout = new QGridLayout();
+	//layout->addWidget(buttonGroup, 2, 0);
+	//layout->addWidget(viewGroup, 0, 0, 1, 2);
+	//layout->addWidget(fileGroup, 0, 2, 1, 2);
+	//layout->addWidget(timeGroup, 0, 4, 1, 1);
+	//layout->addWidget(saveGroup, 1, 0, 1, 5);
 
-	this->setLayout(layout);
-	this->setWindowTitle("Create new recording");
+	//this->setLayout(layout);
+	//this->setWindowTitle("Create new recording");
 
-}
+//}
 
-NewRecordingWindow::~NewRecordingWindow() {
-}
+//NewRecordingWindow::~NewRecordingWindow() {
+//}
 
-QString NewRecordingWindow::getSaveDir() {
-	return this->settings.getSaveDir();
-}
+//QString NewRecordingWindow::getSaveDir() {
+	//return this->settings.getSaveDir();
+//}
 
-QString NewRecordingWindow::getSaveFilename() {
-	return this->settings.getSaveFilename();
-}
+//QString NewRecordingWindow::getSaveFilename() {
+	//return this->settings.getSaveFilename();
+//}
 
-QString NewRecordingWindow::getView() {
-	return this->settings.getChannelViewString();
-}
+//QString NewRecordingWindow::getView() {
+	//return this->settings.getChannelViewString();
+//}
 
-uint NewRecordingWindow::getTime() {
-	return this->settings.getExperimentLength();
-}
+//uint NewRecordingWindow::getTime() {
+	//return this->settings.getExperimentLength();
+//}
 
-QString NewRecordingWindow::getFullFilename() {
-	QString s = this->getSaveDir();
-	if (!s.endsWith("/"))
-		s.append("/");
-	s.append(this->getSaveFilename());
-	return s.append(SAVE_FILE_EXTENSION);
-}
+//QString NewRecordingWindow::getFullFilename() {
+	//QString s = this->getSaveDir();
+	//if (!s.endsWith("/"))
+		//s.append("/");
+	//s.append(this->getSaveFilename());
+	//return s.append(SAVE_FILE_EXTENSION);
+//}
 
-void NewRecordingWindow::setView() {
-	//QAction *sender = dynamic_cast<QAction *>(QObject::sender());
-	//this->viewButton->setText(sender->text());
-	QComboBox *sender = dynamic_cast<QComboBox *>(QObject::sender());
-	this->settings.setChannelView(sender->currentText());
-}
+//void NewRecordingWindow::setView() {
+	////QAction *sender = dynamic_cast<QAction *>(QObject::sender());
+	////this->viewButton->setText(sender->text());
+	//QComboBox *sender = dynamic_cast<QComboBox *>(QObject::sender());
+	//this->settings.setChannelView(sender->currentText());
+//}
 
-int NewRecordingWindow::validateChoices() {
-	this->settings.setSaveDir(this->saveLine->text());
-	this->settings.setSaveFilename(this->fileLine->text());
-	this->settings.setChannelView(this->viewBox->currentText());
-	this->settings.setExperimentLength(this->timeLine->text().toUInt());
-	QFileInfo finfo(this->saveLine->text());
-	if (!finfo.permission(QFileDevice::ReadOwner | QFileDevice::WriteOwner)) {
-		QMessageBox msg;
-		msg.setText("Permissions error");
-		msg.setInformativeText(QString(
-				"The current user does not have permissions for"
-				" the requested save directory:\n%1").arg(
-				this->saveLine->text()));
-		msg.setStandardButtons(QMessageBox::Ok);
-		msg.exec();
-		return -1;
-	}
-	return 0;
-}
+//int NewRecordingWindow::validateChoices() {
+	//this->settings.setSaveDir(this->saveLine->text());
+	//this->settings.setSaveFilename(this->fileLine->text());
+	//this->settings.setChannelView(this->viewBox->currentText());
+	//this->settings.setExperimentLength(this->timeLine->text().toUInt());
+	//QFileInfo finfo(this->saveLine->text());
+	//if (!finfo.permission(QFileDevice::ReadOwner | QFileDevice::WriteOwner)) {
+		//QMessageBox msg;
+		//msg.setText("Permissions error");
+		//msg.setInformativeText(QString(
+				//"The current user does not have permissions for"
+				//" the requested save directory:\n%1").arg(
+				//this->saveLine->text()));
+		//msg.setStandardButtons(QMessageBox::Ok);
+		//msg.exec();
+		//return -1;
+	//}
+	//return 0;
+//}
 
-void NewRecordingWindow::chooseDirectory() {
-	QFileDialog dialog(this, "Choose save directory", DEFAULT_SAVE_DIR);
-	dialog.setOptions(QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-	if (dialog.exec() == QDialog::Rejected)
-		return;
-	QString path = dialog.directory().absolutePath();
-	this->settings.setSaveDir(path);
-	this->saveLine->setText(path);
-}
+//void NewRecordingWindow::chooseDirectory() {
+	//QFileDialog dialog(this, "Choose save directory", DEFAULT_SAVE_DIR);
+	//dialog.setOptions(QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+	//if (dialog.exec() == QDialog::Rejected)
+		//return;
+	//QString path = dialog.directory().absolutePath();
+	//this->settings.setSaveDir(path);
+	//this->saveLine->setText(path);
+//}
 

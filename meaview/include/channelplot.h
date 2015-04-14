@@ -17,6 +17,8 @@
 /* Other third-party includes */
 #include "qcustomplot.h"
 
+#include "h5recording/include/h5recording.h"
+
 /* meaview includes */
 #include "settings.h"
 
@@ -35,7 +37,8 @@ class ChannelPlot : public QCustomPlot {
 		void plotData(QVector<QVector<double> > &data);
 
 		QVector<double> xData;
-
+		void distributedPlot(samples &s);
+		void plotSubBlock(samples &s, int block);
 		void distributedPlotData(QVector<QVector<double> > &data);
 		void plotDataSubBlock(QVector<QVector<double> > &data, int i);
 

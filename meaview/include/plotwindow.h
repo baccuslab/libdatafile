@@ -19,6 +19,8 @@
 #include "playback.h"
 #include "settings.h"
 
+#include "h5recording/include/h5recording.h"
+
 class PlotWindow : public QWidget {
 	Q_OBJECT
 
@@ -30,6 +32,7 @@ class PlotWindow : public QWidget {
 
 	public slots:
 		void plotNextDataBlock();
+		void plotData(samples &s);
 
 	private slots:
 		void toggleVisible();
@@ -38,8 +41,9 @@ class PlotWindow : public QWidget {
 		void initPlotGroup();
 		ChannelPlot *channelPlot;
 		Settings settings;
-		Playback *playback = nullptr;
-		Recording *recording = nullptr;
+		//Playback *playback = nullptr;
+		//Recording *recording = nullptr;
+		H5Recording *recording = nullptr;
 		QHBoxLayout *layout;
 };
 

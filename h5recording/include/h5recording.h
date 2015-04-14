@@ -13,13 +13,14 @@
 #include <vector>
 
 /* Third-party includes */
-#include "H5cpp.h"
+#include "H5Cpp.h"
 #include "boost/multi_array.hpp"
 
 using namespace std;
 using namespace H5;
 
 /* Constants */
+const string RECORDING_FILE_EXTENSION = ".h5";
 const int DATASET_RANK = 2;
 const int NCHANNELS = 64;
 const int BLOCK_SIZE = 2000;

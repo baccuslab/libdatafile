@@ -27,7 +27,7 @@ using namespace std;
 
 /* Window sizes */
 const int CTRL_WINDOW_WIDTH = 500;
-const int CTRL_WINDOW_HEIGHT = 700;
+const int CTRL_WINDOW_HEIGHT = 600;
 const int PLOT_WINDOW_HEIGHT = 1000;
 const int PLOT_WINDOW_WIDTH = 1000;
 const int INSPECTOR_WINDOW_WIDTH = 600;
@@ -46,15 +46,12 @@ const QSet<int> RESCALED_CHANNELS {
 };
 
 /* Default location to save new files */
-const QString DEFAULT_SAVE_FILENAME("default-data");
-const QString SAVE_FILE_EXTENSION(".bin");
 #ifdef Q_OS_WIN
-const QString DEFAULT_SAVE_DIR("C:/Desktop/");
+const QString STARTING_SAVE_DIR("C:/Desktop/");
 #else
-const QString DEFAULT_SAVE_DIR("~/Desktop");
+const QString STARTING_SAVE_DIR("~/Desktop");
 #endif
 const unsigned int DEFAULT_EXPERIMENT_LENGTH = 1000; 	// seconds
-const unsigned int MAX_EXPERIMENT_LENGTH = 10000; 		// seconds
 
 /* Information about AIB binary files */
 /* NOTE: These are not defined as Qt types, since they

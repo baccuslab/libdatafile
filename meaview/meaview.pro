@@ -4,15 +4,19 @@
 
 TEMPLATE = app
 TARGET = meaview
-INCLUDEPATH += ./include
+INCLUDEPATH += ./include ../ \
+		/usr/local/Cellar/hdf5/1.8.14/include \
+		/usr/local/Cellar/boost/1.57.0/include/
 MOC_DIR = ./build
 OBJECTS_DIR = ./build
 QT += widgets printsupport core concurrent
 CONFIG += c++11 debug
-QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++ -g -Wno-deprecated-register -O0
+QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++ -g -Wno-deprecated-register -O0 
+LIBS += -L/usr/local/lib -lh5recording
 
 # Input
-HEADERS += 	include/channelplot.h \
+HEADERS += 	../h5recording/include/h5recording.h \
+			include/channelplot.h \
 			include/settings.h \
 			include/qcustomplot.h \
 			include/windows.h \
