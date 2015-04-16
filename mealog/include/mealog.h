@@ -49,7 +49,7 @@ class MealogWindow : public QMainWindow {
 	private slots:
 		void startMeaview(void);
 		void acceptClients(void);
-		void respondToClient(quint64 nbytes);
+		void respondToClient(void);
 		void initRecording(void);
 		void deInitRecording(void);
 
@@ -63,6 +63,12 @@ class MealogWindow : public QMainWindow {
 		bool removeOldRecording(QFile &path);
 		void setRecordingParameters(void);
 		void setParameterSelectionsEnabled(bool enabled);
+		mearec::RecordingStatusReply constructStatusReply(
+				mearec::RecordingStatusRequest req);
+		bool readMessage(QTcpSocket *socket, 
+				mearec::RecordingStatusRequest &request);
+		bool writeMessage(QTcpSocket *socket,
+				mearec::RecordingStatusReply &reply);
 
 		/* Server for responding to clients requesting information about recording */
 		QTcpServer *server;
@@ -73,6 +79,8 @@ class MealogWindow : public QMainWindow {
 		// DaqClient client;
 		H5Recording *recording;
 		bool recordingInitialized = false;
+		mearec::RecordingStatusReply_StatusType recordingStatus = \
+				mearec::RecordingStatusReply_StatusType_STOPPED;
 
 		/* GUI elements */
 		QGridLayout *mainLayout;

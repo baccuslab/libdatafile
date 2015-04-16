@@ -35,27 +35,27 @@ void protobuf_AssignDesc_logserver_2eproto();
 void protobuf_ShutdownFile_logserver_2eproto();
 
 class RecordingStatusRequest;
-class RecordingParamsReply;
+class RecordingStatusReply;
 
-enum RecordingParamsReply_StatusType {
-  RecordingParamsReply_StatusType_RUNNING = 0,
-  RecordingParamsReply_StatusType_STOPPED = 1,
-  RecordingParamsReply_StatusType_ERROR = 2
+enum RecordingStatusReply_StatusType {
+  RecordingStatusReply_StatusType_RUNNING = 0,
+  RecordingStatusReply_StatusType_STOPPED = 1,
+  RecordingStatusReply_StatusType_ERROR = 2
 };
-bool RecordingParamsReply_StatusType_IsValid(int value);
-const RecordingParamsReply_StatusType RecordingParamsReply_StatusType_StatusType_MIN = RecordingParamsReply_StatusType_RUNNING;
-const RecordingParamsReply_StatusType RecordingParamsReply_StatusType_StatusType_MAX = RecordingParamsReply_StatusType_ERROR;
-const int RecordingParamsReply_StatusType_StatusType_ARRAYSIZE = RecordingParamsReply_StatusType_StatusType_MAX + 1;
+bool RecordingStatusReply_StatusType_IsValid(int value);
+const RecordingStatusReply_StatusType RecordingStatusReply_StatusType_StatusType_MIN = RecordingStatusReply_StatusType_RUNNING;
+const RecordingStatusReply_StatusType RecordingStatusReply_StatusType_StatusType_MAX = RecordingStatusReply_StatusType_ERROR;
+const int RecordingStatusReply_StatusType_StatusType_ARRAYSIZE = RecordingStatusReply_StatusType_StatusType_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* RecordingParamsReply_StatusType_descriptor();
-inline const ::std::string& RecordingParamsReply_StatusType_Name(RecordingParamsReply_StatusType value) {
+const ::google::protobuf::EnumDescriptor* RecordingStatusReply_StatusType_descriptor();
+inline const ::std::string& RecordingStatusReply_StatusType_Name(RecordingStatusReply_StatusType value) {
   return ::google::protobuf::internal::NameOfEnum(
-    RecordingParamsReply_StatusType_descriptor(), value);
+    RecordingStatusReply_StatusType_descriptor(), value);
 }
-inline bool RecordingParamsReply_StatusType_Parse(
-    const ::std::string& name, RecordingParamsReply_StatusType* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<RecordingParamsReply_StatusType>(
-    RecordingParamsReply_StatusType_descriptor(), name, value);
+inline bool RecordingStatusReply_StatusType_Parse(
+    const ::std::string& name, RecordingStatusReply_StatusType* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<RecordingStatusReply_StatusType>(
+    RecordingStatusReply_StatusType_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -112,103 +112,94 @@ class RecordingStatusRequest : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required uint32 size = 1;
-  inline bool has_size() const;
-  inline void clear_size();
-  static const int kSizeFieldNumber = 1;
-  inline ::google::protobuf::uint32 size() const;
-  inline void set_size(::google::protobuf::uint32 value);
+  // optional bool status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline bool status() const;
+  inline void set_status(bool value);
 
-  // optional bool type = 2;
-  inline bool has_type() const;
-  inline void clear_type();
-  static const int kTypeFieldNumber = 2;
-  inline bool type() const;
-  inline void set_type(bool value);
-
-  // optional bool filename = 3;
+  // optional bool filename = 2;
   inline bool has_filename() const;
   inline void clear_filename();
-  static const int kFilenameFieldNumber = 3;
+  static const int kFilenameFieldNumber = 2;
   inline bool filename() const;
   inline void set_filename(bool value);
 
-  // optional bool length = 4;
+  // optional bool length = 3;
   inline bool has_length() const;
   inline void clear_length();
-  static const int kLengthFieldNumber = 4;
+  static const int kLengthFieldNumber = 3;
   inline bool length() const;
   inline void set_length(bool value);
 
-  // optional bool nsamples = 5;
+  // optional bool nsamples = 4;
   inline bool has_nsamples() const;
   inline void clear_nsamples();
-  static const int kNsamplesFieldNumber = 5;
+  static const int kNsamplesFieldNumber = 4;
   inline bool nsamples() const;
   inline void set_nsamples(bool value);
 
-  // optional bool nchannels = 6;
+  // optional bool nchannels = 5;
   inline bool has_nchannels() const;
   inline void clear_nchannels();
-  static const int kNchannelsFieldNumber = 6;
+  static const int kNchannelsFieldNumber = 5;
   inline bool nchannels() const;
   inline void set_nchannels(bool value);
 
-  // optional bool lastValidSample = 7;
+  // optional bool lastValidSample = 6;
   inline bool has_lastvalidsample() const;
   inline void clear_lastvalidsample();
-  static const int kLastValidSampleFieldNumber = 7;
+  static const int kLastValidSampleFieldNumber = 6;
   inline bool lastvalidsample() const;
   inline void set_lastvalidsample(bool value);
 
-  // optional bool blockSize = 8;
+  // optional bool blockSize = 7;
   inline bool has_blocksize() const;
   inline void clear_blocksize();
-  static const int kBlockSizeFieldNumber = 8;
+  static const int kBlockSizeFieldNumber = 7;
   inline bool blocksize() const;
   inline void set_blocksize(bool value);
 
-  // optional bool sampleRate = 9;
+  // optional bool sampleRate = 8;
   inline bool has_samplerate() const;
   inline void clear_samplerate();
-  static const int kSampleRateFieldNumber = 9;
+  static const int kSampleRateFieldNumber = 8;
   inline bool samplerate() const;
   inline void set_samplerate(bool value);
 
-  // optional bool gain = 10;
+  // optional bool gain = 9;
   inline bool has_gain() const;
   inline void clear_gain();
-  static const int kGainFieldNumber = 10;
+  static const int kGainFieldNumber = 9;
   inline bool gain() const;
   inline void set_gain(bool value);
 
-  // optional bool offset = 11;
+  // optional bool offset = 10;
   inline bool has_offset() const;
   inline void clear_offset();
-  static const int kOffsetFieldNumber = 11;
+  static const int kOffsetFieldNumber = 10;
   inline bool offset() const;
   inline void set_offset(bool value);
 
-  // optional bool date = 12;
+  // optional bool date = 11;
   inline bool has_date() const;
   inline void clear_date();
-  static const int kDateFieldNumber = 12;
+  static const int kDateFieldNumber = 11;
   inline bool date() const;
   inline void set_date(bool value);
 
-  // optional bool time = 13;
+  // optional bool time = 12;
   inline bool has_time() const;
   inline void clear_time();
-  static const int kTimeFieldNumber = 13;
+  static const int kTimeFieldNumber = 12;
   inline bool time() const;
   inline void set_time(bool value);
 
   // @@protoc_insertion_point(class_scope:mearec.RecordingStatusRequest)
  private:
-  inline void set_has_size();
-  inline void clear_has_size();
-  inline void set_has_type();
-  inline void clear_has_type();
+  inline void set_has_status();
+  inline void clear_has_status();
   inline void set_has_filename();
   inline void clear_has_filename();
   inline void set_has_length();
@@ -236,8 +227,7 @@ class RecordingStatusRequest : public ::google::protobuf::Message {
 
   ::google::protobuf::uint32 _has_bits_[1];
   mutable int _cached_size_;
-  ::google::protobuf::uint32 size_;
-  bool type_;
+  bool status_;
   bool filename_;
   bool length_;
   bool nsamples_;
@@ -258,14 +248,14 @@ class RecordingStatusRequest : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
-class RecordingParamsReply : public ::google::protobuf::Message {
+class RecordingStatusReply : public ::google::protobuf::Message {
  public:
-  RecordingParamsReply();
-  virtual ~RecordingParamsReply();
+  RecordingStatusReply();
+  virtual ~RecordingStatusReply();
 
-  RecordingParamsReply(const RecordingParamsReply& from);
+  RecordingStatusReply(const RecordingStatusReply& from);
 
-  inline RecordingParamsReply& operator=(const RecordingParamsReply& from) {
+  inline RecordingStatusReply& operator=(const RecordingStatusReply& from) {
     CopyFrom(from);
     return *this;
   }
@@ -279,17 +269,17 @@ class RecordingParamsReply : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const RecordingParamsReply& default_instance();
+  static const RecordingStatusReply& default_instance();
 
-  void Swap(RecordingParamsReply* other);
+  void Swap(RecordingStatusReply* other);
 
   // implements Message ----------------------------------------------
 
-  RecordingParamsReply* New() const;
+  RecordingStatusReply* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const RecordingParamsReply& from);
-  void MergeFrom(const RecordingParamsReply& from);
+  void CopyFrom(const RecordingStatusReply& from);
+  void MergeFrom(const RecordingStatusReply& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -309,56 +299,44 @@ class RecordingParamsReply : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef RecordingParamsReply_StatusType StatusType;
-  static const StatusType RUNNING = RecordingParamsReply_StatusType_RUNNING;
-  static const StatusType STOPPED = RecordingParamsReply_StatusType_STOPPED;
-  static const StatusType ERROR = RecordingParamsReply_StatusType_ERROR;
+  typedef RecordingStatusReply_StatusType StatusType;
+  static const StatusType RUNNING = RecordingStatusReply_StatusType_RUNNING;
+  static const StatusType STOPPED = RecordingStatusReply_StatusType_STOPPED;
+  static const StatusType ERROR = RecordingStatusReply_StatusType_ERROR;
   static inline bool StatusType_IsValid(int value) {
-    return RecordingParamsReply_StatusType_IsValid(value);
+    return RecordingStatusReply_StatusType_IsValid(value);
   }
   static const StatusType StatusType_MIN =
-    RecordingParamsReply_StatusType_StatusType_MIN;
+    RecordingStatusReply_StatusType_StatusType_MIN;
   static const StatusType StatusType_MAX =
-    RecordingParamsReply_StatusType_StatusType_MAX;
+    RecordingStatusReply_StatusType_StatusType_MAX;
   static const int StatusType_ARRAYSIZE =
-    RecordingParamsReply_StatusType_StatusType_ARRAYSIZE;
+    RecordingStatusReply_StatusType_StatusType_ARRAYSIZE;
   static inline const ::google::protobuf::EnumDescriptor*
   StatusType_descriptor() {
-    return RecordingParamsReply_StatusType_descriptor();
+    return RecordingStatusReply_StatusType_descriptor();
   }
   static inline const ::std::string& StatusType_Name(StatusType value) {
-    return RecordingParamsReply_StatusType_Name(value);
+    return RecordingStatusReply_StatusType_Name(value);
   }
   static inline bool StatusType_Parse(const ::std::string& name,
       StatusType* value) {
-    return RecordingParamsReply_StatusType_Parse(name, value);
+    return RecordingStatusReply_StatusType_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
 
-  // required uint32 size = 1;
-  inline bool has_size() const;
-  inline void clear_size();
-  static const int kSizeFieldNumber = 1;
-  inline ::google::protobuf::uint32 size() const;
-  inline void set_size(::google::protobuf::uint32 value);
+  // optional .mearec.RecordingStatusReply.StatusType status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline ::mearec::RecordingStatusReply_StatusType status() const;
+  inline void set_status(::mearec::RecordingStatusReply_StatusType value);
 
-  // optional string type = 2;
-  inline bool has_type() const;
-  inline void clear_type();
-  static const int kTypeFieldNumber = 2;
-  inline const ::std::string& type() const;
-  inline void set_type(const ::std::string& value);
-  inline void set_type(const char* value);
-  inline void set_type(const char* value, size_t size);
-  inline ::std::string* mutable_type();
-  inline ::std::string* release_type();
-  inline void set_allocated_type(::std::string* type);
-
-  // optional string filename = 3;
+  // optional string filename = 2;
   inline bool has_filename() const;
   inline void clear_filename();
-  static const int kFilenameFieldNumber = 3;
+  static const int kFilenameFieldNumber = 2;
   inline const ::std::string& filename() const;
   inline void set_filename(const ::std::string& value);
   inline void set_filename(const char* value);
@@ -367,66 +345,66 @@ class RecordingParamsReply : public ::google::protobuf::Message {
   inline ::std::string* release_filename();
   inline void set_allocated_filename(::std::string* filename);
 
-  // optional double length = 4;
+  // optional double length = 3;
   inline bool has_length() const;
   inline void clear_length();
-  static const int kLengthFieldNumber = 4;
+  static const int kLengthFieldNumber = 3;
   inline double length() const;
   inline void set_length(double value);
 
-  // optional uint32 nsamples = 5;
+  // optional uint32 nsamples = 4;
   inline bool has_nsamples() const;
   inline void clear_nsamples();
-  static const int kNsamplesFieldNumber = 5;
+  static const int kNsamplesFieldNumber = 4;
   inline ::google::protobuf::uint32 nsamples() const;
   inline void set_nsamples(::google::protobuf::uint32 value);
 
-  // optional uint32 nchannels = 6;
+  // optional uint32 nchannels = 5;
   inline bool has_nchannels() const;
   inline void clear_nchannels();
-  static const int kNchannelsFieldNumber = 6;
+  static const int kNchannelsFieldNumber = 5;
   inline ::google::protobuf::uint32 nchannels() const;
   inline void set_nchannels(::google::protobuf::uint32 value);
 
-  // optional uint32 lastValidSample = 7;
+  // optional uint32 lastValidSample = 6;
   inline bool has_lastvalidsample() const;
   inline void clear_lastvalidsample();
-  static const int kLastValidSampleFieldNumber = 7;
+  static const int kLastValidSampleFieldNumber = 6;
   inline ::google::protobuf::uint32 lastvalidsample() const;
   inline void set_lastvalidsample(::google::protobuf::uint32 value);
 
-  // optional uint32 blockSize = 8;
+  // optional uint32 blockSize = 7;
   inline bool has_blocksize() const;
   inline void clear_blocksize();
-  static const int kBlockSizeFieldNumber = 8;
+  static const int kBlockSizeFieldNumber = 7;
   inline ::google::protobuf::uint32 blocksize() const;
   inline void set_blocksize(::google::protobuf::uint32 value);
 
-  // optional float sampleRate = 9;
+  // optional float sampleRate = 8;
   inline bool has_samplerate() const;
   inline void clear_samplerate();
-  static const int kSampleRateFieldNumber = 9;
+  static const int kSampleRateFieldNumber = 8;
   inline float samplerate() const;
   inline void set_samplerate(float value);
 
-  // optional float gain = 10;
+  // optional float gain = 9;
   inline bool has_gain() const;
   inline void clear_gain();
-  static const int kGainFieldNumber = 10;
+  static const int kGainFieldNumber = 9;
   inline float gain() const;
   inline void set_gain(float value);
 
-  // optional float offset = 11;
+  // optional float offset = 10;
   inline bool has_offset() const;
   inline void clear_offset();
-  static const int kOffsetFieldNumber = 11;
+  static const int kOffsetFieldNumber = 10;
   inline float offset() const;
   inline void set_offset(float value);
 
-  // optional string date = 12;
+  // optional string date = 11;
   inline bool has_date() const;
   inline void clear_date();
-  static const int kDateFieldNumber = 12;
+  static const int kDateFieldNumber = 11;
   inline const ::std::string& date() const;
   inline void set_date(const ::std::string& value);
   inline void set_date(const char* value);
@@ -435,10 +413,10 @@ class RecordingParamsReply : public ::google::protobuf::Message {
   inline ::std::string* release_date();
   inline void set_allocated_date(::std::string* date);
 
-  // optional string time = 13;
+  // optional string time = 12;
   inline bool has_time() const;
   inline void clear_time();
-  static const int kTimeFieldNumber = 13;
+  static const int kTimeFieldNumber = 12;
   inline const ::std::string& time() const;
   inline void set_time(const ::std::string& value);
   inline void set_time(const char* value);
@@ -447,12 +425,10 @@ class RecordingParamsReply : public ::google::protobuf::Message {
   inline ::std::string* release_time();
   inline void set_allocated_time(::std::string* time);
 
-  // @@protoc_insertion_point(class_scope:mearec.RecordingParamsReply)
+  // @@protoc_insertion_point(class_scope:mearec.RecordingStatusReply)
  private:
-  inline void set_has_size();
-  inline void clear_has_size();
-  inline void set_has_type();
-  inline void clear_has_type();
+  inline void set_has_status();
+  inline void clear_has_status();
   inline void set_has_filename();
   inline void clear_has_filename();
   inline void set_has_length();
@@ -480,9 +456,8 @@ class RecordingParamsReply : public ::google::protobuf::Message {
 
   ::google::protobuf::uint32 _has_bits_[1];
   mutable int _cached_size_;
-  ::std::string* type_;
   ::std::string* filename_;
-  ::google::protobuf::uint32 size_;
+  int status_;
   ::google::protobuf::uint32 nsamples_;
   double length_;
   ::google::protobuf::uint32 nchannels_;
@@ -498,7 +473,7 @@ class RecordingParamsReply : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_logserver_2eproto();
 
   void InitAsDefaultInstance();
-  static RecordingParamsReply* default_instance_;
+  static RecordingStatusReply* default_instance_;
 };
 // ===================================================================
 
@@ -507,63 +482,39 @@ class RecordingParamsReply : public ::google::protobuf::Message {
 
 // RecordingStatusRequest
 
-// required uint32 size = 1;
-inline bool RecordingStatusRequest::has_size() const {
+// optional bool status = 1;
+inline bool RecordingStatusRequest::has_status() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void RecordingStatusRequest::set_has_size() {
+inline void RecordingStatusRequest::set_has_status() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void RecordingStatusRequest::clear_has_size() {
+inline void RecordingStatusRequest::clear_has_status() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void RecordingStatusRequest::clear_size() {
-  size_ = 0u;
-  clear_has_size();
+inline void RecordingStatusRequest::clear_status() {
+  status_ = false;
+  clear_has_status();
 }
-inline ::google::protobuf::uint32 RecordingStatusRequest::size() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingStatusRequest.size)
-  return size_;
+inline bool RecordingStatusRequest::status() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusRequest.status)
+  return status_;
 }
-inline void RecordingStatusRequest::set_size(::google::protobuf::uint32 value) {
-  set_has_size();
-  size_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.size)
+inline void RecordingStatusRequest::set_status(bool value) {
+  set_has_status();
+  status_ = value;
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.status)
 }
 
-// optional bool type = 2;
-inline bool RecordingStatusRequest::has_type() const {
+// optional bool filename = 2;
+inline bool RecordingStatusRequest::has_filename() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void RecordingStatusRequest::set_has_type() {
+inline void RecordingStatusRequest::set_has_filename() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void RecordingStatusRequest::clear_has_type() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void RecordingStatusRequest::clear_type() {
-  type_ = false;
-  clear_has_type();
-}
-inline bool RecordingStatusRequest::type() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingStatusRequest.type)
-  return type_;
-}
-inline void RecordingStatusRequest::set_type(bool value) {
-  set_has_type();
-  type_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.type)
-}
-
-// optional bool filename = 3;
-inline bool RecordingStatusRequest::has_filename() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void RecordingStatusRequest::set_has_filename() {
-  _has_bits_[0] |= 0x00000004u;
-}
 inline void RecordingStatusRequest::clear_has_filename() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void RecordingStatusRequest::clear_filename() {
   filename_ = false;
@@ -579,15 +530,15 @@ inline void RecordingStatusRequest::set_filename(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.filename)
 }
 
-// optional bool length = 4;
+// optional bool length = 3;
 inline bool RecordingStatusRequest::has_length() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void RecordingStatusRequest::set_has_length() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void RecordingStatusRequest::clear_has_length() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void RecordingStatusRequest::clear_length() {
   length_ = false;
@@ -603,15 +554,15 @@ inline void RecordingStatusRequest::set_length(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.length)
 }
 
-// optional bool nsamples = 5;
+// optional bool nsamples = 4;
 inline bool RecordingStatusRequest::has_nsamples() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void RecordingStatusRequest::set_has_nsamples() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void RecordingStatusRequest::clear_has_nsamples() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void RecordingStatusRequest::clear_nsamples() {
   nsamples_ = false;
@@ -627,15 +578,15 @@ inline void RecordingStatusRequest::set_nsamples(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.nsamples)
 }
 
-// optional bool nchannels = 6;
+// optional bool nchannels = 5;
 inline bool RecordingStatusRequest::has_nchannels() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void RecordingStatusRequest::set_has_nchannels() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void RecordingStatusRequest::clear_has_nchannels() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void RecordingStatusRequest::clear_nchannels() {
   nchannels_ = false;
@@ -651,15 +602,15 @@ inline void RecordingStatusRequest::set_nchannels(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.nchannels)
 }
 
-// optional bool lastValidSample = 7;
+// optional bool lastValidSample = 6;
 inline bool RecordingStatusRequest::has_lastvalidsample() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void RecordingStatusRequest::set_has_lastvalidsample() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void RecordingStatusRequest::clear_has_lastvalidsample() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void RecordingStatusRequest::clear_lastvalidsample() {
   lastvalidsample_ = false;
@@ -675,15 +626,15 @@ inline void RecordingStatusRequest::set_lastvalidsample(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.lastValidSample)
 }
 
-// optional bool blockSize = 8;
+// optional bool blockSize = 7;
 inline bool RecordingStatusRequest::has_blocksize() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void RecordingStatusRequest::set_has_blocksize() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void RecordingStatusRequest::clear_has_blocksize() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void RecordingStatusRequest::clear_blocksize() {
   blocksize_ = false;
@@ -699,15 +650,15 @@ inline void RecordingStatusRequest::set_blocksize(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.blockSize)
 }
 
-// optional bool sampleRate = 9;
+// optional bool sampleRate = 8;
 inline bool RecordingStatusRequest::has_samplerate() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void RecordingStatusRequest::set_has_samplerate() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void RecordingStatusRequest::clear_has_samplerate() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void RecordingStatusRequest::clear_samplerate() {
   samplerate_ = false;
@@ -723,15 +674,15 @@ inline void RecordingStatusRequest::set_samplerate(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.sampleRate)
 }
 
-// optional bool gain = 10;
+// optional bool gain = 9;
 inline bool RecordingStatusRequest::has_gain() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void RecordingStatusRequest::set_has_gain() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void RecordingStatusRequest::clear_has_gain() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void RecordingStatusRequest::clear_gain() {
   gain_ = false;
@@ -747,15 +698,15 @@ inline void RecordingStatusRequest::set_gain(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.gain)
 }
 
-// optional bool offset = 11;
+// optional bool offset = 10;
 inline bool RecordingStatusRequest::has_offset() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void RecordingStatusRequest::set_has_offset() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void RecordingStatusRequest::clear_has_offset() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void RecordingStatusRequest::clear_offset() {
   offset_ = false;
@@ -771,15 +722,15 @@ inline void RecordingStatusRequest::set_offset(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.offset)
 }
 
-// optional bool date = 12;
+// optional bool date = 11;
 inline bool RecordingStatusRequest::has_date() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void RecordingStatusRequest::set_has_date() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void RecordingStatusRequest::clear_has_date() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void RecordingStatusRequest::clear_date() {
   date_ = false;
@@ -795,15 +746,15 @@ inline void RecordingStatusRequest::set_date(bool value) {
   // @@protoc_insertion_point(field_set:mearec.RecordingStatusRequest.date)
 }
 
-// optional bool time = 13;
+// optional bool time = 12;
 inline bool RecordingStatusRequest::has_time() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void RecordingStatusRequest::set_has_time() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void RecordingStatusRequest::clear_has_time() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void RecordingStatusRequest::clear_time() {
   time_ = false;
@@ -821,161 +772,86 @@ inline void RecordingStatusRequest::set_time(bool value) {
 
 // -------------------------------------------------------------------
 
-// RecordingParamsReply
+// RecordingStatusReply
 
-// required uint32 size = 1;
-inline bool RecordingParamsReply::has_size() const {
+// optional .mearec.RecordingStatusReply.StatusType status = 1;
+inline bool RecordingStatusReply::has_status() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void RecordingParamsReply::set_has_size() {
+inline void RecordingStatusReply::set_has_status() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void RecordingParamsReply::clear_has_size() {
+inline void RecordingStatusReply::clear_has_status() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void RecordingParamsReply::clear_size() {
-  size_ = 0u;
-  clear_has_size();
+inline void RecordingStatusReply::clear_status() {
+  status_ = 0;
+  clear_has_status();
 }
-inline ::google::protobuf::uint32 RecordingParamsReply::size() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.size)
-  return size_;
+inline ::mearec::RecordingStatusReply_StatusType RecordingStatusReply::status() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.status)
+  return static_cast< ::mearec::RecordingStatusReply_StatusType >(status_);
 }
-inline void RecordingParamsReply::set_size(::google::protobuf::uint32 value) {
-  set_has_size();
-  size_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.size)
+inline void RecordingStatusReply::set_status(::mearec::RecordingStatusReply_StatusType value) {
+  assert(::mearec::RecordingStatusReply_StatusType_IsValid(value));
+  set_has_status();
+  status_ = value;
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.status)
 }
 
-// optional string type = 2;
-inline bool RecordingParamsReply::has_type() const {
+// optional string filename = 2;
+inline bool RecordingStatusReply::has_filename() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void RecordingParamsReply::set_has_type() {
+inline void RecordingStatusReply::set_has_filename() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void RecordingParamsReply::clear_has_type() {
+inline void RecordingStatusReply::clear_has_filename() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void RecordingParamsReply::clear_type() {
-  if (type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    type_->clear();
-  }
-  clear_has_type();
-}
-inline const ::std::string& RecordingParamsReply::type() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.type)
-  return *type_;
-}
-inline void RecordingParamsReply::set_type(const ::std::string& value) {
-  set_has_type();
-  if (type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    type_ = new ::std::string;
-  }
-  type_->assign(value);
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.type)
-}
-inline void RecordingParamsReply::set_type(const char* value) {
-  set_has_type();
-  if (type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    type_ = new ::std::string;
-  }
-  type_->assign(value);
-  // @@protoc_insertion_point(field_set_char:mearec.RecordingParamsReply.type)
-}
-inline void RecordingParamsReply::set_type(const char* value, size_t size) {
-  set_has_type();
-  if (type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    type_ = new ::std::string;
-  }
-  type_->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:mearec.RecordingParamsReply.type)
-}
-inline ::std::string* RecordingParamsReply::mutable_type() {
-  set_has_type();
-  if (type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    type_ = new ::std::string;
-  }
-  // @@protoc_insertion_point(field_mutable:mearec.RecordingParamsReply.type)
-  return type_;
-}
-inline ::std::string* RecordingParamsReply::release_type() {
-  clear_has_type();
-  if (type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    return NULL;
-  } else {
-    ::std::string* temp = type_;
-    type_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-    return temp;
-  }
-}
-inline void RecordingParamsReply::set_allocated_type(::std::string* type) {
-  if (type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    delete type_;
-  }
-  if (type) {
-    set_has_type();
-    type_ = type;
-  } else {
-    clear_has_type();
-    type_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  }
-  // @@protoc_insertion_point(field_set_allocated:mearec.RecordingParamsReply.type)
-}
-
-// optional string filename = 3;
-inline bool RecordingParamsReply::has_filename() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void RecordingParamsReply::set_has_filename() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void RecordingParamsReply::clear_has_filename() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void RecordingParamsReply::clear_filename() {
+inline void RecordingStatusReply::clear_filename() {
   if (filename_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     filename_->clear();
   }
   clear_has_filename();
 }
-inline const ::std::string& RecordingParamsReply::filename() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.filename)
+inline const ::std::string& RecordingStatusReply::filename() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.filename)
   return *filename_;
 }
-inline void RecordingParamsReply::set_filename(const ::std::string& value) {
+inline void RecordingStatusReply::set_filename(const ::std::string& value) {
   set_has_filename();
   if (filename_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     filename_ = new ::std::string;
   }
   filename_->assign(value);
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.filename)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.filename)
 }
-inline void RecordingParamsReply::set_filename(const char* value) {
+inline void RecordingStatusReply::set_filename(const char* value) {
   set_has_filename();
   if (filename_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     filename_ = new ::std::string;
   }
   filename_->assign(value);
-  // @@protoc_insertion_point(field_set_char:mearec.RecordingParamsReply.filename)
+  // @@protoc_insertion_point(field_set_char:mearec.RecordingStatusReply.filename)
 }
-inline void RecordingParamsReply::set_filename(const char* value, size_t size) {
+inline void RecordingStatusReply::set_filename(const char* value, size_t size) {
   set_has_filename();
   if (filename_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     filename_ = new ::std::string;
   }
   filename_->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:mearec.RecordingParamsReply.filename)
+  // @@protoc_insertion_point(field_set_pointer:mearec.RecordingStatusReply.filename)
 }
-inline ::std::string* RecordingParamsReply::mutable_filename() {
+inline ::std::string* RecordingStatusReply::mutable_filename() {
   set_has_filename();
   if (filename_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     filename_ = new ::std::string;
   }
-  // @@protoc_insertion_point(field_mutable:mearec.RecordingParamsReply.filename)
+  // @@protoc_insertion_point(field_mutable:mearec.RecordingStatusReply.filename)
   return filename_;
 }
-inline ::std::string* RecordingParamsReply::release_filename() {
+inline ::std::string* RecordingStatusReply::release_filename() {
   clear_has_filename();
   if (filename_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     return NULL;
@@ -985,7 +861,7 @@ inline ::std::string* RecordingParamsReply::release_filename() {
     return temp;
   }
 }
-inline void RecordingParamsReply::set_allocated_filename(::std::string* filename) {
+inline void RecordingStatusReply::set_allocated_filename(::std::string* filename) {
   if (filename_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     delete filename_;
   }
@@ -996,254 +872,254 @@ inline void RecordingParamsReply::set_allocated_filename(::std::string* filename
     clear_has_filename();
     filename_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   }
-  // @@protoc_insertion_point(field_set_allocated:mearec.RecordingParamsReply.filename)
+  // @@protoc_insertion_point(field_set_allocated:mearec.RecordingStatusReply.filename)
 }
 
-// optional double length = 4;
-inline bool RecordingParamsReply::has_length() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+// optional double length = 3;
+inline bool RecordingStatusReply::has_length() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void RecordingParamsReply::set_has_length() {
-  _has_bits_[0] |= 0x00000008u;
+inline void RecordingStatusReply::set_has_length() {
+  _has_bits_[0] |= 0x00000004u;
 }
-inline void RecordingParamsReply::clear_has_length() {
-  _has_bits_[0] &= ~0x00000008u;
+inline void RecordingStatusReply::clear_has_length() {
+  _has_bits_[0] &= ~0x00000004u;
 }
-inline void RecordingParamsReply::clear_length() {
+inline void RecordingStatusReply::clear_length() {
   length_ = 0;
   clear_has_length();
 }
-inline double RecordingParamsReply::length() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.length)
+inline double RecordingStatusReply::length() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.length)
   return length_;
 }
-inline void RecordingParamsReply::set_length(double value) {
+inline void RecordingStatusReply::set_length(double value) {
   set_has_length();
   length_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.length)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.length)
 }
 
-// optional uint32 nsamples = 5;
-inline bool RecordingParamsReply::has_nsamples() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+// optional uint32 nsamples = 4;
+inline bool RecordingStatusReply::has_nsamples() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void RecordingParamsReply::set_has_nsamples() {
-  _has_bits_[0] |= 0x00000010u;
+inline void RecordingStatusReply::set_has_nsamples() {
+  _has_bits_[0] |= 0x00000008u;
 }
-inline void RecordingParamsReply::clear_has_nsamples() {
-  _has_bits_[0] &= ~0x00000010u;
+inline void RecordingStatusReply::clear_has_nsamples() {
+  _has_bits_[0] &= ~0x00000008u;
 }
-inline void RecordingParamsReply::clear_nsamples() {
+inline void RecordingStatusReply::clear_nsamples() {
   nsamples_ = 0u;
   clear_has_nsamples();
 }
-inline ::google::protobuf::uint32 RecordingParamsReply::nsamples() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.nsamples)
+inline ::google::protobuf::uint32 RecordingStatusReply::nsamples() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.nsamples)
   return nsamples_;
 }
-inline void RecordingParamsReply::set_nsamples(::google::protobuf::uint32 value) {
+inline void RecordingStatusReply::set_nsamples(::google::protobuf::uint32 value) {
   set_has_nsamples();
   nsamples_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.nsamples)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.nsamples)
 }
 
-// optional uint32 nchannels = 6;
-inline bool RecordingParamsReply::has_nchannels() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+// optional uint32 nchannels = 5;
+inline bool RecordingStatusReply::has_nchannels() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void RecordingParamsReply::set_has_nchannels() {
-  _has_bits_[0] |= 0x00000020u;
+inline void RecordingStatusReply::set_has_nchannels() {
+  _has_bits_[0] |= 0x00000010u;
 }
-inline void RecordingParamsReply::clear_has_nchannels() {
-  _has_bits_[0] &= ~0x00000020u;
+inline void RecordingStatusReply::clear_has_nchannels() {
+  _has_bits_[0] &= ~0x00000010u;
 }
-inline void RecordingParamsReply::clear_nchannels() {
+inline void RecordingStatusReply::clear_nchannels() {
   nchannels_ = 0u;
   clear_has_nchannels();
 }
-inline ::google::protobuf::uint32 RecordingParamsReply::nchannels() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.nchannels)
+inline ::google::protobuf::uint32 RecordingStatusReply::nchannels() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.nchannels)
   return nchannels_;
 }
-inline void RecordingParamsReply::set_nchannels(::google::protobuf::uint32 value) {
+inline void RecordingStatusReply::set_nchannels(::google::protobuf::uint32 value) {
   set_has_nchannels();
   nchannels_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.nchannels)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.nchannels)
 }
 
-// optional uint32 lastValidSample = 7;
-inline bool RecordingParamsReply::has_lastvalidsample() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+// optional uint32 lastValidSample = 6;
+inline bool RecordingStatusReply::has_lastvalidsample() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void RecordingParamsReply::set_has_lastvalidsample() {
-  _has_bits_[0] |= 0x00000040u;
+inline void RecordingStatusReply::set_has_lastvalidsample() {
+  _has_bits_[0] |= 0x00000020u;
 }
-inline void RecordingParamsReply::clear_has_lastvalidsample() {
-  _has_bits_[0] &= ~0x00000040u;
+inline void RecordingStatusReply::clear_has_lastvalidsample() {
+  _has_bits_[0] &= ~0x00000020u;
 }
-inline void RecordingParamsReply::clear_lastvalidsample() {
+inline void RecordingStatusReply::clear_lastvalidsample() {
   lastvalidsample_ = 0u;
   clear_has_lastvalidsample();
 }
-inline ::google::protobuf::uint32 RecordingParamsReply::lastvalidsample() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.lastValidSample)
+inline ::google::protobuf::uint32 RecordingStatusReply::lastvalidsample() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.lastValidSample)
   return lastvalidsample_;
 }
-inline void RecordingParamsReply::set_lastvalidsample(::google::protobuf::uint32 value) {
+inline void RecordingStatusReply::set_lastvalidsample(::google::protobuf::uint32 value) {
   set_has_lastvalidsample();
   lastvalidsample_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.lastValidSample)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.lastValidSample)
 }
 
-// optional uint32 blockSize = 8;
-inline bool RecordingParamsReply::has_blocksize() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+// optional uint32 blockSize = 7;
+inline bool RecordingStatusReply::has_blocksize() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
-inline void RecordingParamsReply::set_has_blocksize() {
-  _has_bits_[0] |= 0x00000080u;
+inline void RecordingStatusReply::set_has_blocksize() {
+  _has_bits_[0] |= 0x00000040u;
 }
-inline void RecordingParamsReply::clear_has_blocksize() {
-  _has_bits_[0] &= ~0x00000080u;
+inline void RecordingStatusReply::clear_has_blocksize() {
+  _has_bits_[0] &= ~0x00000040u;
 }
-inline void RecordingParamsReply::clear_blocksize() {
+inline void RecordingStatusReply::clear_blocksize() {
   blocksize_ = 0u;
   clear_has_blocksize();
 }
-inline ::google::protobuf::uint32 RecordingParamsReply::blocksize() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.blockSize)
+inline ::google::protobuf::uint32 RecordingStatusReply::blocksize() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.blockSize)
   return blocksize_;
 }
-inline void RecordingParamsReply::set_blocksize(::google::protobuf::uint32 value) {
+inline void RecordingStatusReply::set_blocksize(::google::protobuf::uint32 value) {
   set_has_blocksize();
   blocksize_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.blockSize)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.blockSize)
 }
 
-// optional float sampleRate = 9;
-inline bool RecordingParamsReply::has_samplerate() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+// optional float sampleRate = 8;
+inline bool RecordingStatusReply::has_samplerate() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
-inline void RecordingParamsReply::set_has_samplerate() {
-  _has_bits_[0] |= 0x00000100u;
+inline void RecordingStatusReply::set_has_samplerate() {
+  _has_bits_[0] |= 0x00000080u;
 }
-inline void RecordingParamsReply::clear_has_samplerate() {
-  _has_bits_[0] &= ~0x00000100u;
+inline void RecordingStatusReply::clear_has_samplerate() {
+  _has_bits_[0] &= ~0x00000080u;
 }
-inline void RecordingParamsReply::clear_samplerate() {
+inline void RecordingStatusReply::clear_samplerate() {
   samplerate_ = 0;
   clear_has_samplerate();
 }
-inline float RecordingParamsReply::samplerate() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.sampleRate)
+inline float RecordingStatusReply::samplerate() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.sampleRate)
   return samplerate_;
 }
-inline void RecordingParamsReply::set_samplerate(float value) {
+inline void RecordingStatusReply::set_samplerate(float value) {
   set_has_samplerate();
   samplerate_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.sampleRate)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.sampleRate)
 }
 
-// optional float gain = 10;
-inline bool RecordingParamsReply::has_gain() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+// optional float gain = 9;
+inline bool RecordingStatusReply::has_gain() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
-inline void RecordingParamsReply::set_has_gain() {
-  _has_bits_[0] |= 0x00000200u;
+inline void RecordingStatusReply::set_has_gain() {
+  _has_bits_[0] |= 0x00000100u;
 }
-inline void RecordingParamsReply::clear_has_gain() {
-  _has_bits_[0] &= ~0x00000200u;
+inline void RecordingStatusReply::clear_has_gain() {
+  _has_bits_[0] &= ~0x00000100u;
 }
-inline void RecordingParamsReply::clear_gain() {
+inline void RecordingStatusReply::clear_gain() {
   gain_ = 0;
   clear_has_gain();
 }
-inline float RecordingParamsReply::gain() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.gain)
+inline float RecordingStatusReply::gain() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.gain)
   return gain_;
 }
-inline void RecordingParamsReply::set_gain(float value) {
+inline void RecordingStatusReply::set_gain(float value) {
   set_has_gain();
   gain_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.gain)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.gain)
 }
 
-// optional float offset = 11;
-inline bool RecordingParamsReply::has_offset() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+// optional float offset = 10;
+inline bool RecordingStatusReply::has_offset() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
-inline void RecordingParamsReply::set_has_offset() {
-  _has_bits_[0] |= 0x00000400u;
+inline void RecordingStatusReply::set_has_offset() {
+  _has_bits_[0] |= 0x00000200u;
 }
-inline void RecordingParamsReply::clear_has_offset() {
-  _has_bits_[0] &= ~0x00000400u;
+inline void RecordingStatusReply::clear_has_offset() {
+  _has_bits_[0] &= ~0x00000200u;
 }
-inline void RecordingParamsReply::clear_offset() {
+inline void RecordingStatusReply::clear_offset() {
   offset_ = 0;
   clear_has_offset();
 }
-inline float RecordingParamsReply::offset() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.offset)
+inline float RecordingStatusReply::offset() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.offset)
   return offset_;
 }
-inline void RecordingParamsReply::set_offset(float value) {
+inline void RecordingStatusReply::set_offset(float value) {
   set_has_offset();
   offset_ = value;
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.offset)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.offset)
 }
 
-// optional string date = 12;
-inline bool RecordingParamsReply::has_date() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+// optional string date = 11;
+inline bool RecordingStatusReply::has_date() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
-inline void RecordingParamsReply::set_has_date() {
-  _has_bits_[0] |= 0x00000800u;
+inline void RecordingStatusReply::set_has_date() {
+  _has_bits_[0] |= 0x00000400u;
 }
-inline void RecordingParamsReply::clear_has_date() {
-  _has_bits_[0] &= ~0x00000800u;
+inline void RecordingStatusReply::clear_has_date() {
+  _has_bits_[0] &= ~0x00000400u;
 }
-inline void RecordingParamsReply::clear_date() {
+inline void RecordingStatusReply::clear_date() {
   if (date_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     date_->clear();
   }
   clear_has_date();
 }
-inline const ::std::string& RecordingParamsReply::date() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.date)
+inline const ::std::string& RecordingStatusReply::date() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.date)
   return *date_;
 }
-inline void RecordingParamsReply::set_date(const ::std::string& value) {
+inline void RecordingStatusReply::set_date(const ::std::string& value) {
   set_has_date();
   if (date_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     date_ = new ::std::string;
   }
   date_->assign(value);
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.date)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.date)
 }
-inline void RecordingParamsReply::set_date(const char* value) {
+inline void RecordingStatusReply::set_date(const char* value) {
   set_has_date();
   if (date_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     date_ = new ::std::string;
   }
   date_->assign(value);
-  // @@protoc_insertion_point(field_set_char:mearec.RecordingParamsReply.date)
+  // @@protoc_insertion_point(field_set_char:mearec.RecordingStatusReply.date)
 }
-inline void RecordingParamsReply::set_date(const char* value, size_t size) {
+inline void RecordingStatusReply::set_date(const char* value, size_t size) {
   set_has_date();
   if (date_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     date_ = new ::std::string;
   }
   date_->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:mearec.RecordingParamsReply.date)
+  // @@protoc_insertion_point(field_set_pointer:mearec.RecordingStatusReply.date)
 }
-inline ::std::string* RecordingParamsReply::mutable_date() {
+inline ::std::string* RecordingStatusReply::mutable_date() {
   set_has_date();
   if (date_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     date_ = new ::std::string;
   }
-  // @@protoc_insertion_point(field_mutable:mearec.RecordingParamsReply.date)
+  // @@protoc_insertion_point(field_mutable:mearec.RecordingStatusReply.date)
   return date_;
 }
-inline ::std::string* RecordingParamsReply::release_date() {
+inline ::std::string* RecordingStatusReply::release_date() {
   clear_has_date();
   if (date_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     return NULL;
@@ -1253,7 +1129,7 @@ inline ::std::string* RecordingParamsReply::release_date() {
     return temp;
   }
 }
-inline void RecordingParamsReply::set_allocated_date(::std::string* date) {
+inline void RecordingStatusReply::set_allocated_date(::std::string* date) {
   if (date_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     delete date_;
   }
@@ -1264,62 +1140,62 @@ inline void RecordingParamsReply::set_allocated_date(::std::string* date) {
     clear_has_date();
     date_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   }
-  // @@protoc_insertion_point(field_set_allocated:mearec.RecordingParamsReply.date)
+  // @@protoc_insertion_point(field_set_allocated:mearec.RecordingStatusReply.date)
 }
 
-// optional string time = 13;
-inline bool RecordingParamsReply::has_time() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+// optional string time = 12;
+inline bool RecordingStatusReply::has_time() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
-inline void RecordingParamsReply::set_has_time() {
-  _has_bits_[0] |= 0x00001000u;
+inline void RecordingStatusReply::set_has_time() {
+  _has_bits_[0] |= 0x00000800u;
 }
-inline void RecordingParamsReply::clear_has_time() {
-  _has_bits_[0] &= ~0x00001000u;
+inline void RecordingStatusReply::clear_has_time() {
+  _has_bits_[0] &= ~0x00000800u;
 }
-inline void RecordingParamsReply::clear_time() {
+inline void RecordingStatusReply::clear_time() {
   if (time_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     time_->clear();
   }
   clear_has_time();
 }
-inline const ::std::string& RecordingParamsReply::time() const {
-  // @@protoc_insertion_point(field_get:mearec.RecordingParamsReply.time)
+inline const ::std::string& RecordingStatusReply::time() const {
+  // @@protoc_insertion_point(field_get:mearec.RecordingStatusReply.time)
   return *time_;
 }
-inline void RecordingParamsReply::set_time(const ::std::string& value) {
+inline void RecordingStatusReply::set_time(const ::std::string& value) {
   set_has_time();
   if (time_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     time_ = new ::std::string;
   }
   time_->assign(value);
-  // @@protoc_insertion_point(field_set:mearec.RecordingParamsReply.time)
+  // @@protoc_insertion_point(field_set:mearec.RecordingStatusReply.time)
 }
-inline void RecordingParamsReply::set_time(const char* value) {
+inline void RecordingStatusReply::set_time(const char* value) {
   set_has_time();
   if (time_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     time_ = new ::std::string;
   }
   time_->assign(value);
-  // @@protoc_insertion_point(field_set_char:mearec.RecordingParamsReply.time)
+  // @@protoc_insertion_point(field_set_char:mearec.RecordingStatusReply.time)
 }
-inline void RecordingParamsReply::set_time(const char* value, size_t size) {
+inline void RecordingStatusReply::set_time(const char* value, size_t size) {
   set_has_time();
   if (time_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     time_ = new ::std::string;
   }
   time_->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:mearec.RecordingParamsReply.time)
+  // @@protoc_insertion_point(field_set_pointer:mearec.RecordingStatusReply.time)
 }
-inline ::std::string* RecordingParamsReply::mutable_time() {
+inline ::std::string* RecordingStatusReply::mutable_time() {
   set_has_time();
   if (time_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     time_ = new ::std::string;
   }
-  // @@protoc_insertion_point(field_mutable:mearec.RecordingParamsReply.time)
+  // @@protoc_insertion_point(field_mutable:mearec.RecordingStatusReply.time)
   return time_;
 }
-inline ::std::string* RecordingParamsReply::release_time() {
+inline ::std::string* RecordingStatusReply::release_time() {
   clear_has_time();
   if (time_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     return NULL;
@@ -1329,7 +1205,7 @@ inline ::std::string* RecordingParamsReply::release_time() {
     return temp;
   }
 }
-inline void RecordingParamsReply::set_allocated_time(::std::string* time) {
+inline void RecordingStatusReply::set_allocated_time(::std::string* time) {
   if (time_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     delete time_;
   }
@@ -1340,7 +1216,7 @@ inline void RecordingParamsReply::set_allocated_time(::std::string* time) {
     clear_has_time();
     time_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   }
-  // @@protoc_insertion_point(field_set_allocated:mearec.RecordingParamsReply.time)
+  // @@protoc_insertion_point(field_set_allocated:mearec.RecordingStatusReply.time)
 }
 
 
@@ -1352,10 +1228,10 @@ inline void RecordingParamsReply::set_allocated_time(::std::string* time) {
 namespace google {
 namespace protobuf {
 
-template <> struct is_proto_enum< ::mearec::RecordingParamsReply_StatusType> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::mearec::RecordingStatusReply_StatusType> : ::google::protobuf::internal::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::mearec::RecordingParamsReply_StatusType>() {
-  return ::mearec::RecordingParamsReply_StatusType_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::mearec::RecordingStatusReply_StatusType>() {
+  return ::mearec::RecordingStatusReply_StatusType_descriptor();
 }
 
 }  // namespace google

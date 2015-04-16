@@ -23,10 +23,10 @@ namespace {
 const ::google::protobuf::Descriptor* RecordingStatusRequest_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   RecordingStatusRequest_reflection_ = NULL;
-const ::google::protobuf::Descriptor* RecordingParamsReply_descriptor_ = NULL;
+const ::google::protobuf::Descriptor* RecordingStatusReply_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-  RecordingParamsReply_reflection_ = NULL;
-const ::google::protobuf::EnumDescriptor* RecordingParamsReply_StatusType_descriptor_ = NULL;
+  RecordingStatusReply_reflection_ = NULL;
+const ::google::protobuf::EnumDescriptor* RecordingStatusReply_StatusType_descriptor_ = NULL;
 
 }  // namespace
 
@@ -38,9 +38,8 @@ void protobuf_AssignDesc_logserver_2eproto() {
       "logserver.proto");
   GOOGLE_CHECK(file != NULL);
   RecordingStatusRequest_descriptor_ = file->message_type(0);
-  static const int RecordingStatusRequest_offsets_[13] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusRequest, size_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusRequest, type_),
+  static const int RecordingStatusRequest_offsets_[12] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusRequest, status_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusRequest, filename_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusRequest, length_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusRequest, nsamples_),
@@ -64,34 +63,33 @@ void protobuf_AssignDesc_logserver_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(RecordingStatusRequest));
-  RecordingParamsReply_descriptor_ = file->message_type(1);
-  static const int RecordingParamsReply_offsets_[13] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, size_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, type_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, filename_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, length_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, nsamples_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, nchannels_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, lastvalidsample_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, blocksize_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, samplerate_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, gain_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, offset_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, date_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, time_),
+  RecordingStatusReply_descriptor_ = file->message_type(1);
+  static const int RecordingStatusReply_offsets_[12] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, status_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, filename_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, length_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, nsamples_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, nchannels_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, lastvalidsample_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, blocksize_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, samplerate_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, gain_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, offset_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, date_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, time_),
   };
-  RecordingParamsReply_reflection_ =
+  RecordingStatusReply_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
-      RecordingParamsReply_descriptor_,
-      RecordingParamsReply::default_instance_,
-      RecordingParamsReply_offsets_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, _has_bits_[0]),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingParamsReply, _unknown_fields_),
+      RecordingStatusReply_descriptor_,
+      RecordingStatusReply::default_instance_,
+      RecordingStatusReply_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordingStatusReply, _unknown_fields_),
       -1,
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
-      sizeof(RecordingParamsReply));
-  RecordingParamsReply_StatusType_descriptor_ = RecordingParamsReply_descriptor_->enum_type(0);
+      sizeof(RecordingStatusReply));
+  RecordingStatusReply_StatusType_descriptor_ = RecordingStatusReply_descriptor_->enum_type(0);
 }
 
 namespace {
@@ -107,7 +105,7 @@ void protobuf_RegisterTypes(const ::std::string&) {
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     RecordingStatusRequest_descriptor_, &RecordingStatusRequest::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-    RecordingParamsReply_descriptor_, &RecordingParamsReply::default_instance());
+    RecordingStatusReply_descriptor_, &RecordingStatusReply::default_instance());
 }
 
 }  // namespace
@@ -115,8 +113,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void protobuf_ShutdownFile_logserver_2eproto() {
   delete RecordingStatusRequest::default_instance_;
   delete RecordingStatusRequest_reflection_;
-  delete RecordingParamsReply::default_instance_;
-  delete RecordingParamsReply_reflection_;
+  delete RecordingStatusReply::default_instance_;
+  delete RecordingStatusReply_reflection_;
 }
 
 void protobuf_AddDesc_logserver_2eproto() {
@@ -126,27 +124,27 @@ void protobuf_AddDesc_logserver_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\017logserver.proto\022\006mearec\"\365\001\n\026RecordingS"
-    "tatusRequest\022\014\n\004size\030\001 \002(\r\022\014\n\004type\030\002 \001(\010"
-    "\022\020\n\010filename\030\003 \001(\010\022\016\n\006length\030\004 \001(\010\022\020\n\010ns"
-    "amples\030\005 \001(\010\022\021\n\tnchannels\030\006 \001(\010\022\027\n\017lastV"
-    "alidSample\030\007 \001(\010\022\021\n\tblockSize\030\010 \001(\010\022\022\n\ns"
-    "ampleRate\030\t \001(\010\022\014\n\004gain\030\n \001(\010\022\016\n\006offset\030"
-    "\013 \001(\010\022\014\n\004date\030\014 \001(\010\022\014\n\004time\030\r \001(\010\"\246\002\n\024Re"
-    "cordingParamsReply\022\014\n\004size\030\001 \002(\r\022\014\n\004type"
-    "\030\002 \001(\t\022\020\n\010filename\030\003 \001(\t\022\016\n\006length\030\004 \001(\001"
-    "\022\020\n\010nsamples\030\005 \001(\r\022\021\n\tnchannels\030\006 \001(\r\022\027\n"
-    "\017lastValidSample\030\007 \001(\r\022\021\n\tblockSize\030\010 \001("
-    "\r\022\022\n\nsampleRate\030\t \001(\002\022\014\n\004gain\030\n \001(\002\022\016\n\006o"
-    "ffset\030\013 \001(\002\022\014\n\004date\030\014 \001(\t\022\014\n\004time\030\r \001(\t\""
-    "1\n\nStatusType\022\013\n\007RUNNING\020\000\022\013\n\007STOPPED\020\001\022"
-    "\t\n\005ERROR\020\002", 570);
+    "\n\017logserver.proto\022\006mearec\"\351\001\n\026RecordingS"
+    "tatusRequest\022\016\n\006status\030\001 \001(\010\022\020\n\010filename"
+    "\030\002 \001(\010\022\016\n\006length\030\003 \001(\010\022\020\n\010nsamples\030\004 \001(\010"
+    "\022\021\n\tnchannels\030\005 \001(\010\022\027\n\017lastValidSample\030\006"
+    " \001(\010\022\021\n\tblockSize\030\007 \001(\010\022\022\n\nsampleRate\030\010 "
+    "\001(\010\022\014\n\004gain\030\t \001(\010\022\016\n\006offset\030\n \001(\010\022\014\n\004dat"
+    "e\030\013 \001(\010\022\014\n\004time\030\014 \001(\010\"\303\002\n\024RecordingStatu"
+    "sReply\0227\n\006status\030\001 \001(\0162\'.mearec.Recordin"
+    "gStatusReply.StatusType\022\020\n\010filename\030\002 \001("
+    "\t\022\016\n\006length\030\003 \001(\001\022\020\n\010nsamples\030\004 \001(\r\022\021\n\tn"
+    "channels\030\005 \001(\r\022\027\n\017lastValidSample\030\006 \001(\r\022"
+    "\021\n\tblockSize\030\007 \001(\r\022\022\n\nsampleRate\030\010 \001(\002\022\014"
+    "\n\004gain\030\t \001(\002\022\016\n\006offset\030\n \001(\002\022\014\n\004date\030\013 \001"
+    "(\t\022\014\n\004time\030\014 \001(\t\"1\n\nStatusType\022\013\n\007RUNNIN"
+    "G\020\000\022\013\n\007STOPPED\020\001\022\t\n\005ERROR\020\002", 587);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "logserver.proto", &protobuf_RegisterTypes);
   RecordingStatusRequest::default_instance_ = new RecordingStatusRequest();
-  RecordingParamsReply::default_instance_ = new RecordingParamsReply();
+  RecordingStatusReply::default_instance_ = new RecordingStatusReply();
   RecordingStatusRequest::default_instance_->InitAsDefaultInstance();
-  RecordingParamsReply::default_instance_->InitAsDefaultInstance();
+  RecordingStatusReply::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_logserver_2eproto);
 }
 
@@ -160,8 +158,7 @@ struct StaticDescriptorInitializer_logserver_2eproto {
 // ===================================================================
 
 #ifndef _MSC_VER
-const int RecordingStatusRequest::kSizeFieldNumber;
-const int RecordingStatusRequest::kTypeFieldNumber;
+const int RecordingStatusRequest::kStatusFieldNumber;
 const int RecordingStatusRequest::kFilenameFieldNumber;
 const int RecordingStatusRequest::kLengthFieldNumber;
 const int RecordingStatusRequest::kNsamplesFieldNumber;
@@ -193,8 +190,7 @@ RecordingStatusRequest::RecordingStatusRequest(const RecordingStatusRequest& fro
 
 void RecordingStatusRequest::SharedCtor() {
   _cached_size_ = 0;
-  size_ = 0u;
-  type_ = false;
+  status_ = false;
   filename_ = false;
   length_ = false;
   nsamples_ = false;
@@ -252,11 +248,9 @@ void RecordingStatusRequest::Clear() {
   } while (0)
 
   if (_has_bits_[0 / 32] & 255) {
-    ZR_(size_, blocksize_);
+    ZR_(status_, samplerate_);
   }
-  if (_has_bits_[8 / 32] & 7936) {
-    ZR_(samplerate_, time_);
-  }
+  ZR_(gain_, time_);
 
 #undef OFFSET_OF_FIELD_
 #undef ZR_
@@ -275,38 +269,23 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required uint32 size = 1;
+      // optional bool status = 1;
       case 1: {
         if (tag == 8) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
-                 input, &size_)));
-          set_has_size();
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &status_)));
+          set_has_status();
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(16)) goto parse_type;
+        if (input->ExpectTag(16)) goto parse_filename;
         break;
       }
 
-      // optional bool type = 2;
+      // optional bool filename = 2;
       case 2: {
         if (tag == 16) {
-         parse_type:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &type_)));
-          set_has_type();
-        } else {
-          goto handle_unusual;
-        }
-        if (input->ExpectTag(24)) goto parse_filename;
-        break;
-      }
-
-      // optional bool filename = 3;
-      case 3: {
-        if (tag == 24) {
          parse_filename:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -315,13 +294,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(32)) goto parse_length;
+        if (input->ExpectTag(24)) goto parse_length;
         break;
       }
 
-      // optional bool length = 4;
-      case 4: {
-        if (tag == 32) {
+      // optional bool length = 3;
+      case 3: {
+        if (tag == 24) {
          parse_length:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -330,13 +309,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(40)) goto parse_nsamples;
+        if (input->ExpectTag(32)) goto parse_nsamples;
         break;
       }
 
-      // optional bool nsamples = 5;
-      case 5: {
-        if (tag == 40) {
+      // optional bool nsamples = 4;
+      case 4: {
+        if (tag == 32) {
          parse_nsamples:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -345,13 +324,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(48)) goto parse_nchannels;
+        if (input->ExpectTag(40)) goto parse_nchannels;
         break;
       }
 
-      // optional bool nchannels = 6;
-      case 6: {
-        if (tag == 48) {
+      // optional bool nchannels = 5;
+      case 5: {
+        if (tag == 40) {
          parse_nchannels:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -360,13 +339,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(56)) goto parse_lastValidSample;
+        if (input->ExpectTag(48)) goto parse_lastValidSample;
         break;
       }
 
-      // optional bool lastValidSample = 7;
-      case 7: {
-        if (tag == 56) {
+      // optional bool lastValidSample = 6;
+      case 6: {
+        if (tag == 48) {
          parse_lastValidSample:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -375,13 +354,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(64)) goto parse_blockSize;
+        if (input->ExpectTag(56)) goto parse_blockSize;
         break;
       }
 
-      // optional bool blockSize = 8;
-      case 8: {
-        if (tag == 64) {
+      // optional bool blockSize = 7;
+      case 7: {
+        if (tag == 56) {
          parse_blockSize:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -390,13 +369,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(72)) goto parse_sampleRate;
+        if (input->ExpectTag(64)) goto parse_sampleRate;
         break;
       }
 
-      // optional bool sampleRate = 9;
-      case 9: {
-        if (tag == 72) {
+      // optional bool sampleRate = 8;
+      case 8: {
+        if (tag == 64) {
          parse_sampleRate:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -405,13 +384,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(80)) goto parse_gain;
+        if (input->ExpectTag(72)) goto parse_gain;
         break;
       }
 
-      // optional bool gain = 10;
-      case 10: {
-        if (tag == 80) {
+      // optional bool gain = 9;
+      case 9: {
+        if (tag == 72) {
          parse_gain:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -420,13 +399,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(88)) goto parse_offset;
+        if (input->ExpectTag(80)) goto parse_offset;
         break;
       }
 
-      // optional bool offset = 11;
-      case 11: {
-        if (tag == 88) {
+      // optional bool offset = 10;
+      case 10: {
+        if (tag == 80) {
          parse_offset:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -435,13 +414,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(96)) goto parse_date;
+        if (input->ExpectTag(88)) goto parse_date;
         break;
       }
 
-      // optional bool date = 12;
-      case 12: {
-        if (tag == 96) {
+      // optional bool date = 11;
+      case 11: {
+        if (tag == 88) {
          parse_date:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -450,13 +429,13 @@ bool RecordingStatusRequest::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(104)) goto parse_time;
+        if (input->ExpectTag(96)) goto parse_time;
         break;
       }
 
-      // optional bool time = 13;
-      case 13: {
-        if (tag == 104) {
+      // optional bool time = 12;
+      case 12: {
+        if (tag == 96) {
          parse_time:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -494,69 +473,64 @@ failure:
 void RecordingStatusRequest::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // @@protoc_insertion_point(serialize_start:mearec.RecordingStatusRequest)
-  // required uint32 size = 1;
-  if (has_size()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(1, this->size(), output);
+  // optional bool status = 1;
+  if (has_status()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->status(), output);
   }
 
-  // optional bool type = 2;
-  if (has_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->type(), output);
-  }
-
-  // optional bool filename = 3;
+  // optional bool filename = 2;
   if (has_filename()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(3, this->filename(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->filename(), output);
   }
 
-  // optional bool length = 4;
+  // optional bool length = 3;
   if (has_length()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->length(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(3, this->length(), output);
   }
 
-  // optional bool nsamples = 5;
+  // optional bool nsamples = 4;
   if (has_nsamples()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->nsamples(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->nsamples(), output);
   }
 
-  // optional bool nchannels = 6;
+  // optional bool nchannels = 5;
   if (has_nchannels()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->nchannels(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->nchannels(), output);
   }
 
-  // optional bool lastValidSample = 7;
+  // optional bool lastValidSample = 6;
   if (has_lastvalidsample()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->lastvalidsample(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->lastvalidsample(), output);
   }
 
-  // optional bool blockSize = 8;
+  // optional bool blockSize = 7;
   if (has_blocksize()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(8, this->blocksize(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->blocksize(), output);
   }
 
-  // optional bool sampleRate = 9;
+  // optional bool sampleRate = 8;
   if (has_samplerate()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(9, this->samplerate(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(8, this->samplerate(), output);
   }
 
-  // optional bool gain = 10;
+  // optional bool gain = 9;
   if (has_gain()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(10, this->gain(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(9, this->gain(), output);
   }
 
-  // optional bool offset = 11;
+  // optional bool offset = 10;
   if (has_offset()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(11, this->offset(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(10, this->offset(), output);
   }
 
-  // optional bool date = 12;
+  // optional bool date = 11;
   if (has_date()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(12, this->date(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(11, this->date(), output);
   }
 
-  // optional bool time = 13;
+  // optional bool time = 12;
   if (has_time()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(13, this->time(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(12, this->time(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -569,69 +543,64 @@ void RecordingStatusRequest::SerializeWithCachedSizes(
 ::google::protobuf::uint8* RecordingStatusRequest::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
   // @@protoc_insertion_point(serialize_to_array_start:mearec.RecordingStatusRequest)
-  // required uint32 size = 1;
-  if (has_size()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(1, this->size(), target);
+  // optional bool status = 1;
+  if (has_status()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->status(), target);
   }
 
-  // optional bool type = 2;
-  if (has_type()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->type(), target);
-  }
-
-  // optional bool filename = 3;
+  // optional bool filename = 2;
   if (has_filename()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(3, this->filename(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->filename(), target);
   }
 
-  // optional bool length = 4;
+  // optional bool length = 3;
   if (has_length()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->length(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(3, this->length(), target);
   }
 
-  // optional bool nsamples = 5;
+  // optional bool nsamples = 4;
   if (has_nsamples()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->nsamples(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->nsamples(), target);
   }
 
-  // optional bool nchannels = 6;
+  // optional bool nchannels = 5;
   if (has_nchannels()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(6, this->nchannels(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->nchannels(), target);
   }
 
-  // optional bool lastValidSample = 7;
+  // optional bool lastValidSample = 6;
   if (has_lastvalidsample()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(7, this->lastvalidsample(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(6, this->lastvalidsample(), target);
   }
 
-  // optional bool blockSize = 8;
+  // optional bool blockSize = 7;
   if (has_blocksize()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(8, this->blocksize(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(7, this->blocksize(), target);
   }
 
-  // optional bool sampleRate = 9;
+  // optional bool sampleRate = 8;
   if (has_samplerate()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(9, this->samplerate(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(8, this->samplerate(), target);
   }
 
-  // optional bool gain = 10;
+  // optional bool gain = 9;
   if (has_gain()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(10, this->gain(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(9, this->gain(), target);
   }
 
-  // optional bool offset = 11;
+  // optional bool offset = 10;
   if (has_offset()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(11, this->offset(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(10, this->offset(), target);
   }
 
-  // optional bool date = 12;
+  // optional bool date = 11;
   if (has_date()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(12, this->date(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(11, this->date(), target);
   }
 
-  // optional bool time = 13;
+  // optional bool time = 12;
   if (has_time()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(13, this->time(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(12, this->time(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -646,71 +615,64 @@ int RecordingStatusRequest::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required uint32 size = 1;
-    if (has_size()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::UInt32Size(
-          this->size());
-    }
-
-    // optional bool type = 2;
-    if (has_type()) {
+    // optional bool status = 1;
+    if (has_status()) {
       total_size += 1 + 1;
     }
 
-    // optional bool filename = 3;
+    // optional bool filename = 2;
     if (has_filename()) {
       total_size += 1 + 1;
     }
 
-    // optional bool length = 4;
+    // optional bool length = 3;
     if (has_length()) {
       total_size += 1 + 1;
     }
 
-    // optional bool nsamples = 5;
+    // optional bool nsamples = 4;
     if (has_nsamples()) {
       total_size += 1 + 1;
     }
 
-    // optional bool nchannels = 6;
+    // optional bool nchannels = 5;
     if (has_nchannels()) {
       total_size += 1 + 1;
     }
 
-    // optional bool lastValidSample = 7;
+    // optional bool lastValidSample = 6;
     if (has_lastvalidsample()) {
       total_size += 1 + 1;
     }
 
-    // optional bool blockSize = 8;
+    // optional bool blockSize = 7;
     if (has_blocksize()) {
+      total_size += 1 + 1;
+    }
+
+    // optional bool sampleRate = 8;
+    if (has_samplerate()) {
       total_size += 1 + 1;
     }
 
   }
   if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
-    // optional bool sampleRate = 9;
-    if (has_samplerate()) {
-      total_size += 1 + 1;
-    }
-
-    // optional bool gain = 10;
+    // optional bool gain = 9;
     if (has_gain()) {
       total_size += 1 + 1;
     }
 
-    // optional bool offset = 11;
+    // optional bool offset = 10;
     if (has_offset()) {
       total_size += 1 + 1;
     }
 
-    // optional bool date = 12;
+    // optional bool date = 11;
     if (has_date()) {
       total_size += 1 + 1;
     }
 
-    // optional bool time = 13;
+    // optional bool time = 12;
     if (has_time()) {
       total_size += 1 + 1;
     }
@@ -742,11 +704,8 @@ void RecordingStatusRequest::MergeFrom(const ::google::protobuf::Message& from) 
 void RecordingStatusRequest::MergeFrom(const RecordingStatusRequest& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_size()) {
-      set_size(from.size());
-    }
-    if (from.has_type()) {
-      set_type(from.type());
+    if (from.has_status()) {
+      set_status(from.status());
     }
     if (from.has_filename()) {
       set_filename(from.filename());
@@ -766,11 +725,11 @@ void RecordingStatusRequest::MergeFrom(const RecordingStatusRequest& from) {
     if (from.has_blocksize()) {
       set_blocksize(from.blocksize());
     }
-  }
-  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     if (from.has_samplerate()) {
       set_samplerate(from.samplerate());
     }
+  }
+  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     if (from.has_gain()) {
       set_gain(from.gain());
     }
@@ -800,15 +759,13 @@ void RecordingStatusRequest::CopyFrom(const RecordingStatusRequest& from) {
 }
 
 bool RecordingStatusRequest::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
 
   return true;
 }
 
 void RecordingStatusRequest::Swap(RecordingStatusRequest* other) {
   if (other != this) {
-    std::swap(size_, other->size_);
-    std::swap(type_, other->type_);
+    std::swap(status_, other->status_);
     std::swap(filename_, other->filename_);
     std::swap(length_, other->length_);
     std::swap(nsamples_, other->nsamples_);
@@ -837,11 +794,11 @@ void RecordingStatusRequest::Swap(RecordingStatusRequest* other) {
 
 // ===================================================================
 
-const ::google::protobuf::EnumDescriptor* RecordingParamsReply_StatusType_descriptor() {
+const ::google::protobuf::EnumDescriptor* RecordingStatusReply_StatusType_descriptor() {
   protobuf_AssignDescriptorsOnce();
-  return RecordingParamsReply_StatusType_descriptor_;
+  return RecordingStatusReply_StatusType_descriptor_;
 }
-bool RecordingParamsReply_StatusType_IsValid(int value) {
+bool RecordingStatusReply_StatusType_IsValid(int value) {
   switch(value) {
     case 0:
     case 1:
@@ -853,50 +810,48 @@ bool RecordingParamsReply_StatusType_IsValid(int value) {
 }
 
 #ifndef _MSC_VER
-const RecordingParamsReply_StatusType RecordingParamsReply::RUNNING;
-const RecordingParamsReply_StatusType RecordingParamsReply::STOPPED;
-const RecordingParamsReply_StatusType RecordingParamsReply::ERROR;
-const RecordingParamsReply_StatusType RecordingParamsReply::StatusType_MIN;
-const RecordingParamsReply_StatusType RecordingParamsReply::StatusType_MAX;
-const int RecordingParamsReply::StatusType_ARRAYSIZE;
+const RecordingStatusReply_StatusType RecordingStatusReply::RUNNING;
+const RecordingStatusReply_StatusType RecordingStatusReply::STOPPED;
+const RecordingStatusReply_StatusType RecordingStatusReply::ERROR;
+const RecordingStatusReply_StatusType RecordingStatusReply::StatusType_MIN;
+const RecordingStatusReply_StatusType RecordingStatusReply::StatusType_MAX;
+const int RecordingStatusReply::StatusType_ARRAYSIZE;
 #endif  // _MSC_VER
 #ifndef _MSC_VER
-const int RecordingParamsReply::kSizeFieldNumber;
-const int RecordingParamsReply::kTypeFieldNumber;
-const int RecordingParamsReply::kFilenameFieldNumber;
-const int RecordingParamsReply::kLengthFieldNumber;
-const int RecordingParamsReply::kNsamplesFieldNumber;
-const int RecordingParamsReply::kNchannelsFieldNumber;
-const int RecordingParamsReply::kLastValidSampleFieldNumber;
-const int RecordingParamsReply::kBlockSizeFieldNumber;
-const int RecordingParamsReply::kSampleRateFieldNumber;
-const int RecordingParamsReply::kGainFieldNumber;
-const int RecordingParamsReply::kOffsetFieldNumber;
-const int RecordingParamsReply::kDateFieldNumber;
-const int RecordingParamsReply::kTimeFieldNumber;
+const int RecordingStatusReply::kStatusFieldNumber;
+const int RecordingStatusReply::kFilenameFieldNumber;
+const int RecordingStatusReply::kLengthFieldNumber;
+const int RecordingStatusReply::kNsamplesFieldNumber;
+const int RecordingStatusReply::kNchannelsFieldNumber;
+const int RecordingStatusReply::kLastValidSampleFieldNumber;
+const int RecordingStatusReply::kBlockSizeFieldNumber;
+const int RecordingStatusReply::kSampleRateFieldNumber;
+const int RecordingStatusReply::kGainFieldNumber;
+const int RecordingStatusReply::kOffsetFieldNumber;
+const int RecordingStatusReply::kDateFieldNumber;
+const int RecordingStatusReply::kTimeFieldNumber;
 #endif  // !_MSC_VER
 
-RecordingParamsReply::RecordingParamsReply()
+RecordingStatusReply::RecordingStatusReply()
   : ::google::protobuf::Message() {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:mearec.RecordingParamsReply)
+  // @@protoc_insertion_point(constructor:mearec.RecordingStatusReply)
 }
 
-void RecordingParamsReply::InitAsDefaultInstance() {
+void RecordingStatusReply::InitAsDefaultInstance() {
 }
 
-RecordingParamsReply::RecordingParamsReply(const RecordingParamsReply& from)
+RecordingStatusReply::RecordingStatusReply(const RecordingStatusReply& from)
   : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
-  // @@protoc_insertion_point(copy_constructor:mearec.RecordingParamsReply)
+  // @@protoc_insertion_point(copy_constructor:mearec.RecordingStatusReply)
 }
 
-void RecordingParamsReply::SharedCtor() {
+void RecordingStatusReply::SharedCtor() {
   ::google::protobuf::internal::GetEmptyString();
   _cached_size_ = 0;
-  size_ = 0u;
-  type_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  status_ = 0;
   filename_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   length_ = 0;
   nsamples_ = 0u;
@@ -911,15 +866,12 @@ void RecordingParamsReply::SharedCtor() {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-RecordingParamsReply::~RecordingParamsReply() {
-  // @@protoc_insertion_point(destructor:mearec.RecordingParamsReply)
+RecordingStatusReply::~RecordingStatusReply() {
+  // @@protoc_insertion_point(destructor:mearec.RecordingStatusReply)
   SharedDtor();
 }
 
-void RecordingParamsReply::SharedDtor() {
-  if (type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    delete type_;
-  }
+void RecordingStatusReply::SharedDtor() {
   if (filename_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     delete filename_;
   }
@@ -933,30 +885,30 @@ void RecordingParamsReply::SharedDtor() {
   }
 }
 
-void RecordingParamsReply::SetCachedSize(int size) const {
+void RecordingStatusReply::SetCachedSize(int size) const {
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* RecordingParamsReply::descriptor() {
+const ::google::protobuf::Descriptor* RecordingStatusReply::descriptor() {
   protobuf_AssignDescriptorsOnce();
-  return RecordingParamsReply_descriptor_;
+  return RecordingStatusReply_descriptor_;
 }
 
-const RecordingParamsReply& RecordingParamsReply::default_instance() {
+const RecordingStatusReply& RecordingStatusReply::default_instance() {
   if (default_instance_ == NULL) protobuf_AddDesc_logserver_2eproto();
   return *default_instance_;
 }
 
-RecordingParamsReply* RecordingParamsReply::default_instance_ = NULL;
+RecordingStatusReply* RecordingStatusReply::default_instance_ = NULL;
 
-RecordingParamsReply* RecordingParamsReply::New() const {
-  return new RecordingParamsReply;
+RecordingStatusReply* RecordingStatusReply::New() const {
+  return new RecordingStatusReply;
 }
 
-void RecordingParamsReply::Clear() {
+void RecordingStatusReply::Clear() {
 #define OFFSET_OF_FIELD_(f) (reinterpret_cast<char*>(      \
-  &reinterpret_cast<RecordingParamsReply*>(16)->f) - \
+  &reinterpret_cast<RecordingStatusReply*>(16)->f) - \
    reinterpret_cast<char*>(16))
 
 #define ZR_(first, last) do {                              \
@@ -966,20 +918,15 @@ void RecordingParamsReply::Clear() {
   } while (0)
 
   if (_has_bits_[0 / 32] & 255) {
-    ZR_(size_, blocksize_);
-    if (has_type()) {
-      if (type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-        type_->clear();
-      }
-    }
+    ZR_(status_, samplerate_);
     if (has_filename()) {
       if (filename_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
         filename_->clear();
       }
     }
   }
-  if (_has_bits_[8 / 32] & 7936) {
-    ZR_(samplerate_, offset_);
+  if (_has_bits_[8 / 32] & 3840) {
+    ZR_(gain_, offset_);
     if (has_date()) {
       if (date_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
         date_->clear();
@@ -999,50 +946,38 @@ void RecordingParamsReply::Clear() {
   mutable_unknown_fields()->Clear();
 }
 
-bool RecordingParamsReply::MergePartialFromCodedStream(
+bool RecordingStatusReply::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:mearec.RecordingParamsReply)
+  // @@protoc_insertion_point(parse_start:mearec.RecordingStatusReply)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required uint32 size = 1;
+      // optional .mearec.RecordingStatusReply.StatusType status = 1;
       case 1: {
         if (tag == 8) {
+          int value;
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
-                 input, &size_)));
-          set_has_size();
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::mearec::RecordingStatusReply_StatusType_IsValid(value)) {
+            set_status(static_cast< ::mearec::RecordingStatusReply_StatusType >(value));
+          } else {
+            mutable_unknown_fields()->AddVarint(1, value);
+          }
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(18)) goto parse_type;
+        if (input->ExpectTag(18)) goto parse_filename;
         break;
       }
 
-      // optional string type = 2;
+      // optional string filename = 2;
       case 2: {
         if (tag == 18) {
-         parse_type:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_type()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-            this->type().data(), this->type().length(),
-            ::google::protobuf::internal::WireFormat::PARSE,
-            "type");
-        } else {
-          goto handle_unusual;
-        }
-        if (input->ExpectTag(26)) goto parse_filename;
-        break;
-      }
-
-      // optional string filename = 3;
-      case 3: {
-        if (tag == 26) {
          parse_filename:
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_filename()));
@@ -1053,13 +988,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(33)) goto parse_length;
+        if (input->ExpectTag(25)) goto parse_length;
         break;
       }
 
-      // optional double length = 4;
-      case 4: {
-        if (tag == 33) {
+      // optional double length = 3;
+      case 3: {
+        if (tag == 25) {
          parse_length:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
@@ -1068,13 +1003,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(40)) goto parse_nsamples;
+        if (input->ExpectTag(32)) goto parse_nsamples;
         break;
       }
 
-      // optional uint32 nsamples = 5;
-      case 5: {
-        if (tag == 40) {
+      // optional uint32 nsamples = 4;
+      case 4: {
+        if (tag == 32) {
          parse_nsamples:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
@@ -1083,13 +1018,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(48)) goto parse_nchannels;
+        if (input->ExpectTag(40)) goto parse_nchannels;
         break;
       }
 
-      // optional uint32 nchannels = 6;
-      case 6: {
-        if (tag == 48) {
+      // optional uint32 nchannels = 5;
+      case 5: {
+        if (tag == 40) {
          parse_nchannels:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
@@ -1098,13 +1033,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(56)) goto parse_lastValidSample;
+        if (input->ExpectTag(48)) goto parse_lastValidSample;
         break;
       }
 
-      // optional uint32 lastValidSample = 7;
-      case 7: {
-        if (tag == 56) {
+      // optional uint32 lastValidSample = 6;
+      case 6: {
+        if (tag == 48) {
          parse_lastValidSample:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
@@ -1113,13 +1048,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(64)) goto parse_blockSize;
+        if (input->ExpectTag(56)) goto parse_blockSize;
         break;
       }
 
-      // optional uint32 blockSize = 8;
-      case 8: {
-        if (tag == 64) {
+      // optional uint32 blockSize = 7;
+      case 7: {
+        if (tag == 56) {
          parse_blockSize:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
@@ -1128,13 +1063,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(77)) goto parse_sampleRate;
+        if (input->ExpectTag(69)) goto parse_sampleRate;
         break;
       }
 
-      // optional float sampleRate = 9;
-      case 9: {
-        if (tag == 77) {
+      // optional float sampleRate = 8;
+      case 8: {
+        if (tag == 69) {
          parse_sampleRate:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
@@ -1143,13 +1078,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(85)) goto parse_gain;
+        if (input->ExpectTag(77)) goto parse_gain;
         break;
       }
 
-      // optional float gain = 10;
-      case 10: {
-        if (tag == 85) {
+      // optional float gain = 9;
+      case 9: {
+        if (tag == 77) {
          parse_gain:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
@@ -1158,13 +1093,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(93)) goto parse_offset;
+        if (input->ExpectTag(85)) goto parse_offset;
         break;
       }
 
-      // optional float offset = 11;
-      case 11: {
-        if (tag == 93) {
+      // optional float offset = 10;
+      case 10: {
+        if (tag == 85) {
          parse_offset:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
@@ -1173,13 +1108,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(98)) goto parse_date;
+        if (input->ExpectTag(90)) goto parse_date;
         break;
       }
 
-      // optional string date = 12;
-      case 12: {
-        if (tag == 98) {
+      // optional string date = 11;
+      case 11: {
+        if (tag == 90) {
          parse_date:
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_date()));
@@ -1190,13 +1125,13 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(106)) goto parse_time;
+        if (input->ExpectTag(98)) goto parse_time;
         break;
       }
 
-      // optional string time = 13;
-      case 13: {
-        if (tag == 106) {
+      // optional string time = 12;
+      case 12: {
+        if (tag == 98) {
          parse_time:
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_time()));
@@ -1225,129 +1160,110 @@ bool RecordingParamsReply::MergePartialFromCodedStream(
     }
   }
 success:
-  // @@protoc_insertion_point(parse_success:mearec.RecordingParamsReply)
+  // @@protoc_insertion_point(parse_success:mearec.RecordingStatusReply)
   return true;
 failure:
-  // @@protoc_insertion_point(parse_failure:mearec.RecordingParamsReply)
+  // @@protoc_insertion_point(parse_failure:mearec.RecordingStatusReply)
   return false;
 #undef DO_
 }
 
-void RecordingParamsReply::SerializeWithCachedSizes(
+void RecordingStatusReply::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:mearec.RecordingParamsReply)
-  // required uint32 size = 1;
-  if (has_size()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(1, this->size(), output);
+  // @@protoc_insertion_point(serialize_start:mearec.RecordingStatusReply)
+  // optional .mearec.RecordingStatusReply.StatusType status = 1;
+  if (has_status()) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      1, this->status(), output);
   }
 
-  // optional string type = 2;
-  if (has_type()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->type().data(), this->type().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
-      "type");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->type(), output);
-  }
-
-  // optional string filename = 3;
+  // optional string filename = 2;
   if (has_filename()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
       this->filename().data(), this->filename().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "filename");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->filename(), output);
+      2, this->filename(), output);
   }
 
-  // optional double length = 4;
+  // optional double length = 3;
   if (has_length()) {
-    ::google::protobuf::internal::WireFormatLite::WriteDouble(4, this->length(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(3, this->length(), output);
   }
 
-  // optional uint32 nsamples = 5;
+  // optional uint32 nsamples = 4;
   if (has_nsamples()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(5, this->nsamples(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(4, this->nsamples(), output);
   }
 
-  // optional uint32 nchannels = 6;
+  // optional uint32 nchannels = 5;
   if (has_nchannels()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(6, this->nchannels(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(5, this->nchannels(), output);
   }
 
-  // optional uint32 lastValidSample = 7;
+  // optional uint32 lastValidSample = 6;
   if (has_lastvalidsample()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(7, this->lastvalidsample(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(6, this->lastvalidsample(), output);
   }
 
-  // optional uint32 blockSize = 8;
+  // optional uint32 blockSize = 7;
   if (has_blocksize()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(8, this->blocksize(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(7, this->blocksize(), output);
   }
 
-  // optional float sampleRate = 9;
+  // optional float sampleRate = 8;
   if (has_samplerate()) {
-    ::google::protobuf::internal::WireFormatLite::WriteFloat(9, this->samplerate(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(8, this->samplerate(), output);
   }
 
-  // optional float gain = 10;
+  // optional float gain = 9;
   if (has_gain()) {
-    ::google::protobuf::internal::WireFormatLite::WriteFloat(10, this->gain(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(9, this->gain(), output);
   }
 
-  // optional float offset = 11;
+  // optional float offset = 10;
   if (has_offset()) {
-    ::google::protobuf::internal::WireFormatLite::WriteFloat(11, this->offset(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(10, this->offset(), output);
   }
 
-  // optional string date = 12;
+  // optional string date = 11;
   if (has_date()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
       this->date().data(), this->date().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "date");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      12, this->date(), output);
+      11, this->date(), output);
   }
 
-  // optional string time = 13;
+  // optional string time = 12;
   if (has_time()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
       this->time().data(), this->time().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "time");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      13, this->time(), output);
+      12, this->time(), output);
   }
 
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
   }
-  // @@protoc_insertion_point(serialize_end:mearec.RecordingParamsReply)
+  // @@protoc_insertion_point(serialize_end:mearec.RecordingStatusReply)
 }
 
-::google::protobuf::uint8* RecordingParamsReply::SerializeWithCachedSizesToArray(
+::google::protobuf::uint8* RecordingStatusReply::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:mearec.RecordingParamsReply)
-  // required uint32 size = 1;
-  if (has_size()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(1, this->size(), target);
+  // @@protoc_insertion_point(serialize_to_array_start:mearec.RecordingStatusReply)
+  // optional .mearec.RecordingStatusReply.StatusType status = 1;
+  if (has_status()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      1, this->status(), target);
   }
 
-  // optional string type = 2;
-  if (has_type()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->type().data(), this->type().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
-      "type");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->type(), target);
-  }
-
-  // optional string filename = 3;
+  // optional string filename = 2;
   if (has_filename()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
       this->filename().data(), this->filename().length(),
@@ -1355,50 +1271,50 @@ void RecordingParamsReply::SerializeWithCachedSizes(
       "filename");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->filename(), target);
+        2, this->filename(), target);
   }
 
-  // optional double length = 4;
+  // optional double length = 3;
   if (has_length()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(4, this->length(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(3, this->length(), target);
   }
 
-  // optional uint32 nsamples = 5;
+  // optional uint32 nsamples = 4;
   if (has_nsamples()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(5, this->nsamples(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(4, this->nsamples(), target);
   }
 
-  // optional uint32 nchannels = 6;
+  // optional uint32 nchannels = 5;
   if (has_nchannels()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(6, this->nchannels(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(5, this->nchannels(), target);
   }
 
-  // optional uint32 lastValidSample = 7;
+  // optional uint32 lastValidSample = 6;
   if (has_lastvalidsample()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(7, this->lastvalidsample(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(6, this->lastvalidsample(), target);
   }
 
-  // optional uint32 blockSize = 8;
+  // optional uint32 blockSize = 7;
   if (has_blocksize()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(8, this->blocksize(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(7, this->blocksize(), target);
   }
 
-  // optional float sampleRate = 9;
+  // optional float sampleRate = 8;
   if (has_samplerate()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(9, this->samplerate(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(8, this->samplerate(), target);
   }
 
-  // optional float gain = 10;
+  // optional float gain = 9;
   if (has_gain()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(10, this->gain(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(9, this->gain(), target);
   }
 
-  // optional float offset = 11;
+  // optional float offset = 10;
   if (has_offset()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(11, this->offset(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(10, this->offset(), target);
   }
 
-  // optional string date = 12;
+  // optional string date = 11;
   if (has_date()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
       this->date().data(), this->date().length(),
@@ -1406,10 +1322,10 @@ void RecordingParamsReply::SerializeWithCachedSizes(
       "date");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        12, this->date(), target);
+        11, this->date(), target);
   }
 
-  // optional string time = 13;
+  // optional string time = 12;
   if (has_time()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
       this->time().data(), this->time().length(),
@@ -1417,100 +1333,92 @@ void RecordingParamsReply::SerializeWithCachedSizes(
       "time");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        13, this->time(), target);
+        12, this->time(), target);
   }
 
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:mearec.RecordingParamsReply)
+  // @@protoc_insertion_point(serialize_to_array_end:mearec.RecordingStatusReply)
   return target;
 }
 
-int RecordingParamsReply::ByteSize() const {
+int RecordingStatusReply::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required uint32 size = 1;
-    if (has_size()) {
+    // optional .mearec.RecordingStatusReply.StatusType status = 1;
+    if (has_status()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::UInt32Size(
-          this->size());
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->status());
     }
 
-    // optional string type = 2;
-    if (has_type()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->type());
-    }
-
-    // optional string filename = 3;
+    // optional string filename = 2;
     if (has_filename()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->filename());
     }
 
-    // optional double length = 4;
+    // optional double length = 3;
     if (has_length()) {
       total_size += 1 + 8;
     }
 
-    // optional uint32 nsamples = 5;
+    // optional uint32 nsamples = 4;
     if (has_nsamples()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt32Size(
           this->nsamples());
     }
 
-    // optional uint32 nchannels = 6;
+    // optional uint32 nchannels = 5;
     if (has_nchannels()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt32Size(
           this->nchannels());
     }
 
-    // optional uint32 lastValidSample = 7;
+    // optional uint32 lastValidSample = 6;
     if (has_lastvalidsample()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt32Size(
           this->lastvalidsample());
     }
 
-    // optional uint32 blockSize = 8;
+    // optional uint32 blockSize = 7;
     if (has_blocksize()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt32Size(
           this->blocksize());
     }
 
-  }
-  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
-    // optional float sampleRate = 9;
+    // optional float sampleRate = 8;
     if (has_samplerate()) {
       total_size += 1 + 4;
     }
 
-    // optional float gain = 10;
+  }
+  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    // optional float gain = 9;
     if (has_gain()) {
       total_size += 1 + 4;
     }
 
-    // optional float offset = 11;
+    // optional float offset = 10;
     if (has_offset()) {
       total_size += 1 + 4;
     }
 
-    // optional string date = 12;
+    // optional string date = 11;
     if (has_date()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->date());
     }
 
-    // optional string time = 13;
+    // optional string time = 12;
     if (has_time()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
@@ -1529,10 +1437,10 @@ int RecordingParamsReply::ByteSize() const {
   return total_size;
 }
 
-void RecordingParamsReply::MergeFrom(const ::google::protobuf::Message& from) {
+void RecordingStatusReply::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
-  const RecordingParamsReply* source =
-    ::google::protobuf::internal::dynamic_cast_if_available<const RecordingParamsReply*>(
+  const RecordingStatusReply* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const RecordingStatusReply*>(
       &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
@@ -1541,14 +1449,11 @@ void RecordingParamsReply::MergeFrom(const ::google::protobuf::Message& from) {
   }
 }
 
-void RecordingParamsReply::MergeFrom(const RecordingParamsReply& from) {
+void RecordingStatusReply::MergeFrom(const RecordingStatusReply& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_size()) {
-      set_size(from.size());
-    }
-    if (from.has_type()) {
-      set_type(from.type());
+    if (from.has_status()) {
+      set_status(from.status());
     }
     if (from.has_filename()) {
       set_filename(from.filename());
@@ -1568,11 +1473,11 @@ void RecordingParamsReply::MergeFrom(const RecordingParamsReply& from) {
     if (from.has_blocksize()) {
       set_blocksize(from.blocksize());
     }
-  }
-  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     if (from.has_samplerate()) {
       set_samplerate(from.samplerate());
     }
+  }
+  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     if (from.has_gain()) {
       set_gain(from.gain());
     }
@@ -1589,28 +1494,26 @@ void RecordingParamsReply::MergeFrom(const RecordingParamsReply& from) {
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
 
-void RecordingParamsReply::CopyFrom(const ::google::protobuf::Message& from) {
+void RecordingStatusReply::CopyFrom(const ::google::protobuf::Message& from) {
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-void RecordingParamsReply::CopyFrom(const RecordingParamsReply& from) {
+void RecordingStatusReply::CopyFrom(const RecordingStatusReply& from) {
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool RecordingParamsReply::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+bool RecordingStatusReply::IsInitialized() const {
 
   return true;
 }
 
-void RecordingParamsReply::Swap(RecordingParamsReply* other) {
+void RecordingStatusReply::Swap(RecordingStatusReply* other) {
   if (other != this) {
-    std::swap(size_, other->size_);
-    std::swap(type_, other->type_);
+    std::swap(status_, other->status_);
     std::swap(filename_, other->filename_);
     std::swap(length_, other->length_);
     std::swap(nsamples_, other->nsamples_);
@@ -1628,11 +1531,11 @@ void RecordingParamsReply::Swap(RecordingParamsReply* other) {
   }
 }
 
-::google::protobuf::Metadata RecordingParamsReply::GetMetadata() const {
+::google::protobuf::Metadata RecordingStatusReply::GetMetadata() const {
   protobuf_AssignDescriptorsOnce();
   ::google::protobuf::Metadata metadata;
-  metadata.descriptor = RecordingParamsReply_descriptor_;
-  metadata.reflection = RecordingParamsReply_reflection_;
+  metadata.descriptor = RecordingStatusReply_descriptor_;
+  metadata.reflection = RecordingStatusReply_reflection_;
   return metadata;
 }
 

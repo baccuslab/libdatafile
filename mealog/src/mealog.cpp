@@ -18,6 +18,7 @@
 #include <QMessageBox>
 #include <QTime>
 #include <QDate>
+#include <QDataStream>
 
 #include "mealog.h"
 
@@ -128,18 +129,86 @@ void MealogWindow::initGui(void) {
 void MealogWindow::initServer(void) {
 	server = new QTcpServer(this);
 	server->listen(QHostAddress::LocalHost, IPC_PORT);
+	qDebug() << "Server started at: " << server->serverAddress().toString();
 }
 
 void MealogWindow::acceptClients(void) {
 	QTcpSocket *socket = server->nextPendingConnection();
-	connect(socket, SIGNAL(bytesWritten(quint64)), 
-			this, SLOT(respondToClient(quint64)));
+	socket->setParent(this);
+	qDebug() << "New client: " << socket->peerAddress() << ":" << socket->peerPort();
+	connect(socket, SIGNAL(readyRead()), 
+			this, SLOT(respondToClient()));
+	qDebug() << "Signals connected";
 }
 
-void MealogWindow::respondToClient(quint64 nbytes) {
-	QTcpSocket *s = dynamic_cast<QTcpSocket *>(QObject::sender());
-	mearec::RecordingStatusRequest req;
-	bool ok = req.ParseFromString(s->read(nbytes).toStdString());
+bool MealogWindow::readMessage(QTcpSocket *socket, 
+		mearec::RecordingStatusRequest &request) {
+	/* Read the size */
+	QDataStream stream(socket);
+	quint32 size = 0;
+	stream >> size;
+	if (size == 0)
+		return false;
+
+	/* Return the parsed message */
+	return request.ParseFromString(socket->read(size).toStdString());
+}
+
+bool MealogWindow::writeMessage(QTcpSocket *socket, 
+		mearec::RecordingStatusReply &reply) {
+	/* Write the size */
+	QDataStream stream(socket);
+	quint32 size = reply.ByteSize();
+	stream << size;
+
+	/* Write the message */
+	std::string data;
+	if (!reply.SerializeToString(&data))
+		return false;
+	if (socket->write(data.data(), size) != size)
+		return false;
+	return true;
+}
+
+void MealogWindow::respondToClient(void) {
+	QTcpSocket *socket = dynamic_cast<QTcpSocket *>(QObject::sender());
+	mearec::RecordingStatusRequest request;
+	bool ok = readMessage(socket, request);
+	if (!ok) // ignore bad messages for now
+		return;
+
+	qDebug() << "Received request from peer: " << request.ByteSize() << " bytes";
+
+	/* Send back the correct reply */
+	mearec::RecordingStatusReply reply = constructStatusReply(request);
+	qDebug() << "Sending reply: " << reply.ByteSize() << " bytes";
+	writeMessage(socket, reply);
+}
+
+mearec::RecordingStatusReply MealogWindow::constructStatusReply(
+		mearec::RecordingStatusRequest request) {
+	mearec::RecordingStatusReply reply;
+	if (request.has_status() && request.status())
+		reply.set_status(recordingStatus);
+	if (request.has_filename() && request.filename())
+		reply.set_filename(recording->filename());
+	if (request.has_length() && request.length())
+		reply.set_length(recording->length());
+	if (request.has_nsamples() && request.nsamples())
+		reply.set_nsamples(recording->nsamples());
+	if (request.has_lastvalidsample() && request.lastvalidsample())
+		reply.set_lastvalidsample(recording->lastValidSample());
+	if (request.has_blocksize() && request.blocksize())
+		reply.set_blocksize(recording->blockSize());
+	if (request.has_samplerate() && request.samplerate())
+		reply.set_samplerate(recording->sampleRate());
+	if (request.has_gain() && request.gain())
+		reply.set_gain(recording->gain());
+	if (request.has_offset() && request.offset())
+		reply.set_offset(recording->offset());
+	if (request.has_date() && request.date())
+		reply.set_date(recording->date());
+	return reply;
 }
 
 QFile *MealogWindow::getFullFilename(void) {
@@ -198,9 +267,11 @@ void MealogWindow::setParameterSelectionsEnabled(bool enabled) {
 void MealogWindow::initRecording(void) {
 	statusBar->showMessage("Initializing recording");
 	QFile *path = getFullFilename();
-	if (path->exists()) {
-		if (!confirmFileOverwrite(*path))
-			return;
+	if (path->exists()) {  
+		if (!(path->fileName().contains(DEFAULT_SAVE_FILE.fileName()))) {
+			if (!confirmFileOverwrite(*path))
+				return;
+		}
 		if (!removeOldRecording(*path))
 			return;
 	}

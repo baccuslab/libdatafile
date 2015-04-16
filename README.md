@@ -21,4 +21,16 @@ Dependencies
 - [Qt5] (http://doc.qt.io/qt-5/index.html)
 - [HDF5 with C++ bindings] (http://hdfgroup.org/HDF5/)
 - [Boost] (http://www.boost.org/)
+- [Google Protocol Buffers] (https://developers.google.com/protocol-buffers)
 
+Installation
+============
+
+Manual for now:
+
+	foreach directory:
+		cd $directory
+		qmake 	# Must be for Qt5
+		make
+	cd mealog/proto
+	make

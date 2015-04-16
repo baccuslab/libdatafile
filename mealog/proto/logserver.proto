@@ -2,39 +2,37 @@ package mearec;
 
 message RecordingStatusRequest {
 	// Set to true those pieces of information you'd like returned
-	required uint32 size = 1;
-	optional bool type = 2;
-	optional bool filename = 3;
-	optional bool length = 4;
-	optional bool nsamples = 5;
-	optional bool nchannels = 6;
-	optional bool lastValidSample = 7;
-	optional bool blockSize = 8;
-	optional bool sampleRate = 9;
-	optional bool gain = 10;
-	optional bool offset = 11;
-	optional bool date = 12;
-	optional bool time = 13;
+	optional bool status = 1;
+	optional bool filename = 2;
+	optional bool length = 3;
+	optional bool nsamples = 4;
+	optional bool nchannels = 5;
+	optional bool lastValidSample = 6;
+	optional bool blockSize = 7;
+	optional bool sampleRate = 8;
+	optional bool gain = 9;
+	optional bool offset = 10;
+	optional bool date = 11;
+	optional bool time = 12;
 }
 
-message RecordingParamsReply {
+message RecordingStatusReply {
 	enum StatusType {
 		RUNNING = 0;
 		STOPPED = 1;
 		ERROR = 2;
 	}
-	required uint32 size = 1;
-	optional string type = 2;
-	optional string filename = 3;
-	optional double length = 4;
-	optional uint32 nsamples = 5;
-	optional uint32 nchannels = 6;
-	optional uint32 lastValidSample = 7;
-	optional uint32 blockSize = 8;
-	optional float sampleRate = 9;
-	optional float gain = 10;
-	optional float offset = 11;
-	optional string date = 12;
-	optional string time = 13;
+	optional StatusType status = 1;
+	optional string filename = 2;
+	optional double length = 3;
+	optional uint32 nsamples = 4;
+	optional uint32 nchannels = 5;
+	optional uint32 lastValidSample = 6;
+	optional uint32 blockSize = 7;
+	optional float sampleRate = 8;
+	optional float gain = 9;
+	optional float offset = 10;
+	optional string date = 11;
+	optional string time = 12;
 }
 
