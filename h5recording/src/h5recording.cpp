@@ -57,11 +57,20 @@ H5Recording::H5Recording(std::string filename) {
 		/* New file. This needs to be only called by mealog... */
 		readOnly = false;
 		file = H5File(_filename, H5F_ACC_TRUNC);
-		dataspace = DataSpace(DATASET_RANK, DATASET_DEFAULT_DIMS, DATASET_MAX_DIMS);
+		dataspace = DataSpace(H5Rec::DATASET_RANK, H5Rec::DATASET_DEFAULT_DIMS, 
+				H5Rec::DATASET_MAX_DIMS);
 		props = DSetCreatPropList();
-		props.setChunk(DATASET_RANK, DATASET_CHUNK_DIMS);
+		props.setChunk(H5Rec::DATASET_RANK, H5Rec::DATASET_CHUNK_DIMS);
 		datatype = DataType(PredType::STD_I16LE);
 		dataset = file.createDataSet("data", datatype, dataspace, props);
+
+		/* Set default parameters */
+		setFileType(H5Rec::BIN_FILE_TYPE);
+		setFileVersion(H5Rec::BIN_FILE_VERSION);
+		setNumChannels(H5Rec::NUM_CHANNELS);
+		setBlockSize(H5Rec::BLOCK_SIZE);
+		setSampleRate(H5Rec::SAMPLE_RATE);
+		setRoom(H5Rec::DEFAULT_ROOM_STRING);
 	}
 }
 
@@ -139,7 +148,7 @@ std::string H5Recording::room(void) {
 	return this->_room;
 }
 
-samples H5Recording::data(int startSample, int endSample) {
+H5Rec::samples H5Recording::data(int startSample, int endSample) {
 	/* Allocate return array */
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples < 0) {
@@ -147,12 +156,12 @@ samples H5Recording::data(int startSample, int endSample) {
 				startSample << ", " << endSample << ")" << std::endl;
 		throw;
 	}
-	samples s(extents[this->_nchannels][req_nsamples]);
+	H5Rec::samples s(extents[this->_nchannels][req_nsamples]);
 	data(startSample, endSample, s);
 	return s;
 }
 
-void H5Recording::data(int startSample, int endSample, samples &s) {
+void H5Recording::data(int startSample, int endSample, H5Rec::samples &s) {
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples < 0) {
 		std::cerr << "Requested sample range is invalid: (" << 
@@ -161,19 +170,19 @@ void H5Recording::data(int startSample, int endSample, samples &s) {
 	}
 
 	/* Select hyperslab from data set itself */
-	hsize_t space_offset[DATASET_RANK] = {0, static_cast<hsize_t>(startSample)};
-	hsize_t space_count[DATASET_RANK] = {this->_nchannels, 
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, static_cast<hsize_t>(startSample)};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
 			static_cast<hsize_t>(req_nsamples)};
 	this->dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
 
 	/* Define dataspace of memory region, which is contiguous
 	 * data chunk of Boost multi-array, and its hyperslab.
 	 */
-	hsize_t dims[DATASET_RANK] = {this->_nchannels, 
+	hsize_t dims[H5Rec::DATASET_RANK] = {this->_nchannels, 
 			static_cast<hsize_t>(req_nsamples)};
-	DataSpace memspace(DATASET_RANK, dims);
-	hsize_t mem_offset[DATASET_RANK] = {0, 0};
-	hsize_t mem_count[DATASET_RANK] = {this->_nchannels, 
+	DataSpace memspace(H5Rec::DATASET_RANK, dims);
+	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
 		static_cast<hsize_t>(req_nsamples)};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
 
@@ -181,7 +190,7 @@ void H5Recording::data(int startSample, int endSample, samples &s) {
 	this->dataset.read(s.data(), PredType::STD_I16LE, memspace, this->dataspace);
 }
 
-void H5Recording::data(int startSample, int endSample, samples_d &s) {
+void H5Recording::data(int startSample, int endSample, H5Rec::samples_d &s) {
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples < 0) {
 		std::cerr << "Requested sample range is invalid: (" << 
@@ -190,19 +199,19 @@ void H5Recording::data(int startSample, int endSample, samples_d &s) {
 	}
 
 	/* Select hyperslab from data set itself */
-	hsize_t space_offset[DATASET_RANK] = {0, static_cast<hsize_t>(startSample)};
-	hsize_t space_count[DATASET_RANK] = {this->_nchannels, 
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, static_cast<hsize_t>(startSample)};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
 			static_cast<hsize_t>(req_nsamples)};
 	this->dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
 
 	/* Define dataspace of memory region, which is contiguous
 	 * data chunk of Boost multi-array, and its hyperslab.
 	 */
-	hsize_t dims[DATASET_RANK] = {this->_nchannels, 
+	hsize_t dims[H5Rec::DATASET_RANK] = {this->_nchannels, 
 			static_cast<hsize_t>(req_nsamples)};
-	DataSpace memspace(DATASET_RANK, dims);
-	hsize_t mem_offset[DATASET_RANK] = {0, 0};
-	hsize_t mem_count[DATASET_RANK] = {this->_nchannels, 
+	DataSpace memspace(H5Rec::DATASET_RANK, dims);
+	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
 		static_cast<hsize_t>(req_nsamples)};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
 
@@ -224,7 +233,7 @@ void H5Recording::setData(int startSample, int endSample,
 		std::vector<std::vector<int16_t> > &data) {
 }
 
-void H5Recording::setData(int startSample, int endSample, samples &data) {
+void H5Recording::setData(int startSample, int endSample, H5Rec::samples &data) {
 }
 
 void H5Recording::writeFileAttr(std::string name, const DataType &type, void *buf) {

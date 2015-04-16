@@ -28,6 +28,8 @@
 #include "proto/logserver.pb.h"
 
 /* Settings */
+namespace Mealog {
+
 const int MEALOG_WINDOW_WIDTH = 300;
 const int MEALOG_WINDOW_HEIGHT = 200;
 const QFile DEFAULT_SAVE_FILE("default-data.h5");
@@ -38,6 +40,10 @@ const QList<double> ADC_RANGES = { 1, 2, 5, 10 };
 const double DEFAULT_ADC_RANGE = 5;
 const QStringList TRIGGERS = {"Photodiode", "None"};
 const quint16 IPC_PORT = 44444;
+
+class MealogWindow;
+
+};
 
 class MealogWindow : public QMainWindow {
 	Q_OBJECT

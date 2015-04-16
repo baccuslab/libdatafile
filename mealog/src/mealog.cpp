@@ -72,33 +72,34 @@ void MealogWindow::initGui(void) {
 	paramLayout = new QGridLayout();
 
 	timeLabel = new QLabel("Time:");
-	timeLine = new QLineEdit(QString::number(DEFAULT_EXPERIMENT_LENGTH));
+	timeLine = new QLineEdit(QString::number(Mealog::DEFAULT_EXPERIMENT_LENGTH));
 	timeLine->setToolTip("Set duration of the recording");
-	timeValidator = new QIntValidator(1, MAX_EXPERIMENT_LENGTH);
+	timeValidator = new QIntValidator(1, Mealog::MAX_EXPERIMENT_LENGTH);
 	timeLine->setValidator(timeValidator);
 
 	fileLabel = new QLabel("Data file:");
-	fileLine = new QLineEdit(DEFAULT_SAVE_FILE.fileName(), this);
+	fileLine = new QLineEdit(Mealog::DEFAULT_SAVE_FILE.fileName(), this);
 	fileLine->setToolTip("Name of file to which data is written");
 	fileValidator = new QRegExpValidator(QRegExp("(\\w+[-_]*)+"));
 	fileLine->setValidator(fileValidator);
 
 	savedirLabel = new QLabel("Save dir:");
-	savedirLine = new QLineEdit(DEFAULT_SAVE_DIR.absolutePath());
+	savedirLine = new QLineEdit(Mealog::DEFAULT_SAVE_DIR.absolutePath());
 	savedirLine->setToolTip("Directory of current recording data file");
 	savedirLine->setReadOnly(true);
 	chooseDirButton = new QPushButton("Choose");
 	chooseDirButton->setToolTip("Choose save directory");
 
 	adcRangeBox = new QComboBox(this);
-	for (auto &each : ADC_RANGES)
+	for (auto &each : Mealog::ADC_RANGES)
 		adcRangeBox->addItem(QString::number(each), QVariant(each));
 	adcRangeLabel = new QLabel("ADC range:");
 	adcRangeBox->setToolTip("Set the voltage range of the NI-DAQ card");
-	adcRangeBox->setCurrentIndex(ADC_RANGES.indexOf(DEFAULT_ADC_RANGE));
+	adcRangeBox->setCurrentIndex(
+			Mealog::ADC_RANGES.indexOf(Mealog::DEFAULT_ADC_RANGE));
 
 	triggerBox = new QComboBox(this);
-	triggerBox->addItems(TRIGGERS);
+	triggerBox->addItems(Mealog::TRIGGERS);
 	triggerLabel = new QLabel("Trigger:");
 	triggerBox->setToolTip("Set the triggering mechanism for starting the experiment");
 
@@ -128,7 +129,7 @@ void MealogWindow::initGui(void) {
 
 void MealogWindow::initServer(void) {
 	server = new QTcpServer(this);
-	server->listen(QHostAddress::LocalHost, IPC_PORT);
+	server->listen(QHostAddress::LocalHost, Mealog::IPC_PORT);
 	qDebug() << "Server started at: " << server->serverAddress().toString();
 }
 
@@ -244,7 +245,7 @@ void MealogWindow::setRecordingParameters(void) {
 	recording->setSampleRate(recording->sampleRate());
 
 	recording->setNumSamples(recording->length() * recording->sampleRate());
-	double adcRange = ADC_RANGES.at(adcRangeBox->currentIndex());
+	double adcRange = Mealog::ADC_RANGES.at(adcRangeBox->currentIndex());
 	recording->setOffset(adcRange);
 	recording->setGain((adcRange * 2) / (1 << 16));
 
@@ -268,7 +269,7 @@ void MealogWindow::initRecording(void) {
 	statusBar->showMessage("Initializing recording");
 	QFile *path = getFullFilename();
 	if (path->exists()) {  
-		if (!(path->fileName().contains(DEFAULT_SAVE_FILE.fileName()))) {
+		if (!(path->fileName().contains(Mealog::DEFAULT_SAVE_FILE.fileName()))) {
 			if (!confirmFileOverwrite(*path))
 				return;
 		}
