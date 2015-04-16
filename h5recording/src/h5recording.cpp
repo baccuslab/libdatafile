@@ -10,10 +10,9 @@
 #include "h5recording.h"
 
 using namespace H5;
-using namespace std;
 using boost::extents;
 
-H5Recording::H5Recording(string filename) {
+H5Recording::H5Recording(std::string filename) {
 	_filename = filename;
 
 	/* If file exists, verify it is valid HDF5 and load data from it.
@@ -22,14 +21,14 @@ H5Recording::H5Recording(string filename) {
 	struct stat buffer;
 	if (stat(_filename.c_str(), &buffer) == 0) {
 		if (!H5File::isHdf5(_filename)) {
-			cout << "Invalid H5 file" << endl;
+			std::cerr << "Invalid H5 file" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 		try {
 			readOnly = true;
 			file = H5File::H5File(_filename, H5F_ACC_RDONLY);
 		} catch (FileIException &e) {
-			cout << "Could not open H5 file" << endl;
+			std::cerr << "Could not open H5 file" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 
@@ -58,7 +57,7 @@ H5Recording::H5Recording(string filename) {
 		/* New file. This needs to be only called by mealog... */
 		readOnly = false;
 		file = H5File(_filename, H5F_ACC_TRUNC);
-		dataspace = DataSpace(DATASET_RANK, DATASET_DEFAULT_DIMS, NULL);
+		dataspace = DataSpace(DATASET_RANK, DATASET_DEFAULT_DIMS, DATASET_MAX_DIMS);
 		props = DSetCreatPropList();
 		props.setChunk(DATASET_RANK, DATASET_CHUNK_DIMS);
 		datatype = DataType(PredType::STD_I16LE);
@@ -72,11 +71,11 @@ H5Recording::~H5Recording() {
 			writeAllAttributes();
 		this->file.close();
 	} catch (FileIException &e) {
-		cerr << "Error closing HDF5 file: " << this->_filename << endl;
+		std::cerr << "Error closing HDF5 file: " << this->_filename << std::endl;
 	}
 }
 
-string H5Recording::filename(void) {
+std::string H5Recording::filename(void) {
 	return this->_filename;
 }
 
@@ -128,15 +127,15 @@ float H5Recording::offset(void) {
 	return this->_offset;
 }
 
-string H5Recording::date(void) {
+std::string H5Recording::date(void) {
 	return this->_date;
 }
 
-string H5Recording::time(void) {
+std::string H5Recording::time(void) {
 	return this->_time;
 }
 
-string H5Recording::room(void) {
+std::string H5Recording::room(void) {
 	return this->_room;
 }
 
@@ -144,8 +143,8 @@ samples H5Recording::data(int startSample, int endSample) {
 	/* Allocate return array */
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples < 0) {
-		cerr << "Requested sample range is invalid: (" << 
-				startSample << ", " << endSample << ")" << endl;
+		std::cerr << "Requested sample range is invalid: (" << 
+				startSample << ", " << endSample << ")" << std::endl;
 		throw;
 	}
 	samples s(extents[this->_nchannels][req_nsamples]);
@@ -156,8 +155,8 @@ samples H5Recording::data(int startSample, int endSample) {
 void H5Recording::data(int startSample, int endSample, samples &s) {
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples < 0) {
-		cerr << "Requested sample range is invalid: (" << 
-				startSample << ", " << endSample << ")" << endl;
+		std::cerr << "Requested sample range is invalid: (" << 
+				startSample << ", " << endSample << ")" << std::endl;
 		throw;
 	}
 
@@ -185,8 +184,8 @@ void H5Recording::data(int startSample, int endSample, samples &s) {
 void H5Recording::data(int startSample, int endSample, samples_d &s) {
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples < 0) {
-		cerr << "Requested sample range is invalid: (" << 
-				startSample << ", " << endSample << ")" << endl;
+		std::cerr << "Requested sample range is invalid: (" << 
+				startSample << ", " << endSample << ")" << std::endl;
 		throw;
 	}
 
@@ -217,18 +216,18 @@ void H5Recording::data(int startSample, int endSample, samples_d &s) {
 	}
 }
 
-void H5Recording::setFilename(string filename) {
+void H5Recording::setFilename(std::string filename) {
 	this->_filename = filename;
 }
 
 void H5Recording::setData(int startSample, int endSample, 
-		vector<vector<int16_t> > &data) {
+		std::vector<std::vector<int16_t> > &data) {
 }
 
 void H5Recording::setData(int startSample, int endSample, samples &data) {
 }
 
-void H5Recording::writeFileAttr(string name, const DataType &type, void *buf) {
+void H5Recording::writeFileAttr(std::string name, const DataType &type, void *buf) {
 	if (readOnly)
 		return;
 	try {
@@ -240,13 +239,13 @@ void H5Recording::writeFileAttr(string name, const DataType &type, void *buf) {
 		Attribute attr = this->file.openAttribute(name);
 		attr.write(writeType, buf);
 	} catch (AttributeIException &e) {
-		cout << "Attribute exception accessing: " << name << endl;
+		std::cerr << "Attribute exception accessing: " << name << std::endl;
 	} catch (FileIException &e) {
-		cout << "File exception accessing: " << name << endl;
+		std::cerr << "File exception accessing: " << name << std::endl;
 	}
 }
 
-void H5Recording::writeDataAttr(string name, const DataType &type, void *buf) {
+void H5Recording::writeDataAttr(std::string name, const DataType &type, void *buf) {
 	if (readOnly)
 		return;
 	try {
@@ -258,13 +257,13 @@ void H5Recording::writeDataAttr(string name, const DataType &type, void *buf) {
 		Attribute attr = this->dataset.openAttribute(name);
 		attr.write(writeType, buf);
 	} catch (DataSetIException &e) {
-		cout << "DataSet exception accessing: " << name << endl;
+		std::cerr << "DataSet exception accessing: " << name << std::endl;
 	} catch (AttributeIException &e) {
-		cout << "Attribute exception accessing: " << name << endl;
+		std::cerr << "Attribute exception accessing: " << name << std::endl;
 	}
 }
 
-void H5Recording::writeDataStringAttr(string name, string value) {
+void H5Recording::writeDataStringAttr(std::string name, std::string value) {
 	if (readOnly)
 		return;
 	try {
@@ -276,9 +275,9 @@ void H5Recording::writeDataStringAttr(string name, string value) {
 		Attribute attr = this->dataset.openAttribute(name);
 		attr.write(stringType, value.c_str());
 	} catch (DataSetIException &e) {
-		cout << "DataSet exception accessing: " << name << endl;
+		std::cerr << "DataSet exception accessing: " << name << std::endl;
 	} catch (AttributeIException &e) {
-		cout << "Attribute exception accessing: " << name << endl;
+		std::cerr << "Attribute exception accessing: " << name << std::endl;
 	}
 }
 
@@ -345,44 +344,44 @@ void H5Recording::setBlockSize(size_t blockSize) {
 	this->_blockSize = blockSize;
 }
 
-void H5Recording::setDate(string date) {
+void H5Recording::setDate(std::string date) {
 	writeDataStringAttr("date", date);
 	this->_date = date;
 }
 
-void H5Recording::setTime(string time) {
+void H5Recording::setTime(std::string time) {
 	writeDataStringAttr("time", time);
 	this->_time = time;
 }
 
-void H5Recording::setRoom(string room) {
+void H5Recording::setRoom(std::string room) {
 	writeDataStringAttr("room", room);
 	this->_room = room;
 }
 
-void H5Recording::readFileAttr(string name, void *buf) {
+void H5Recording::readFileAttr(std::string name, void *buf) {
 	try {
 		Attribute attr = this->file.openAttribute(name);
 		attr.read(attr.getDataType(), buf);
 	} catch (FileIException &e) {
-		cerr << "File exception accessing attribute: " << name << endl;
+		std::cerr << "File exception accessing attribute: " << name << std::endl;
 	} catch (AttributeIException &e) {
-		cerr << "Attribute exception accessing attribute: " << name << endl;
+		std::cerr << "Attribute exception accessing attribute: " << name << std::endl;
 	}
 }
 
-void H5Recording::readDataAttr(string name, void *buf) {
+void H5Recording::readDataAttr(std::string name, void *buf) {
 	try {
 		Attribute attr = this->dataset.openAttribute(name);
 		attr.read(attr.getDataType(), buf);
 	} catch (DataSetIException &e) {
-		cerr << "DataSet exception accessing attribute: " << name << endl;
+		std::cerr << "DataSet exception accessing attribute: " << name << std::endl;
 	} catch (AttributeIException &e) {
-		cerr << "Attribute exception accessing attribute: " << name << endl;
+		std::cerr << "Attribute exception accessing attribute: " << name << std::endl;
 	}
 }
 
-void H5Recording::readDataStringAttr(string name, string &loc) {
+void H5Recording::readDataStringAttr(std::string name, std::string &loc) {
 	try {
 		Attribute attr = this->dataset.openAttribute(name);
 		hsize_t sz = attr.getStorageSize();
@@ -393,11 +392,11 @@ void H5Recording::readDataStringAttr(string name, string &loc) {
 		loc.replace(0, sz, buf);
 		free(buf);
 	} catch (DataSetIException &e) {
-		cerr << "DataSet exception accessing attribute: " << name << endl;
+		std::cerr << "DataSet exception accessing attribute: " << name << std::endl;
 	} catch (AttributeIException &e) {
-		cerr << "Attribute exception accessing attribute: " << name << endl;
-	} catch (exception &e) {
-		cerr << "Calloc error" << endl;
+		std::cerr << "Attribute exception accessing attribute: " << name << std::endl;
+	} catch (std::exception &e) {
+		std::cerr << "Calloc error" << std::endl;
 	}
 }
 

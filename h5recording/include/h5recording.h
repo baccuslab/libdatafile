@@ -16,16 +16,19 @@
 #include "H5Cpp.h"
 #include "boost/multi_array.hpp"
 
-using namespace std;
 using namespace H5;
 
 /* Constants */
-const string RECORDING_FILE_EXTENSION = ".h5";
+const std::string RECORDING_FILE_EXTENSION = ".h5";
+const int BIN_FILE_TYPE = 2;
+const int BIN_FILE_VERSION = 1;
 const int DATASET_RANK = 2;
-const int NCHANNELS = 64;
-const int BLOCK_SIZE = 2000;
-const hsize_t DATASET_DEFAULT_DIMS[DATASET_RANK] = {NCHANNELS, BLOCK_SIZE};
-const hsize_t DATASET_CHUNK_DIMS[DATASET_RANK]= {NCHANNELS, BLOCK_SIZE};
+const int NUM_CHANNELS = 64;
+const int BLOCK_SIZE = 20000;
+const int SAMPLE_RATE = 10000;
+const hsize_t DATASET_DEFAULT_DIMS[DATASET_RANK] = {NUM_CHANNELS, BLOCK_SIZE};
+const hsize_t DATASET_CHUNK_DIMS[DATASET_RANK]= {NUM_CHANNELS, BLOCK_SIZE};
+const hsize_t DATASET_MAX_DIMS[DATASET_RANK] = {NUM_CHANNELS, H5S_UNLIMITED};
 
 /* Types */
 typedef boost::multi_array<int16_t, 2> samples;
@@ -45,10 +48,10 @@ class H5Recording {
 		/* Construct a new H5Recording object, either from an existing
 		 * H5 file or a new file.
 		 */
-		H5Recording(string filename);
+		H5Recording(std::string filename);
 		~H5Recording();
 
-		string filename(void);			// Returns the full pathname of the file
+		std::string filename(void);		// Returns the full pathname of the file
 		double length(void);			// Returns the recording's length in seconds
 		int16_t type(void);				// Returns the traditional bin file type
 		int16_t version(void);			// Returns the traditional bin file version
@@ -61,9 +64,9 @@ class H5Recording {
 		float sampleRate(void);			// Returns the data sample rate
 		float gain(void);				// Returns the NI-DAQ ADC gain
 		float offset(void);				// Returns the NI-DAQ ADC offset
-		string date(void);				// Returns date of the recording
-		string time(void);				// Returns time of the recording
-		string room(void);				// Returns room in which recording occurred
+		std::string date(void);			// Returns date of the recording
+		std::string time(void);			// Returns time of the recording
+		std::string room(void);			// Returns room in which recording occurred
 
 		/* These functions return the requested chunks of data,
 		 * in various data types. Data is stored on disk as signed 16-bit integers,
@@ -84,37 +87,38 @@ class H5Recording {
 		DataSet dataset;			// The HDF5 dataset containing data
 		bool readOnly;				// Protection
 
-		string _filename;			// Full path name of HDF5 file
-		bool _live;					// True if file is currently being written to
-		int16_t _type = 2;			// Bin-file type
-		int16_t _version = 1;		// Bin-file version
-		double _length;				// Length of recording in seconds
-		uint32_t _nsamples;			// Length of recording in samples
-		uint32_t _nchannels = 64;	// Number of channels
-		uint32_t _lastValidSample;	// Latest valid sample index
-		uint32_t _blockSize = 20000;// Size of HDF5 chunks and bin-file blocks
-		float _sampleRate = 10000;	// Data sample rate
-		float _gain;				// NI-DAQ ADC gain
-		float _offset;				// NI-DAQ ADC offset
-		string _time;				// Time of recording start
-		string _date;				// Date of recording
-		string _room = "recorded in d239"; // Location of recording
+		std::string _filename;					// Full path name of HDF5 file
+		bool _live;								// True if file is currently being written to
+		int16_t _type = BIN_FILE_TYPE;			// Bin-file type
+		int16_t _version = BIN_FILE_VERSION;	// Bin-file version
+		double _length;							// Length of recording in seconds
+		uint32_t _nsamples;						// Length of recording in samples
+		uint32_t _nchannels = NUM_CHANNELS;		// Number of channels
+		uint32_t _lastValidSample;				// Latest valid sample index
+		uint32_t _blockSize = BLOCK_SIZE;		// Size of HDF5 chunks and bin-file blocks
+		float _sampleRate = SAMPLE_RATE;		// Data sample rate
+		float _gain;							// NI-DAQ ADC gain
+		float _offset;							// NI-DAQ ADC offset
+		std::string _time;						// Time of recording start
+		std::string _date;						// Date of recording
+		std::string _room = "recorded in d239"; // Location of recording
 
 		/* These functions implement the actual process of writing attributes
 		 * of either the HDF5 data file or the dataset. Where applicable,
 		 * they are used by the various setter functions below.
 		 */
-		void writeFileAttr(string name, const DataType &type, void *buf);
-		void writeDataAttr(string name, const DataType &type, void *buf);
-		void writeDataStringAttr(string name, string value);
+		void writeFileAttr(std::string name, const DataType &type, void *buf);
+		void writeDataAttr(std::string name, const DataType &type, void *buf);
+		void writeDataStringAttr(std::string name, std::string value);
 		void writeAllAttributes(void);
 
 		/* Write data to the file */
 		void setData(int startSample, int endSample, samples &data);
-		void setData(int startSample, int endSample, vector<vector<int16_t> > &data);
+		void setData(int startSample, int endSample, 
+				std::vector<std::vector<int16_t> > &data);
 
 		/* Setters for data attributes */
-		void setFilename(string filename);
+		void setFilename(std::string filename);
 		void setLength(double length);	
 		void setLastValidSample(size_t sample);
 		void setLive(bool live);
@@ -126,17 +130,17 @@ class H5Recording {
 		void setGain(float gain);
 		void setOffset(float offset);
 		void setBlockSize(size_t blockSize);
-		void setDate(string date);
-		void setTime(string time);
-		void setRoom(string room);
+		void setDate(std::string date);
+		void setTime(std::string time);
+		void setRoom(std::string room);
 
 		/* These functions implement the actual reading of HDF5 file
 		 * or dataset attributes, used by the various "read" functions
 		 * below.
 		 */
-		void readFileAttr(string name, void *buf);
-		void readDataAttr(string name, void *buf);
-		void readDataStringAttr(string name, string &dst);
+		void readFileAttr(std::string name, void *buf);
+		void readDataAttr(std::string name, void *buf);
+		void readDataStringAttr(std::string name, std::string &dst);
 
 		/* These functions do not return the value of the corresponding
 		 * data member. They read the values saved in a file, and are thus
@@ -155,7 +159,8 @@ class H5Recording {
 		void readDate(void);
 		void readTime(void);
 		void readRoom(void);
-};
+
+}; // End class
 
 #endif
 
