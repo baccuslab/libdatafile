@@ -4,12 +4,16 @@
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
 
+#include <QHostAddress>
+#include <QByteArray>
+
 #include "ctrlwindow.h"
 
 CtrlWindow::CtrlWindow(QWidget *parent) : QMainWindow(parent) {
 	setWindowTitle("Meaview: Controls");
 	setGeometry(PLOT_WINDOW_WIDTH + 10, 0, CTRL_WINDOW_WIDTH, CTRL_WINDOW_HEIGHT);
 	initSettings();
+	initMealogClient();
 	initCtrlWindowUI();
 	initPlotWindow();
 	//initMenuBar();
@@ -37,6 +41,24 @@ void CtrlWindow::initSettings() {
 	settings.setAutoMean(false);
 	playbackTimer = new QTimer();
 	playbackTimer->setInterval(settings.getRefreshInterval());
+}
+
+void CtrlWindow::initMealogClient() {
+	mealogClient = new QTcpSocket(this);
+	mealogClient->connectToHost(QHostAddress(Mealog::IPC_HOST), 
+			Mealog::IPC_PORT);
+	if (!mealogClient->waitForConnected(MEALOG_SERVER_TIMEOUT)) {
+		// Assume no Mealog running, not a live recording
+		mealogClient->close();
+		delete mealogClient;
+		mealogClient = nullptr;
+		qDebug() << "No mealog server found";
+		mealogConnected = false;
+		return;
+	}
+	qDebug() << "Connected to mealog server at: " << 
+			mealogClient->peerAddress() << ":" << mealogClient->peerPort();
+	mealogConnected = true;
 }
 
 void CtrlWindow::initPlotWindow() {
@@ -90,14 +112,51 @@ void CtrlWindow::initMenuBar() {
 	this->setMenuBar(this->menubar);
 }
 
+QString CtrlWindow::requestFilenameFromMealog(void) {
+
+	/* Make the request */
+	mearec::RecordingStatusRequest request;
+	request.set_filename(true);
+	QDataStream stream(mealogClient);
+	quint32 size = request.ByteSize();
+	stream << size;
+	std::string requestData;
+	if (!request.SerializeToString(&requestData))
+		return settings.getSaveFilename();
+	mealogClient->write(requestData.data(), size);
+
+	/* Read the reply */
+	if (!mealogClient->waitForReadyRead(MEALOG_SERVER_TIMEOUT)) {
+		return settings.getSaveFilename();
+	}
+	mearec::RecordingStatusReply reply;
+	stream >> size;
+	qDebug() << "message is " << size << " bytes";
+	QByteArray tmp = mealogClient->read(size);
+	std::string replyData = tmp.toStdString();
+	if (!reply.ParseFromString(replyData)) {
+		return settings.getSaveFilename();
+	}
+	return QString::fromStdString(reply.filename());
+}
+
 void CtrlWindow::initCtrlWindowUI() {
 	/* Set up GUI */
 	mainLayout = new QGridLayout();
 
+	/* If we're connected to Mealog, get the current filename */
+	QString fname;
+	if (mealogClient != nullptr) {
+		fname = requestFilenameFromMealog();
+	} else {
+		fname = settings.getSaveFilename();
+	}
+	qDebug() << "Using filename: " << fname;
+
 	/* Information group */
 	fileGroup = new QGroupBox("File");
 	fileLayout = new QGridLayout();
-	filenameLine = new QLineEdit(settings.getSaveFilename());
+	filenameLine = new QLineEdit(fname);
 	filenameLine->setToolTip("Name of current recording data file");
 	filenameLine->setReadOnly(true);
 	filenameValidator = new QRegExpValidator(QRegExp("(\\w+[-_]*)+"));
@@ -329,7 +388,7 @@ void CtrlWindow::plotNextDataBlock() {
 	float refreshInterval = this->settings.getRefreshInterval();
 	size_t nsamples = (refreshInterval / 1000) * sampleRate;
 
-	samples s = this->recording->data(this->lastSampleIndex, 
+	H5Rec::samples s = this->recording->data(this->lastSampleIndex, 
 			this->lastSampleIndex + nsamples);
 	this->plotWindow->plotData(s);
 	this->lastSampleIndex += nsamples;
@@ -401,7 +460,7 @@ void CtrlWindow::updateFilename() {
 void CtrlWindow::chooseFile() {
 	QFileDialog dialog(this, "Choose recording file", 
 			STARTING_SAVE_DIR, 
-			QString::fromStdString("*" + RECORDING_FILE_EXTENSION));
+			QString::fromStdString("*" + H5Rec::RECORDING_FILE_EXTENSION));
 	dialog.setFileMode(QFileDialog::ExistingFiles);
 	dialog.setOptions(QFileDialog::DontResolveSymlinks);
 	if (dialog.exec() == QDialog::Rejected)

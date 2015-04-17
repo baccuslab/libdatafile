@@ -23,7 +23,7 @@ void PlotWindow::initPlotGroup() {
 	this->setLayout(layout);
 }
 
-void PlotWindow::plotData(samples &s) {
+void PlotWindow::plotData(H5Rec::samples &s) {
 	this->channelPlot->distributedPlot(s);
 }
 

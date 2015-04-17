@@ -25,7 +25,7 @@
 
 //#include "daqclient/include/daqclient.h"
 #include "h5recording/include/h5recording.h"
-#include "proto/logserver.pb.h"
+#include "messaging/logserver.pb.h"
 
 /* Settings */
 namespace Mealog {
@@ -39,6 +39,7 @@ const unsigned int MAX_EXPERIMENT_LENGTH = 10000;
 const QList<double> ADC_RANGES = { 1, 2, 5, 10 };
 const double DEFAULT_ADC_RANGE = 5;
 const QStringList TRIGGERS = {"Photodiode", "None"};
+const QString IPC_HOST = "127.0.0.1";
 const quint16 IPC_PORT = 44444;
 
 class MealogWindow;
@@ -58,6 +59,7 @@ class MealogWindow : public QMainWindow {
 		void respondToClient(void);
 		void initRecording(void);
 		void deInitRecording(void);
+		void chooseSaveDir(void);
 
 	private:
 		void initGui(void);

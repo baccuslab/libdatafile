@@ -29,6 +29,7 @@
 #include <QRegExpValidator>
 #include <QIntValidator>
 #include <QFileDialog>
+#include <QTcpSocket>
 
 /* meaview includes */
 #include "settings.h"
@@ -36,6 +37,10 @@
 #include "windows.h"
 
 #include "h5recording/include/h5recording.h"
+#include "mealog/include/mealog.h"
+
+/* Constants */
+const int MEALOG_SERVER_TIMEOUT = 100; // ms
 
 /* class: CtrlWindow
  * -----------------
@@ -75,6 +80,7 @@ class CtrlWindow : public QMainWindow {
 
 		/* Initialization methods */
 		void initSettings();
+		void initMealogClient();
 		void initCtrlWindowUI();
 		void initMenuBar();
 		void initPlotWindow();
@@ -82,6 +88,7 @@ class CtrlWindow : public QMainWindow {
 		void initPlayback();
 		//void initLiveRecording();
 		void initSignalsAndSlots();
+		QString requestFilenameFromMealog();
 
 		/* General attributes */
 		Settings settings;
@@ -90,6 +97,10 @@ class CtrlWindow : public QMainWindow {
 		QTimer *playbackTimer;
 		bool isPlaying = false;
 		size_t lastSampleIndex; // last sample plotted
+
+		/* Networking stuff for interfacing with mealog */
+		QTcpSocket *mealogClient;
+		bool mealogConnected;
 
 		/* Data interface attributes */
 		//Playback *playback;

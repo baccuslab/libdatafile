@@ -23,14 +23,15 @@ Dependencies
 - [Boost] (http://www.boost.org/)
 - [Google Protocol Buffers] (https://developers.google.com/protocol-buffers)
 
-Installation
-============
+Building
+========
 
-Manual for now:
+The `mearec` application suite uses `qmake` for its build environment, even for
+those components that are not written using Qt. Each component has its own
+`.pro` file, and can be built independently as:
 
-	foreach directory:
-		cd $directory
-		qmake 	# Must be for Qt5
-		make
-	cd mealog/proto
-	make
+	$ cd <component>
+	$ qmake5 && make
+
+The entire project can be built, either in debug or release mode, by just calling
+`qmake5` in the top `mearec` directory.

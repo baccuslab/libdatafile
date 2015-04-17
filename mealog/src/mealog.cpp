@@ -19,6 +19,7 @@
 #include <QTime>
 #include <QDate>
 #include <QDataStream>
+#include <QFileDialog>
 
 #include "mealog.h"
 
@@ -63,7 +64,8 @@ void MealogWindow::initGui(void) {
 	startButton->setEnabled(false);
 	quitButton = new QPushButton("Quit");
 	quitButton->setToolTip("Quit Mealog");
-	ctrlLayout->addWidget(initRecordingButton, 0, 1);
+	ctrlLayout->addWidget(initRecordingButton, 0, 0);
+	ctrlLayout->addWidget(startMeaviewButton, 0, 1);
 	ctrlLayout->addWidget(startButton, 0, 2);
 	ctrlLayout->addWidget(quitButton, 0, 3);
 	ctrlGroup->setLayout(ctrlLayout);
@@ -129,7 +131,7 @@ void MealogWindow::initGui(void) {
 
 void MealogWindow::initServer(void) {
 	server = new QTcpServer(this);
-	server->listen(QHostAddress::LocalHost, Mealog::IPC_PORT);
+	server->listen(QHostAddress(Mealog::IPC_HOST), Mealog::IPC_PORT);
 	qDebug() << "Server started at: " << server->serverAddress().toString();
 }
 
@@ -139,7 +141,6 @@ void MealogWindow::acceptClients(void) {
 	qDebug() << "New client: " << socket->peerAddress() << ":" << socket->peerPort();
 	connect(socket, SIGNAL(readyRead()), 
 			this, SLOT(respondToClient()));
-	qDebug() << "Signals connected";
 }
 
 bool MealogWindow::readMessage(QTcpSocket *socket, 
@@ -160,18 +161,25 @@ bool MealogWindow::writeMessage(QTcpSocket *socket,
 	/* Write the size */
 	QDataStream stream(socket);
 	quint32 size = reply.ByteSize();
+	qDebug() << "Writing size (" << size << ") to socket's datastream";
 	stream << size;
 
 	/* Write the message */
-	std::string data;
-	if (!reply.SerializeToString(&data))
+	std::string replyData;
+	if (!reply.SerializeToString(&replyData))
 		return false;
-	if (socket->write(data.data(), size) != size)
+	if (socket->write(replyData.data(), size) != size)
 		return false;
+	socket->flush();
 	return true;
 }
 
 void MealogWindow::respondToClient(void) {
+	/* Ignore all messages until initialized? */
+	if (!recordingInitialized) {
+		qDebug() << "Ignoring message from peer, recording is not initialized";
+		return;
+	}
 	QTcpSocket *socket = dynamic_cast<QTcpSocket *>(QObject::sender());
 	mearec::RecordingStatusRequest request;
 	bool ok = readMessage(socket, request);
@@ -343,6 +351,16 @@ void MealogWindow::initSignals(void) {
 			this, SLOT(acceptClients()));
 	connect(this->initRecordingButton, SIGNAL(clicked()), 
 			this, SLOT(initRecording()));
+	connect(this->chooseDirButton, SIGNAL(clicked()),
+			this, SLOT(chooseSaveDir()));
+}
+
+void MealogWindow::chooseSaveDir(void) {
+	QString dir = QFileDialog::getExistingDirectory(this,
+			"Choose save directory",
+			savedirLine->text(),
+			QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+	savedirLine->setText(dir);
 }
 
 bool MealogWindow::checkMeaviewRunning(void) {

@@ -9,8 +9,6 @@
 /* meaview includes */
 #include "settings.h"
 #include "channelplot.h"
-#include "files.h"
-#include "recording.h"
 
 /* Forward declarations */
 class CtrlWindow;

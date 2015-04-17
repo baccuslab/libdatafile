@@ -15,8 +15,6 @@
 
 /* meaview includes */
 #include "channelplot.h"
-#include "recording.h"
-#include "playback.h"
 #include "settings.h"
 
 #include "h5recording/include/h5recording.h"
@@ -32,7 +30,7 @@ class PlotWindow : public QWidget {
 
 	public slots:
 		void plotNextDataBlock();
-		void plotData(samples &s);
+		void plotData(H5Rec::samples &s);
 
 	private slots:
 		void toggleVisible();

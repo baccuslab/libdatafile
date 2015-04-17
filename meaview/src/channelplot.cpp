@@ -72,14 +72,14 @@ QCPAxisRect *ChannelPlot::getSubplotAxis(int row, int col) {
 	return this->axisRect(posToIndex(row, col));
 }
 
-void ChannelPlot::distributedPlot(samples &s) {
+void ChannelPlot::distributedPlot(H5Rec::samples &s) {
 	this->constructXData();
 	qDebug() << "X data size: " << xData.size();
 	for (auto i = 0; i < 8; i++)
 		QtConcurrent::run(this, &ChannelPlot::plotSubBlock, s, i);
 }
 
-void ChannelPlot::plotSubBlock(samples &s, int block) {
+void ChannelPlot::plotSubBlock(H5Rec::samples &s, int block) {
 	QPen pen = this->settings.getPlotPen();
 	bool automean = this->settings.getAutoMean();
 	bool autoscale = this->settings.getAutoscale();
