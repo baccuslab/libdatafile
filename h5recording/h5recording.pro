@@ -12,6 +12,10 @@ INCLUDEPATH += . include /usr/local/include
 LIBS += -L/usr/local/lib -lhdf5 -lhdf5_cpp -lboost_container
 QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++
 
+mac {
+	QMAKE_SONAME_PREFIX += @rpath
+}
+
 # Input
 HEADERS += include/h5recording.h
 SOURCES += src/h5recording.cpp

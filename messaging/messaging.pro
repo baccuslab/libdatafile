@@ -13,6 +13,10 @@ PKGCONFIG += protobuf
 INCLUDEPATH += .
 QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++
 
+mac {
+	QMAKE_SONAME_PREFIX += @rpath
+}
+
 # Input
 HEADERS += logserver.pb.h
 SOURCES += logserver.pb.cc

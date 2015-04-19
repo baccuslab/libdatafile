@@ -10,6 +10,10 @@ INCLUDEPATH += . /usr/local/include
 LIBS += -L/usr/local/lib -lhdf5
 CONFIG += debug_and_release
 
+mac {
+	QMAKE_SONAME_PREFIX += @rpath
+}
+
 # Input
 HEADERS += bintools.h hdftools.h
 SOURCES += bintools.c hdftools.c
