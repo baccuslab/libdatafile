@@ -20,8 +20,16 @@
 #include <QDate>
 #include <QDataStream>
 #include <QFileDialog>
+#include <QErrorMessage>
+
+#include <QFuture>
+#include <QFutureWatcher>
+#include <QtConcurrent>
 
 #include "mealog.h"
+
+#include <boost/multi_array.hpp>
+using boost::extents;
 
 MealogWindow::MealogWindow(QWidget *parent) : QMainWindow(parent) {
 	initGui();
@@ -41,14 +49,24 @@ void MealogWindow::initGui(void) {
 	nidaqLayout = new QGridLayout();
 	connectButton = new QPushButton("Connect");
 	connectButton->setToolTip("Connect to NI-DAQ server to initialize the recording");
+	nidaqHostLabel = new QLabel("IP:");
+	nidaqHostLabel->setAlignment(Qt::AlignRight);
+	nidaqHost = new QLineEdit("127.0.0.1");
+	nidaqHost->setToolTip("IP address of the computer running the NI-DAQ server");
+	nidaqValidator = new QRegExpValidator(
+			QRegExp("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}"\
+				"([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])"));
+	nidaqHost->setValidator(nidaqValidator);
 	nidaqStatusLabel = new QLabel("Status:");
 	nidaqStatusLabel->setAlignment(Qt::AlignRight);
 	nidaqStatus = new QLabel("Not connected");
 	nidaqStatus->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
 	nidaqStatus->setToolTip("Status of connection with NIDAQ");
 	nidaqLayout->addWidget(connectButton, 0, 0);
-	nidaqLayout->addWidget(nidaqStatusLabel, 0, 1);
-	nidaqLayout->addWidget(nidaqStatus, 0, 2, 1, 4);
+	nidaqLayout->addWidget(nidaqHostLabel, 0, 1);
+	nidaqLayout->addWidget(nidaqHost, 0, 2, 1, 2);
+	nidaqLayout->addWidget(nidaqStatusLabel, 1, 0);
+	nidaqLayout->addWidget(nidaqStatus, 1, 1, 1, 4);
 	nidaqGroup->setLayout(nidaqLayout);
 
 	ctrlGroup = new QGroupBox("Controls");
@@ -241,6 +259,31 @@ bool MealogWindow::removeOldRecording(QFile &path) {
 	return true;
 }
 
+void MealogWindow::handleBrokenServerConnection(void) {
+	if (numSamplesAcquired == client->nsamples()) {
+		cleanupRecording();
+	} else {
+		/* Broken pipe! */
+		connectButton->setText("Connect");
+		nidaqStatus->setText("Connection to NI-DAQ server interrupted");
+		nidaqHost->setEnabled(true);
+		if (isRecording) {
+			QErrorMessage *errMsg = new QErrorMessage(this);
+			errMsg->showMessage("Connection to NI-DAQ server interrupted"\
+					", recording terminated!");
+		}
+	}
+}
+
+void MealogWindow::cleanupRecording(void) {
+	connectButton->setText("Connect");
+	nidaqStatus->setText("Connection to NI-DAQ server ended");
+	isRecording = false;
+	statusBar->showMessage("Recording finished", 10000);
+	startButton->setEnabled(false);
+	delete this->recording;
+}
+
 void MealogWindow::setRecordingParameters(void) {
 	/* Set length and sample information */
 	recording->setLength(timeLine->text().toDouble());
@@ -262,6 +305,14 @@ void MealogWindow::setRecordingParameters(void) {
 	QString dt(QDate::currentDate().toString("ddd, MMM dd, yyyy"));
 	recording->setTime(tm.toStdString());
 	recording->setDate(dt.toStdString());
+}
+
+void MealogWindow::sendInitMsg(void) {
+	client->setLength(timeLine->text().toFloat());
+	client->setAdcRange(adcRangeBox->currentData().toFloat());
+	client->setBlockSize(BLOCK_SIZE);
+	client->setTrigger(triggerBox->currentText());
+	client->initExperiment();
 }
 
 void MealogWindow::setParameterSelectionsEnabled(bool enabled) {
@@ -288,6 +339,8 @@ void MealogWindow::initRecording(void) {
 	/* Make recording and set parameters from choices */
 	recording = new H5Recording(path->fileName().toStdString());
 	setRecordingParameters();
+	if (client != nullptr)
+		sendInitMsg();
 
 	/* Disable parameter selections */
 	setParameterSelectionsEnabled(false);
@@ -299,11 +352,13 @@ void MealogWindow::initRecording(void) {
 			this, SLOT(initRecording()));
 	connect(initRecordingButton, SIGNAL(clicked()),
 			this, SLOT(deInitRecording()));
-	if (nidaqConnected)
-		startButton->setEnabled(true);
 	recordingInitialized = true;
 	delete path;
 	statusBar->showMessage("Ready");
+
+	/* Enable "Start" button, if already connected to NIDAQ server */
+	if ((client != nullptr) && (client->isConnected()))
+		startButton->setEnabled(true);
 }
 
 void MealogWindow::deInitRecording(void) {
@@ -353,6 +408,10 @@ void MealogWindow::initSignals(void) {
 			this, SLOT(initRecording()));
 	connect(this->chooseDirButton, SIGNAL(clicked()),
 			this, SLOT(chooseSaveDir()));
+	connect(this->connectButton, SIGNAL(clicked()), 
+			this, SLOT(connectToDaqsrv()));
+	connect(this->startButton, SIGNAL(clicked()), 
+			this, SLOT(startRecording()));
 }
 
 void MealogWindow::chooseSaveDir(void) {
@@ -374,10 +433,77 @@ bool MealogWindow::checkMeaviewRunning(void) {
 }
 
 void MealogWindow::startMeaview(void) {
+	statusBar->showMessage("Starting meaview");
 	if (checkMeaviewRunning())
 		return;
 	QProcess m;
 	m.startDetached("/Users/bnaecker/FileCabinet/stanford/baccuslab/mearec/meaview/meaview.app/Contents/MacOS/meaview");
 	m.waitForStarted();
+	statusBar->showMessage("Ready");
+}
+
+void MealogWindow::connectToDaqsrv(void) {
+	statusBar->showMessage("Connecting to NI-DAQ server");
+	nidaqStatus->setText("Connecting to NI-DAQ server");
+	client = new DaqClient(nidaqHost->text());
+	connectButton->setEnabled(false);
+	connect(client, SIGNAL(connectionMade(bool)),
+			this, SLOT(handleDaqsrvConnection(bool)));
+	connect(client, SIGNAL(connectionBroken()), 
+			this, SLOT(handleBrokenServerConnection()));
+	client->connectToDaqsrv();
+}
+
+void MealogWindow::disconnectFromDaqsrv(void) {
+	client->disconnectFromDaqsrv();
+	connectButton->setText("Connect");
+	nidaqStatus->setText("Not connected");
+	nidaqHost->setEnabled(true);
+	disconnect(connectButton, SIGNAL(clicked()), 
+			this, SLOT(disconnectFromDaqsrv()));
+	connect(connectButton, SIGNAL(clicked()),
+			this, SLOT(connectToDaqsrv()));
+	disconnect(client, SIGNAL(connectionBroken()), 
+			this, SLOT(handleBrokenServerConnection()));
+}
+
+void MealogWindow::handleDaqsrvConnection(bool made) {
+	if (made) {
+		nidaqStatus->setText("Connected to NI-DAQ");
+		connectButton->setText("Disconnect");
+		connectButton->setEnabled(true);
+		nidaqHost->setEnabled(false);
+		disconnect(connectButton, SIGNAL(clicked()), 
+				this, SLOT(connectToDaqsrv()));
+		connect(connectButton, SIGNAL(clicked()),
+				this, SLOT(disconnectFromDaqsrv()));
+		if (recordingInitialized) {
+			sendInitMsg();
+			startButton->setEnabled(true);
+		}
+		statusBar->showMessage("Ready");
+	} else {
+		nidaqStatus->setText("Error connecting to NI-DAQ, correct IP?");
+		delete client;
+		client = nullptr;
+		connectButton->setEnabled(true);
+		statusBar->showMessage("Ready");
+	}
+}
+
+void MealogWindow::startRecording(void) {
+	connect(client, SIGNAL(dataAvailable()), this, SLOT(recvData()));
+	client->startRecording();
+	statusBar->showMessage(QString("Recording data to %1").arg(
+				getFullFilename()->fileName()));
+}
+
+void MealogWindow::recvData(void) {
+	H5Rec::samples samples(extents[client->nchannels()][client->blockSize()]);
+	client->recvData(samples.origin());
+	recording->setData(numSamplesAcquired, 
+			numSamplesAcquired + client->blockSize(), samples);
+	numSamplesAcquired += client->blockSize();
+	qDebug() << numSamplesAcquired << "acquired";
 }
 

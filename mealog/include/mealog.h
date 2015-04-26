@@ -23,7 +23,7 @@
 #include <QFile>
 #include <QDir>
 
-//#include "daqclient/include/daqclient.h"
+#include "daqclient/include/daqclient.h"
 #include "h5recording/include/h5recording.h"
 #include "messaging/logserver.pb.h"
 
@@ -60,13 +60,21 @@ class MealogWindow : public QMainWindow {
 		void initRecording(void);
 		void deInitRecording(void);
 		void chooseSaveDir(void);
+		void connectToDaqsrv(void);
+		void disconnectFromDaqsrv(void);
+		void handleDaqsrvConnection(bool made);
+		void handleBrokenServerConnection(void);
+		void startRecording(void);
+		void recvData(void);
 
 	private:
 		void initGui(void);
 		void initServer(void);
 		void initSignals(void);
+		void sendInitMsg(void);
 		bool checkMeaviewRunning(void);
 		bool confirmFileOverwrite(const QFile &path);
+		void cleanupRecording(void);
 		QFile *getFullFilename(void);
 		bool removeOldRecording(QFile &path);
 		void setRecordingParameters(void);
@@ -84,9 +92,11 @@ class MealogWindow : public QMainWindow {
 		/* Process starting meaview if requested */
 		QProcess *meaviewProcess = nullptr;
 
-		// DaqClient client;
+		DaqClient *client;
 		H5Recording *recording;
 		bool recordingInitialized = false;
+		bool isRecording = false;
+		uint64_t numSamplesAcquired = 0;
 		mearec::RecordingStatusReply_StatusType recordingStatus = \
 				mearec::RecordingStatusReply_StatusType_STOPPED;
 
@@ -95,10 +105,12 @@ class MealogWindow : public QMainWindow {
 		QStatusBar *statusBar;
 
 		/* NIDAQ stuff */
-		bool nidaqConnected = false;
 		QGroupBox *nidaqGroup;
 		QGridLayout *nidaqLayout;
 		QPushButton *connectButton;
+		QLabel *nidaqHostLabel;
+		QLineEdit *nidaqHost;
+		QRegExpValidator *nidaqValidator;
 		QLabel *nidaqStatusLabel;
 		QLabel *nidaqStatus;
 

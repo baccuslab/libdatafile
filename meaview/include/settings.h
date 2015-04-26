@@ -58,15 +58,15 @@ const unsigned int DEFAULT_EXPERIMENT_LENGTH = 1000; 	// seconds
  * must be written as unencoded binary so that files here
  * are compatible with traditional AIB files
  */
-const float SAMPLE_RATE = 10000.0;
-const float GAIN = 0.00015258789;
-const float OFFSET = -5.0;
-const uint32_t NUM_CHANNELS = 64;
-const int16_t AIB_TYPE = 2;
-const int16_t AIB_VERSION = 1;
-const char AIB_ROOM[] = {'r', 'e', 'c', 'o', 'r', 'd', 'e', 'd', ' ',
-		'i', 'n', ' ', 'd', '2', '3', '9', '\0'};
-const uint32_t AIB_ROOM_SIZE = strlen(AIB_ROOM);
+//const float SAMPLE_RATE = 10000.0;
+//const float GAIN = 0.00015258789;
+//const float OFFSET = -5.0;
+//const uint32_t NUM_CHANNELS = 64;
+//const int16_t AIB_TYPE = 2;
+//const int16_t AIB_VERSION = 1;
+//const char AIB_ROOM[] = {'r', 'e', 'c', 'o', 'r', 'd', 'e', 'd', ' ',
+		//'i', 'n', ' ', 'd', '2', '3', '9', '\0'};
+//const uint32_t AIB_ROOM_SIZE = strlen(AIB_ROOM);
 const uint32_t AIB_BLOCK_SIZE = 20000;
 const char TIME_FORMAT[] = "h:mm:ss AP"; 		// QTime format
 const char DATE_FORMAT[] = "ddd, MMM dd, yyyy";	// QDate format

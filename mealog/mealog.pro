@@ -6,16 +6,17 @@ TEMPLATE = app
 TARGET = mealog
 OBJECTS_DIR = build
 MOC_DIR = build
-QT += network printsupport widgets
+QT += network printsupport widgets concurrent
 QT_CONFIG -= no-pkg-config
 CONFIG += c++11 debug_and_release link_pkgconfig
 PKGCONFIG += protobuf
 INCLUDEPATH += . include ../ \
 			/usr/local/include
 LIBS += -L../h5recording/lib -lh5recording \
-		-L../messaging/lib -lmessaging
+		-L../messaging/lib -lmessaging \
+		-L ../daqclient/lib -ldaqclient
 QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++
-QMAKE_RPATHDIR += ../h5recording/lib ../messaging/lib
+QMAKE_RPATHDIR += ../h5recording/lib ../messaging/lib ../daqclient/lib
 
 # Input
 HEADERS += include/mealog.h 

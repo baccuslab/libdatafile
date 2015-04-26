@@ -94,6 +94,11 @@ double H5Recording::length(void) {
 
 void H5Recording::setLength(double length) {
 	this->_length = length;
+	setNumSamples(length * H5Rec::SAMPLE_RATE);
+	/* Resize dataspace */
+	hsize_t newSize[H5Rec::DATASET_RANK] = {H5Rec::NUM_CHANNELS, this->_nsamples};
+	this->dataset.extend(newSize);
+	this->dataspace = this->dataset.getSpace();
 }
 
 int16_t H5Recording::type(void) {
@@ -234,6 +239,35 @@ void H5Recording::setData(int startSample, int endSample,
 }
 
 void H5Recording::setData(int startSample, int endSample, H5Rec::samples &data) {
+	int req_nsamples = endSample - startSample;
+	if (req_nsamples <= 0) {
+		std::cerr << "Requested sample range is invalid: (" <<
+				startSample << ", " << endSample << ")" << std::endl;
+		throw;
+	}
+
+	/* Select hyperslab of dataspace where data will be written */
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, static_cast<hsize_t>(startSample)};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {this->_nchannels,
+			static_cast<hsize_t>(req_nsamples)};
+	this->dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+
+	/* Define dataspace of memory region, from which data is read */
+	hsize_t dims[H5Rec::DATASET_RANK] = {this->_nchannels, 
+			static_cast<hsize_t>(req_nsamples)};
+	DataSpace memspace(H5Rec::DATASET_RANK, dims);
+	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
+		static_cast<hsize_t>(req_nsamples)};
+	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
+
+	/* Write data 
+	 * XXX: This is big-endian because it comes over the network. But 
+	 * if we move away from sockets as the "source" of the data, this will
+	 * likely change.
+	 */
+	this->dataset.write(data.origin(), PredType::STD_I16BE, 
+			memspace, this->dataspace);
 }
 
 void H5Recording::writeFileAttr(std::string name, const DataType &type, void *buf) {

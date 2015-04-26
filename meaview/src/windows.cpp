@@ -43,7 +43,7 @@ ChannelInspectWindow::ChannelInspectWindow(
 	graph->keyAxis()->setTicks(false);
 	graph->keyAxis()->setTickLabels(false);
 	graph->keyAxis()->grid()->setVisible(false);
-	graph->keyAxis()->setRange(0, SAMPLE_RATE * 
+	graph->keyAxis()->setRange(0, H5Rec::SAMPLE_RATE * 
 			this->settings.getRefreshInterval() / 1000);
 	graph->valueAxis()->setTicks(false);
 	graph->valueAxis()->setTickLabels(false);

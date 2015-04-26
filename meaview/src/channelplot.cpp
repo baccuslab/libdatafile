@@ -15,7 +15,7 @@ ChannelPlot::ChannelPlot(int numRows, int numCols, QWidget *parent)
 	this->plotLayout()->expandTo(numRows, numCols);
 	this->plotLayout()->setRowSpacing(-10);
 	this->plotLayout()->setColumnSpacing(-10);
-	for (int chan = 0; chan < NUM_CHANNELS; chan++) {
+	for (int chan = 0; chan < H5Rec::NUM_CHANNELS; chan++) {
 
 		/* Create axes and graph for the subplot */
 		QPair<int, int> pos = this->settings.getChannelView().at(chan);
@@ -30,7 +30,7 @@ ChannelPlot::ChannelPlot(int numRows, int numCols, QWidget *parent)
 		graph->keyAxis()->setTicks(false);
 		graph->keyAxis()->setTickLabels(false);
 		graph->keyAxis()->grid()->setVisible(false);
-		graph->keyAxis()->setRange(0, SAMPLE_RATE * 
+		graph->keyAxis()->setRange(0, H5Rec::SAMPLE_RATE * 
 				this->settings.getRefreshInterval() / 1000);
 		graph->valueAxis()->setTicks(false);
 		graph->valueAxis()->setTickLabels(false);
@@ -43,13 +43,13 @@ ChannelPlot::ChannelPlot(int numRows, int numCols, QWidget *parent)
 	/* Make an x-axis for all subplots. This is not const, really, since
 	 * we expect that the user may change the refresh rate of the plots
 	 */
-	xData.resize(SAMPLE_RATE *
+	xData.resize(H5Rec::SAMPLE_RATE *
 			this->settings.getRefreshInterval() / 1000);
 	constructXData();
 }
 
 void ChannelPlot::constructXData() {
-	int newSize = SAMPLE_RATE * this->settings.getRefreshInterval() / 1000;
+	int newSize = H5Rec::SAMPLE_RATE * this->settings.getRefreshInterval() / 1000;
 	if (xData.size() != newSize)
 		xData.resize(newSize);
 	double start = 0.0;

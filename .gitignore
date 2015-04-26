@@ -1,12 +1,13 @@
 *.swp
 *.app
 *.stash
-./meaview/Makefile
+*Makefile*
 *.bin
 *.o
 moc_*
 *.h5
 *.so
 *.dylib
+*__pycache__*
 hdf2bin
 bin2hdf
