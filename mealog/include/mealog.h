@@ -53,6 +53,9 @@ class MealogWindow : public QMainWindow {
 		MealogWindow(QWidget *parent = 0);
 		~MealogWindow();
 
+	signals:
+		void newDataAvailable(void);
+
 	private slots:
 		void startMeaview(void);
 		void acceptClients(void);

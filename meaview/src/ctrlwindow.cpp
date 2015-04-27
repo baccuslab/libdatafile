@@ -19,6 +19,8 @@ CtrlWindow::CtrlWindow(QWidget *parent) : QMainWindow(parent) {
 	//initMenuBar();
 	initStatusBar();
 	initSignalsAndSlots();
+	if (mealogConnected)
+		loadRecording();
 }
 
 CtrlWindow::~CtrlWindow() {
@@ -343,22 +345,31 @@ void CtrlWindow::togglePlayback() {
 }
 
 void CtrlWindow::loadRecording() {
-	QString tmp = this->filenameLine->text();
-	this->filenameLine->clear();
-	statusLabel->setText("Loading recording");
-	QString filename = QFileDialog::getOpenFileName(
-			this, tr("Load recording"),
-			STARTING_SAVE_DIR, tr("Recordings (*.h5)"));
-	if (filename.isNull()) {
-		this->filenameLine->setText(tmp);
-		statusLabel->setText("Ready");
-		return;
+	QString filename;
+	if (mealogConnected) {
+		filename = this->filenameLine->text();
+	} else {
+		QString tmp = this->filenameLine->text();
+		this->filenameLine->clear();
+		statusLabel->setText("Loading recording");
+		filename = QFileDialog::getOpenFileName(
+				this, tr("Load recording"),
+				STARTING_SAVE_DIR, tr("Recordings (*.h5)"));
+		if (filename.isNull()) {
+			this->filenameLine->setText(tmp);
+			statusLabel->setText("Ready");
+			return;
+		}
 	}
 	
 	/* Open the recording */
 	if (recording != nullptr)
 		delete recording;
-	recording = new H5Recording(filename.toStdString());
+	try {
+		recording = new H5Recording(filename.toStdString());
+	} catch (std::exception &e) {
+		qDebug() << "error creating h5recording";
+	}
 	this->plotWindow->recording = recording;
 	this->filenameLine->setText(filename);
 	this->updateFilename();
@@ -377,17 +388,43 @@ void CtrlWindow::initPlayback() {
 	//savedirLine->setText(finfo.dir().absolutePath());
 	//filenameLine->setText(finfo.baseName()); 
 	connect(startPauseButton, SIGNAL(clicked()), this, SLOT(togglePlayback()));
-	connect(playbackTimer, SIGNAL(timeout()), this, SLOT(plotNextDataBlock()));
 	connect(this->plotWindow->getChannelPlot(), SIGNAL(afterReplot()), 
 			this, SLOT(updateTimeLine()));
+	if (this->recording->live()) {
+		qDebug() << "Watching live recording at:" << QString::fromStdString(this->recording->filename());
+		addFileWatcher();
+		connect(this->fileWatcher, SIGNAL(fileChanged(const QString &)), 
+				this, SLOT(checkRecordingFile(const QString &)));
+	} else {
+		connect(playbackTimer, SIGNAL(timeout()), this, SLOT(plotNextDataBlock()));
+	}
+}
+
+void CtrlWindow::addFileWatcher() {
+	fileWatcher = new QFileSystemWatcher(this);
+	bool watched = fileWatcher->addPath(QString::fromStdString(recording->filename()));
+	if (!watched)
+		qDebug() << "Could not watch file";
+}
+
+void CtrlWindow::checkRecordingFile(const QString &path) {
+	qDebug() << "file changed";
+	size_t nsamplesPerPlotBlock = ((this->settings.getRefreshInterval() / 1000) *
+			this->recording->sampleRate());
+	uint32_t lastValidSample = this->recording->lastValidSample();
+	size_t numNewSamples = (lastValidSample - this->lastSampleIndex);
+	if (numNewSamples > nsamplesPerPlotBlock)
+		plotNextDataBlock();
 }
 
 void CtrlWindow::plotNextDataBlock() {
 	/* Compute next sample we should plot */
-	float sampleRate = this->recording->sampleRate();
-	float refreshInterval = this->settings.getRefreshInterval();
-	size_t nsamples = (refreshInterval / 1000) * sampleRate;
-
+	//float sampleRate = this->recording->sampleRate();
+	//float refreshInterval = this->settings.getRefreshInterval();
+	
+	/* Read data file's last valid sample */
+	size_t nsamples = ((this->settings.getRefreshInterval() / 1000) * 
+			this->recording->sampleRate());
 	H5Rec::samples s = this->recording->data(this->lastSampleIndex, 
 			this->lastSampleIndex + nsamples);
 	this->plotWindow->plotData(s);
@@ -395,14 +432,14 @@ void CtrlWindow::plotNextDataBlock() {
 }
 
 void CtrlWindow::initSignalsAndSlots() {
-	connect(this->playbackTimer, SIGNAL(timeout()),
-			this->plotWindow, SLOT(plotNextDataBlock()));
+	//connect(this->playbackTimer, SIGNAL(timeout()),
+			//this->plotWindow, SLOT(plotNextDataBlock()));
 	connect(this->filenameLine, SIGNAL(editingFinished()), 
 			this, SLOT(updateFilename()));
 	connect(this->chooseFileButton, SIGNAL(clicked()), 
 			this, SLOT(loadRecording()));
-	connect(this->timeLine, SIGNAL(editingFinished()), 
-			this, SLOT(updateTime()));
+	//connect(this->timeLine, SIGNAL(editingFinished()), 
+			//this, SLOT(updateTime()));
 	connect(this->jumpSpinBox, SIGNAL(valueChanged(int)),
 			this, SLOT(updateJump(int)));
 	connect(this->viewBox, SIGNAL(currentIndexChanged(QString)), 

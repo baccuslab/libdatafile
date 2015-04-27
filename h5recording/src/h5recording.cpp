@@ -31,7 +31,6 @@ H5Recording::H5Recording(std::string filename) {
 			std::cerr << "Could not open H5 file" << std::endl;
 			exit(EXIT_FAILURE);
 		}
-
 		/* Get the data itself */
 		dataset = file.openDataSet("data");
 		dataspace = dataset.getSpace();
@@ -95,7 +94,13 @@ double H5Recording::length(void) {
 void H5Recording::setLength(double length) {
 	this->_length = length;
 	setNumSamples(length * H5Rec::SAMPLE_RATE);
-	/* Resize dataspace */
+
+	/* If this is a new recording, it will not be read-only. Requests
+	 * to re-set the length of the file will be done by a class that
+	 * is recording the data to disk.
+	 */
+	if (readOnly)
+		return;
 	hsize_t newSize[H5Rec::DATASET_RANK] = {H5Rec::NUM_CHANNELS, this->_nsamples};
 	this->dataset.extend(newSize);
 	this->dataspace = this->dataset.getSpace();
@@ -268,6 +273,7 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::samples &data) 
 	 */
 	this->dataset.write(data.origin(), PredType::STD_I16BE, 
 			memspace, this->dataspace);
+	this->flush();
 }
 
 void H5Recording::writeFileAttr(std::string name, const DataType &type, void *buf) {
@@ -499,3 +505,6 @@ void H5Recording::readRoom(void) {
 	readDataStringAttr("room", this->_room);
 }
 
+void H5Recording::flush(void) {
+	file.flush(H5F_SCOPE_GLOBAL);
+}

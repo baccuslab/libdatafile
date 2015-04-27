@@ -26,6 +26,8 @@
 #include <QFutureWatcher>
 #include <QtConcurrent>
 
+#include <cstdio>
+
 #include "mealog.h"
 
 #include <boost/multi_array.hpp>
@@ -299,6 +301,7 @@ void MealogWindow::setRecordingParameters(void) {
 	double adcRange = Mealog::ADC_RANGES.at(adcRangeBox->currentIndex());
 	recording->setOffset(adcRange);
 	recording->setGain((adcRange * 2) / (1 << 16));
+	recording->setLastValidSample(0);
 
 	/* Date and time */
 	QString tm(QTime::currentTime().toString("h:mm:ss AP"));
@@ -339,6 +342,7 @@ void MealogWindow::initRecording(void) {
 	/* Make recording and set parameters from choices */
 	recording = new H5Recording(path->fileName().toStdString());
 	setRecordingParameters();
+	recording->flush();
 	if (client != nullptr)
 		sendInitMsg();
 
@@ -504,6 +508,8 @@ void MealogWindow::recvData(void) {
 	recording->setData(numSamplesAcquired, 
 			numSamplesAcquired + client->blockSize(), samples);
 	numSamplesAcquired += client->blockSize();
+	recording->setLastValidSample(numSamplesAcquired);
+	emit newDataAvailable();
 	qDebug() << numSamplesAcquired << "acquired";
 }
 

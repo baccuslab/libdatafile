@@ -29,6 +29,7 @@
 #include <QRegExpValidator>
 #include <QIntValidator>
 #include <QFileDialog>
+#include <QFileSystemWatcher>
 #include <QTcpSocket>
 
 /* meaview includes */
@@ -73,6 +74,7 @@ class CtrlWindow : public QMainWindow {
 		void updateAutoMean(int);
 		void openChannelInspectWindow(int);
 		void updateTimeLine();
+		void checkRecordingFile(const QString &path);
 		void plotNextDataBlock();
 		void loadRecording();
 
@@ -86,6 +88,7 @@ class CtrlWindow : public QMainWindow {
 		void initPlotWindow();
 		void initStatusBar();
 		void initPlayback();
+		void addFileWatcher();
 		//void initLiveRecording();
 		void initSignalsAndSlots();
 		QString requestFilenameFromMealog();
@@ -105,6 +108,7 @@ class CtrlWindow : public QMainWindow {
 		/* Data interface attributes */
 		//Playback *playback;
 		H5Recording *recording = nullptr;
+		QFileSystemWatcher *fileWatcher = nullptr;
 
 		/* Main window GUI attributes */
 		PlotWindow *plotWindow;

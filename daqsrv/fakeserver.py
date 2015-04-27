@@ -108,6 +108,13 @@ def serve_data(task, client):
     # Send random datas
     nsamples = 0
     while nsamples < task.nsamples:
+        try: 
+            buf = client.recv(BUFFER_SIZE)
+            if len(buf) == 0:
+                print("Client disconnected, exiting");
+                sys.exit(0)
+        except BlockingIOError:
+            pass
         client.send(msg)
         time.sleep(task.block_size / task.sample_rate)
         nsamples += task.block_size

@@ -125,6 +125,7 @@ class H5Recording {
 				std::vector<std::vector<int16_t> > &data);
 
 		/* Setters for data attributes */
+		void flush();
 		void setFilename(std::string filename);
 		void setLength(double length);	
 		void setLastValidSample(size_t sample);
