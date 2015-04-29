@@ -28,10 +28,9 @@
 
 #include <cstdio>
 
-#include "mealog.h"
+#include <armadillo>
 
-#include <boost/multi_array.hpp>
-using boost::extents;
+#include "mealog.h"
 
 MealogWindow::MealogWindow(QWidget *parent) : QMainWindow(parent) {
 	initGui();
@@ -503,8 +502,8 @@ void MealogWindow::startRecording(void) {
 }
 
 void MealogWindow::recvData(void) {
-	H5Rec::samples samples(extents[client->nchannels()][client->blockSize()]);
-	client->recvData(samples.origin());
+	H5Rec::Samples samples(client->nchannels(), client->blockSize());
+	client->recvData(samples.memptr());
 	recording->setData(numSamplesAcquired, 
 			numSamplesAcquired + client->blockSize(), samples);
 	numSamplesAcquired += client->blockSize();

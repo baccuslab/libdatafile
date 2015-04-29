@@ -10,23 +10,22 @@
 #include "h5recording.h"
 
 using namespace H5;
-using boost::extents;
 
 H5Recording::H5Recording(std::string filename) {
-	_filename = filename;
+	filename_ = filename;
 
 	/* If file exists, verify it is valid HDF5 and load data from it.
 	 * Else, construct a new file.
 	 */
 	struct stat buffer;
-	if (stat(_filename.c_str(), &buffer) == 0) {
-		if (!H5File::isHdf5(_filename)) {
+	if (stat(filename_.c_str(), &buffer) == 0) {
+		if (!H5File::isHdf5(filename_)) {
 			std::cerr << "Invalid H5 file" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 		try {
 			readOnly = true;
-			file = H5File::H5File(_filename, H5F_ACC_RDONLY);
+			file = H5File(filename_, H5F_ACC_RDONLY);
 		} catch (FileIException &e) {
 			std::cerr << "Could not open H5 file" << std::endl;
 			exit(EXIT_FAILURE);
@@ -55,7 +54,24 @@ H5Recording::H5Recording(std::string filename) {
 	} else {
 		/* New file. This needs to be only called by mealog... */
 		readOnly = false;
-		file = H5File(_filename, H5F_ACC_TRUNC);
+
+		/* Construct the file. Define to have a chunk cache large enough to hold
+		 * a few chunks at a time.
+		 */
+		FileAccPropList fileProps = FileAccPropList(FileAccPropList::DEFAULT);
+		int mdc_nelmts = 0;
+		size_t rdcc_nelmts, rdcc_nbytes = 0;
+		size_t chunkCacheSizeElems = (
+				H5Rec::CHUNK_CACHE_SIZE * H5Rec::BLOCK_SIZE * H5Rec::NUM_CHANNELS
+			);
+		double rdcc_w0 = 0.0;
+		fileProps.getCache(mdc_nelmts, rdcc_nelmts, rdcc_nbytes, rdcc_w0);
+		fileProps.setCache(mdc_nelmts, chunkCacheSizeElems, 
+				chunkCacheSizeElems * sizeof(int16_t), rdcc_w0);
+		file = H5File(filename_, H5F_ACC_TRUNC, 
+				FileCreatPropList::DEFAULT, fileProps);
+
+		/* Create the dataset */
 		dataspace = DataSpace(H5Rec::DATASET_RANK, H5Rec::DATASET_DEFAULT_DIMS, 
 				H5Rec::DATASET_MAX_DIMS);
 		props = DSetCreatPropList();
@@ -77,23 +93,23 @@ H5Recording::~H5Recording() {
 	try {
 		if (!readOnly) 
 			writeAllAttributes();
-		this->file.close();
+		file.close();
 	} catch (FileIException &e) {
-		std::cerr << "Error closing HDF5 file: " << this->_filename << std::endl;
+		std::cerr << "Error closing HDF5 file: " << filename_ << std::endl;
 	}
 }
 
 std::string H5Recording::filename(void) {
-	return this->_filename;
+	return filename_;
 }
 
 double H5Recording::length(void) {
-	return this->_length;
+	return length_;
 }
 
 void H5Recording::setLength(double length) {
-	this->_length = length;
-	setNumSamples(length * H5Rec::SAMPLE_RATE);
+	length_ = length;
+	setNumSamples(length_ * H5Rec::SAMPLE_RATE);
 
 	/* If this is a new recording, it will not be read-only. Requests
 	 * to re-set the length of the file will be done by a class that
@@ -101,64 +117,64 @@ void H5Recording::setLength(double length) {
 	 */
 	if (readOnly)
 		return;
-	hsize_t newSize[H5Rec::DATASET_RANK] = {H5Rec::NUM_CHANNELS, this->_nsamples};
-	this->dataset.extend(newSize);
-	this->dataspace = this->dataset.getSpace();
+	hsize_t newSize[H5Rec::DATASET_RANK] = {H5Rec::NUM_CHANNELS, nsamples_};
+	dataset.extend(newSize);
+	dataspace = dataset.getSpace();
 }
 
 int16_t H5Recording::type(void) {
-	return this->_type;
+	return type_;
 }
 
 int16_t H5Recording::version(void) {
-	return this->_version;
+	return version_;
 }
 
 uint32_t H5Recording::nsamples(void) {
-	return this->_nsamples;
+	return nsamples_;
 }
 
 uint32_t H5Recording::nchannels(void) {
-	return this->_nchannels;
+	return nchannels_;
 }
 
 bool H5Recording::live(void) {
-	return this->_live;
+	return live_;
 }
 
 uint32_t H5Recording::lastValidSample(void) {
-	return this->_lastValidSample;
+	return lastValidSample_;
 }
 
 uint32_t H5Recording::blockSize(void) {
-	return this->_blockSize;
+	return blockSize_;
 }
 
 float H5Recording::sampleRate(void) {
-	return this->_sampleRate;
+	return sampleRate_;
 }
 
 float H5Recording::gain(void) {
-	return this->_gain;
+	return gain_;
 }
 
 float H5Recording::offset(void) {
-	return this->_offset;
+	return offset_;
 }
 
 std::string H5Recording::date(void) {
-	return this->_date;
+	return date_;
 }
 
 std::string H5Recording::time(void) {
-	return this->_time;
+	return time_;
 }
 
 std::string H5Recording::room(void) {
-	return this->_room;
+	return room_;
 }
 
-H5Rec::samples H5Recording::data(int startSample, int endSample) {
+H5Rec::Samples H5Recording::data(int startSample, int endSample) {
 	/* Allocate return array */
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples < 0) {
@@ -166,12 +182,12 @@ H5Rec::samples H5Recording::data(int startSample, int endSample) {
 				startSample << ", " << endSample << ")" << std::endl;
 		throw;
 	}
-	H5Rec::samples s(extents[this->_nchannels][req_nsamples]);
+	H5Rec::Samples s(req_nsamples, nchannels_);
 	data(startSample, endSample, s);
 	return s;
 }
 
-void H5Recording::data(int startSample, int endSample, H5Rec::samples &s) {
+void H5Recording::data(int startSample, int endSample, H5Rec::Samples &s) {
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples < 0) {
 		std::cerr << "Requested sample range is invalid: (" << 
@@ -180,27 +196,38 @@ void H5Recording::data(int startSample, int endSample, H5Rec::samples &s) {
 	}
 
 	/* Select hyperslab from data set itself */
-	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, static_cast<hsize_t>(startSample)};
-	hsize_t space_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
-			static_cast<hsize_t>(req_nsamples)};
-	this->dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(startSample), 0};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
+			nchannels_};
+	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+	if (!dataspace.selectValid()) {
+		std::cerr << "Dataset selection invalid: " << std::endl;
+		std::cerr << "Offset: (" << startSample << ", 0)" << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw;
+	}
 
 	/* Define dataspace of memory region, which is contiguous
 	 * data chunk of Boost multi-array, and its hyperslab.
 	 */
-	hsize_t dims[H5Rec::DATASET_RANK] = {this->_nchannels, 
-			static_cast<hsize_t>(req_nsamples)};
+	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
+			nchannels_};
 	DataSpace memspace(H5Rec::DATASET_RANK, dims);
 	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
-	hsize_t mem_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
-		static_cast<hsize_t>(req_nsamples)};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
+			nchannels_};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
+	if (!memspace.selectValid()) {
+		std::cerr << "Memory dataspace selection invalid: " << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw;
+	}
 
 	/* Read data */
-	this->dataset.read(s.data(), PredType::STD_I16LE, memspace, this->dataspace);
+	dataset.read(s.memptr(), PredType::STD_I16LE, memspace, dataspace);
 }
 
-void H5Recording::data(int startSample, int endSample, H5Rec::samples_d &s) {
+void H5Recording::data(int startSample, int endSample, H5Rec::SamplesD &s) {
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples < 0) {
 		std::cerr << "Requested sample range is invalid: (" << 
@@ -209,41 +236,52 @@ void H5Recording::data(int startSample, int endSample, H5Rec::samples_d &s) {
 	}
 
 	/* Select hyperslab from data set itself */
-	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, static_cast<hsize_t>(startSample)};
-	hsize_t space_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
-			static_cast<hsize_t>(req_nsamples)};
-	this->dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(startSample), 0};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
+			nchannels_};
+	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+	if (!dataspace.selectValid()) {
+		std::cerr << "Dataset selection invalid: " << std::endl;
+		std::cerr << "Offset: (" << startSample << ", 0)" << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw;
+	}
 
 	/* Define dataspace of memory region, which is contiguous
 	 * data chunk of Boost multi-array, and its hyperslab.
 	 */
-	hsize_t dims[H5Rec::DATASET_RANK] = {this->_nchannels, 
-			static_cast<hsize_t>(req_nsamples)};
+	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
+			nchannels_};
 	DataSpace memspace(H5Rec::DATASET_RANK, dims);
 	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
-	hsize_t mem_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
-		static_cast<hsize_t>(req_nsamples)};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
+			nchannels_};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
+	if (!memspace.selectValid()) {
+		std::cerr << "Memory dataspace selection invalid: " << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw;
+	}
 
 	/* Read data */
-	this->dataset.read(s.data(), PredType::IEEE_F64LE, memspace, this->dataspace);
+	dataset.read(s.memptr(), PredType::IEEE_F64LE, memspace, dataspace);
 
 	/* Scale and offset by ADC properties */
-	for (auto i = 0; i < this->_nchannels; i++) {
-		for (auto j = 0; j < req_nsamples; j++)
-			s[i][j] = (s[i][j] * this->_gain) + this->_offset;
+	for (auto i = 0; i < req_nsamples; i++) {
+		for (auto j = 0; j < nchannels_; j++)
+			s(i, j) = (s(i, j) * gain_) + offset_;
 	}
 }
 
 void H5Recording::setFilename(std::string filename) {
-	this->_filename = filename;
+	filename_ = filename;
 }
 
 void H5Recording::setData(int startSample, int endSample, 
 		std::vector<std::vector<int16_t> > &data) {
 }
 
-void H5Recording::setData(int startSample, int endSample, H5Rec::samples &data) {
+void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) {
 	int req_nsamples = endSample - startSample;
 	if (req_nsamples <= 0) {
 		std::cerr << "Requested sample range is invalid: (" <<
@@ -252,18 +290,18 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::samples &data) 
 	}
 
 	/* Select hyperslab of dataspace where data will be written */
-	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, static_cast<hsize_t>(startSample)};
-	hsize_t space_count[H5Rec::DATASET_RANK] = {this->_nchannels,
-			static_cast<hsize_t>(req_nsamples)};
-	this->dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(startSample), 0};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
+			nchannels_};
+	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
 
 	/* Define dataspace of memory region, from which data is read */
-	hsize_t dims[H5Rec::DATASET_RANK] = {this->_nchannels, 
-			static_cast<hsize_t>(req_nsamples)};
+	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
+			nchannels_};
 	DataSpace memspace(H5Rec::DATASET_RANK, dims);
 	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
-	hsize_t mem_count[H5Rec::DATASET_RANK] = {this->_nchannels, 
-		static_cast<hsize_t>(req_nsamples)};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
+			nchannels_};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
 
 	/* Write data 
@@ -271,9 +309,8 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::samples &data) 
 	 * if we move away from sockets as the "source" of the data, this will
 	 * likely change.
 	 */
-	this->dataset.write(data.origin(), PredType::STD_I16BE, 
-			memspace, this->dataspace);
-	this->flush();
+	dataset.write(data.memptr(), PredType::STD_I16BE, memspace, dataspace);
+	flush();
 }
 
 void H5Recording::writeFileAttr(std::string name, const DataType &type, void *buf) {
@@ -281,11 +318,11 @@ void H5Recording::writeFileAttr(std::string name, const DataType &type, void *bu
 		return;
 	try {
 		DataType writeType(type);
-		if (!(this->file.attrExists(name))) {
+		if (!(file.attrExists(name))) {
 			DataSpace space(H5S_SCALAR);
-			this->file.createAttribute(name, type, space);
+			file.createAttribute(name, type, space);
 		}
-		Attribute attr = this->file.openAttribute(name);
+		Attribute attr = file.openAttribute(name);
 		attr.write(writeType, buf);
 	} catch (AttributeIException &e) {
 		std::cerr << "Attribute exception accessing: " << name << std::endl;
@@ -299,11 +336,11 @@ void H5Recording::writeDataAttr(std::string name, const DataType &type, void *bu
 		return;
 	try {
 		DataType writeType(type);
-		if (!(this->dataset.attrExists(name))) {
+		if (!(dataset.attrExists(name))) {
 			DataSpace space(H5S_SCALAR);
-			this->dataset.createAttribute(name, writeType, space);
+			dataset.createAttribute(name, writeType, space);
 		}
-		Attribute attr = this->dataset.openAttribute(name);
+		Attribute attr = dataset.openAttribute(name);
 		attr.write(writeType, buf);
 	} catch (DataSetIException &e) {
 		std::cerr << "DataSet exception accessing: " << name << std::endl;
@@ -317,11 +354,11 @@ void H5Recording::writeDataStringAttr(std::string name, std::string value) {
 		return;
 	try {
 		StrType stringType(0, value.length());
-		if (!(this->dataset.attrExists(name))) {
+		if (!(dataset.attrExists(name))) {
 			DataSpace space(H5S_SCALAR);
-			this->dataset.createAttribute(name, stringType, space);
+			dataset.createAttribute(name, stringType, space);
 		}
-		Attribute attr = this->dataset.openAttribute(name);
+		Attribute attr = dataset.openAttribute(name);
 		attr.write(stringType, value.c_str());
 	} catch (DataSetIException &e) {
 		std::cerr << "DataSet exception accessing: " << name << std::endl;
@@ -331,86 +368,86 @@ void H5Recording::writeDataStringAttr(std::string name, std::string value) {
 }
 
 void H5Recording::writeAllAttributes(void) {
-	writeFileAttr("is-live", PredType::STD_U8LE, &(this->_live));
+	writeFileAttr("is-live", PredType::STD_U8LE, &live_);
 	writeFileAttr("last-valid-sample", 
-			PredType::STD_U64LE, &(this->_lastValidSample));
-	writeDataAttr("bin-file-type", PredType::STD_I16LE, &(this->_type));
-	writeDataAttr("bin-file-version", PredType::STD_I16LE, &(this->_version));
-	writeDataAttr("sample-rate", PredType::STD_U32LE, &(this->_sampleRate));
-	writeDataAttr("block-size", PredType::STD_U32LE, &(this->_blockSize));
-	writeDataAttr("gain", PredType::IEEE_F32LE, &(this->_gain));
-	writeDataAttr("offset", PredType::IEEE_F32LE, &(this->_offset));
-	writeDataStringAttr("date", this->_date);
-	writeDataStringAttr("time", this->_time);
-	writeDataStringAttr("room", this->_room);
+			PredType::STD_U64LE, &lastValidSample_);
+	writeDataAttr("bin-file-type", PredType::STD_I16LE, &type_);
+	writeDataAttr("bin-file-version", PredType::STD_I16LE, &version_);
+	writeDataAttr("sample-rate", PredType::STD_U32LE, &sampleRate_);
+	writeDataAttr("block-size", PredType::STD_U32LE, &blockSize_);
+	writeDataAttr("gain", PredType::IEEE_F32LE, &gain_);
+	writeDataAttr("offset", PredType::IEEE_F32LE, &offset_);
+	writeDataStringAttr("date", date_);
+	writeDataStringAttr("time", time_);
+	writeDataStringAttr("room", room_);
 }
 
 void H5Recording::setLive(bool live) {
 	writeFileAttr("is-live", PredType::STD_U8LE, &live);
-	this->_live = live;
+	live_ = live;
 }
 
 void H5Recording::setLastValidSample(size_t sample) {
 	writeFileAttr("last-valid-sample", PredType::STD_U64LE, &sample);
-	this->_lastValidSample = sample;
+	lastValidSample_ = sample;
 }
 
 void H5Recording::setFileType(int16_t type) {
 	writeDataAttr("bin-file-type", PredType::STD_I16LE, &type);
-	this->_type = type;
+	type_ = type;
 }
 
 void H5Recording::setFileVersion(int16_t version) {
 	writeDataAttr("bin-file-version", PredType::STD_I16LE, &version);
-	this->_version = version;
+	version_ = version;
 }
 
 void H5Recording::setSampleRate(float sampleRate) {
 	writeDataAttr("sample-rate", PredType::IEEE_F32LE, &sampleRate);
-	this->_sampleRate = sampleRate;
+	sampleRate_ = sampleRate;
 }
 
 void H5Recording::setNumChannels(uint32_t nchannels) {
-	this->_nchannels = nchannels;
+	nchannels_ = nchannels;
 }
 
 void H5Recording::setNumSamples(uint32_t nsamples) {
-	this->_nsamples = nsamples;
+	nsamples_ = nsamples;
 }
 
 void H5Recording::setGain(float gain) {
 	writeDataAttr("gain", PredType::IEEE_F32LE, &gain);
-	this->_gain = gain;
+	gain_ = gain;
 }
 
 void H5Recording::setOffset(float offset) {
 	writeDataAttr("offset", PredType::IEEE_F32LE, &offset);
-	this->_offset = offset;
+	offset_ = offset;
 }
 
 void H5Recording::setBlockSize(size_t blockSize) {
 	writeDataAttr("block-size", PredType::STD_U32LE, &blockSize);
-	this->_blockSize = blockSize;
+	blockSize_ = blockSize;
 }
 
 void H5Recording::setDate(std::string date) {
 	writeDataStringAttr("date", date);
-	this->_date = date;
+	date_ = date;
 }
 
 void H5Recording::setTime(std::string time) {
 	writeDataStringAttr("time", time);
-	this->_time = time;
+	time_ = time;
 }
 
 void H5Recording::setRoom(std::string room) {
 	writeDataStringAttr("room", room);
-	this->_room = room;
+	room_ = room;
 }
 
 void H5Recording::readFileAttr(std::string name, void *buf) {
 	try {
-		Attribute attr = this->file.openAttribute(name);
+		Attribute attr = file.openAttribute(name);
 		attr.read(attr.getDataType(), buf);
 	} catch (FileIException &e) {
 		std::cerr << "File exception accessing attribute: " << name << std::endl;
@@ -421,7 +458,7 @@ void H5Recording::readFileAttr(std::string name, void *buf) {
 
 void H5Recording::readDataAttr(std::string name, void *buf) {
 	try {
-		Attribute attr = this->dataset.openAttribute(name);
+		Attribute attr = dataset.openAttribute(name);
 		attr.read(attr.getDataType(), buf);
 	} catch (DataSetIException &e) {
 		std::cerr << "DataSet exception accessing attribute: " << name << std::endl;
@@ -432,7 +469,7 @@ void H5Recording::readDataAttr(std::string name, void *buf) {
 
 void H5Recording::readDataStringAttr(std::string name, std::string &loc) {
 	try {
-		Attribute attr = this->dataset.openAttribute(name);
+		Attribute attr = dataset.openAttribute(name);
 		hsize_t sz = attr.getStorageSize();
 		char *buf = (char *) calloc(sz + 1, 1);
 		if (buf == NULL)
@@ -450,61 +487,62 @@ void H5Recording::readDataStringAttr(std::string name, std::string &loc) {
 }
 
 void H5Recording::readIsLive(void) {
-	readFileAttr("is-live", &(this->_live));
+	readFileAttr("is-live", &live_);
 }
 
 void H5Recording::readLastValidSample(void) {
-	readFileAttr("last-valid-sample", &(this->_lastValidSample));
+	readFileAttr("last-valid-sample", &lastValidSample_);
 }
 
 void H5Recording::readFileType(void) {
-	readDataAttr("bin-file-type", &(this->_type));
+	readDataAttr("bin-file-type", &type_);
 }
 
 void H5Recording::readFileVersion(void) {
-	readDataAttr("bin-file-version", &(this->_version));
+	readDataAttr("bin-file-version", &version_);
 }
 
 void H5Recording::readSampleRate(void) {
-	readDataAttr("sample-rate", &(this->_sampleRate));
+	readDataAttr("sample-rate", &sampleRate_);
 }
 
 void H5Recording::readBlockSize(void) {
-	readDataAttr("block-size", &(this->_blockSize));
+	readDataAttr("block-size", &blockSize_);
 }
 
 void H5Recording::readNumSamples(void) {
-	hsize_t dims[2] = {0, 0};
-	this->dataset.getSpace().getSimpleExtentDims(dims, NULL);
-	this->_nsamples = dims[1];
+	hsize_t dims[H5Rec::DATASET_RANK] = {0, 0};
+	dataset.getSpace().getSimpleExtentDims(dims, NULL);
+	nsamples_ = dims[0];
 }
 
 void H5Recording::readNumChannels(void) {
-	hsize_t dims[2] = {0, 0};
-	this->dataset.getSpace().getSimpleExtentDims(dims, NULL);
-	this->_nchannels = dims[0];
+	hsize_t dims[H5Rec::DATASET_RANK] = {0, 0};
+	dataset.getSpace().getSimpleExtentDims(dims, NULL);
+	nchannels_ = dims[1];
 }
 
 void H5Recording::readGain(void) {
-	readDataAttr("gain", &(this->_gain));
+	readDataAttr("gain", &gain_);
 }
 
 void H5Recording::readOffset(void) {
-	readDataAttr("offset", &(this->_offset));
+	readDataAttr("offset", &offset_);
 }
 
 void H5Recording::readDate(void) {
-	readDataStringAttr("date", this->_date);
+	readDataStringAttr("date", date_);
 }
 
 void H5Recording::readTime(void) {
-	readDataStringAttr("time", this->_time);
+	readDataStringAttr("time", time_);
 }
 
 void H5Recording::readRoom(void) {
-	readDataStringAttr("room", this->_room);
+	readDataStringAttr("room", room_);
 }
 
 void H5Recording::flush(void) {
 	file.flush(H5F_SCOPE_GLOBAL);
 }
+

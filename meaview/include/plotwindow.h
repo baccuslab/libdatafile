@@ -30,7 +30,7 @@ class PlotWindow : public QWidget {
 
 	public slots:
 		void plotNextDataBlock();
-		void plotData(H5Rec::samples &s);
+		void plotData(H5Rec::Samples &s);
 
 	private slots:
 		void toggleVisible();

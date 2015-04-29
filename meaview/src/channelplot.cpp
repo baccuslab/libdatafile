@@ -72,32 +72,32 @@ QCPAxisRect *ChannelPlot::getSubplotAxis(int row, int col) {
 	return this->axisRect(posToIndex(row, col));
 }
 
-void ChannelPlot::distributedPlot(H5Rec::samples &s) {
+void ChannelPlot::distributedPlot(H5Rec::Samples &s) {
 	this->constructXData();
 	qDebug() << "X data size: " << xData.size();
 	for (auto i = 0; i < 8; i++)
 		QtConcurrent::run(this, &ChannelPlot::plotSubBlock, s, i);
 }
 
-void ChannelPlot::plotSubBlock(H5Rec::samples &s, int block) {
+void ChannelPlot::plotSubBlock(H5Rec::Samples &s, int block) {
 	QPen pen = this->settings.getPlotPen();
 	bool automean = this->settings.getAutoMean();
 	bool autoscale = this->settings.getAutoscale();
 	double scale = this->settings.getDisplayScale();
-	QVector<double> plotData(s.shape()[1]);
+	QVector<double> plotData(s.n_rows);
 	for (auto j = 8 * block ; j < 8 * (block + 1); j++) {
 		QCPGraph *graph = getSubplot(j);
 		if (automean) {
 			double mean = 0.0;
 			for (auto k = 0; k < plotData.size(); k++)
-				mean += s[j][k];
-			mean /= s.shape()[1];
+				mean += s(k, j);
+			mean /= s.n_rows;
 			for (auto k = 0; k < plotData.size(); k++) 
-				plotData[k] = s[j][k] - mean;
+				plotData[k] = s(k, j) - mean;
 			graph->setData(xData, plotData);
 		} else {
 			for (auto k = 0; k < plotData.size(); k++)
-				plotData[k] = s[j][k];
+				plotData[k] = s(k, j);
 			graph->setData(xData, plotData);
 		}
 		graph->setPen(pen);

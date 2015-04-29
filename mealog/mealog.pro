@@ -15,7 +15,7 @@ INCLUDEPATH += . include ../ \
 LIBS += -L../h5recording/lib -lh5recording \
 		-L../messaging/lib -lmessaging \
 		-L ../daqclient/lib -ldaqclient
-QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++
+QMAKE_CXXFLAGS += -std=c++11
 QMAKE_RPATHDIR += ../h5recording/lib ../messaging/lib ../daqclient/lib
 
 # Input

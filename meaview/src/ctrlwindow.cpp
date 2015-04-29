@@ -425,7 +425,7 @@ void CtrlWindow::plotNextDataBlock() {
 	/* Read data file's last valid sample */
 	size_t nsamples = ((this->settings.getRefreshInterval() / 1000) * 
 			this->recording->sampleRate());
-	H5Rec::samples s = this->recording->data(this->lastSampleIndex, 
+	H5Rec::Samples s = this->recording->data(this->lastSampleIndex, 
 			this->lastSampleIndex + nsamples);
 	this->plotWindow->plotData(s);
 	this->lastSampleIndex += nsamples;

@@ -20,7 +20,7 @@ Dependencies
 - C++11
 - [Qt5] (http://doc.qt.io/qt-5/index.html)
 - [HDF5 with C++ bindings] (http://hdfgroup.org/HDF5/)
-- [Boost] (http://www.boost.org/)
+- [Armadillo C++ linear algebra library] (http://arma.sourceforge.net)
 - [Google Protocol Buffers] (https://developers.google.com/protocol-buffers)
 
 Building

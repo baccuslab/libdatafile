@@ -37,8 +37,8 @@ class ChannelPlot : public QCustomPlot {
 		void plotData(QVector<QVector<double> > &data);
 
 		QVector<double> xData;
-		void distributedPlot(H5Rec::samples &s);
-		void plotSubBlock(H5Rec::samples &s, int block);
+		void distributedPlot(H5Rec::Samples &s);
+		void plotSubBlock(H5Rec::Samples &s, int block);
 		void distributedPlotData(QVector<QVector<double> > &data);
 		void plotDataSubBlock(QVector<QVector<double> > &data, int i);
 

@@ -9,8 +9,8 @@ OBJECTS_DIR = build
 QT -= core gui
 CONFIG += c++11 debug_and_release
 INCLUDEPATH += . include /usr/local/include
-LIBS += -L/usr/local/lib -lhdf5 -lhdf5_cpp -lboost_container
-QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++
+LIBS += -L/usr/local/lib -lhdf5 -lhdf5_cpp -larmadillo
+QMAKE_CXXFLAGS += -std=c++11
 
 mac {
 	QMAKE_SONAME_PREFIX += @rpath
