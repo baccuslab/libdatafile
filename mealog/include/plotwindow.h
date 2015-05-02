@@ -22,7 +22,7 @@
 class PlotWindow : public QWidget {
 	Q_OBJECT
 
-	friend class CtrlWindow;
+	friend class MealogWindow;
 	public:
 		PlotWindow(QWidget *parent = 0);
 		~PlotWindow();

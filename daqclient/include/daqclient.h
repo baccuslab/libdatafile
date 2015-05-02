@@ -56,19 +56,21 @@ class DaqClient : public QObject {
 		void recvExptParams(void);	// Receive experimental parameters
 		void startRecording(void); 	// Send request to start streaming data
 		QString recvError(void);	// Receive an error string
-		void close();				// Tell daqsrv to close up shop
-		void error();				// Throw an error to the daqsrv
+		void sendClose();			// Tell daqsrv to close up shop
+		void sendError();			// Throw an error to the daqsrv
 
 	signals:
 		void connectionMade(bool made);	// Emitted when connection to server is made
 		void dataAvailable(void);		// Emitted when a full block of data is available
-		void connectionBroken(void);	// Emitted when disconnects from server
+		void disconnected(void);		// Emitted when disconnects from server normally
+		void error(void);				// Emitted when disconnects from server with error
 
 	private slots:
 		void checkDataAvailable(void);
 		void connectionSuccessful(void);
 		void connectionUnsuccessful(QAbstractSocket::SocketError);
-		void handleBrokenConnection(void);
+		void handleDisconnection(void);
+		void handleSocketError(QAbstractSocket::SocketError);
 
 	private:
 		QTcpSocket *socket;

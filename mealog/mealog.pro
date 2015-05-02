@@ -19,5 +19,16 @@ QMAKE_CXXFLAGS += -std=c++11
 QMAKE_RPATHDIR += ../h5recording/lib ../messaging/lib ../daqclient/lib
 
 # Input
-HEADERS += include/mealog.h 
-SOURCES += src/main.cpp src/mealog.cpp
+HEADERS += include/mealogwindow.h \
+			include/plotwindow.h \
+			include/qcustomplot.h \
+			include/settings.h \
+			include/windows.h \
+			include/channelplot.h
+SOURCES += src/main.cpp \
+			src/mealogwindow.cpp \
+			src/plotwindow.cpp \
+			src/qcustomplot.cpp \
+			src/settings.cpp \
+			src/windows.cpp \
+			src/channelplot.cpp

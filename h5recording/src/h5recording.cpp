@@ -117,7 +117,7 @@ void H5Recording::setLength(double length) {
 	 */
 	if (readOnly)
 		return;
-	hsize_t newSize[H5Rec::DATASET_RANK] = {H5Rec::NUM_CHANNELS, nsamples_};
+	hsize_t newSize[H5Rec::DATASET_RANK] = {nsamples_, H5Rec::NUM_CHANNELS};
 	dataset.extend(newSize);
 	dataspace = dataset.getSpace();
 }

@@ -5,7 +5,7 @@
  */
 
 #include <QApplication>
-#include "mealog.h"
+#include "mealogwindow.h"
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);

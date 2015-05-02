@@ -77,7 +77,6 @@ void DaqClient::setTrigger(QString trigger) {
 }
 
 bool DaqClient::connectToDaqsrv(void) {
-	qDebug() << "Attempting connection";
 	connect(socket, SIGNAL(connected()), this, SLOT(connectionSuccessful()));
 	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), 
 			this, SLOT(connectionUnsuccessful(QAbstractSocket::SocketError)));
@@ -85,8 +84,13 @@ bool DaqClient::connectToDaqsrv(void) {
 	return true;
 }
 
-void DaqClient::handleBrokenConnection(void) {
-	emit connectionBroken();
+void DaqClient::handleDisconnection(void) {
+	if (socket->error() == QAbstractSocket::UnknownSocketError)
+		emit disconnected();
+}
+
+void DaqClient::handleSocketError(QAbstractSocket::SocketError e) {
+	emit error();
 }
 
 void DaqClient::connectionSuccessful(void) {
@@ -95,7 +99,9 @@ void DaqClient::connectionSuccessful(void) {
 	disconnect(socket, SIGNAL(error(QAbstractSocket::SocketError)), 
 			this, SLOT(connectionUnsuccessful(QAbstractSocket::SocketError)));
 	connect(socket, SIGNAL(disconnected()), 
-			this, SLOT(handleBrokenConnection()));
+			this, SLOT(handleDisconnection()));
+	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
+			this, SLOT(handleSocketError(QAbstractSocket::SocketError)));
 	connect(socket, SIGNAL(readyRead()), 
 			this, SLOT(checkDataAvailable()));
 	isConnected_ = true;
@@ -138,11 +144,11 @@ void DaqClient::requestExptParams(void) {
 	(*stream) << EXPT_PARAMS_REQ;
 }
 
-void DaqClient::close(void) {
+void DaqClient::sendClose(void) {
 	(*stream) << CLOSE;
 }
 
-void DaqClient::error(void) {
+void DaqClient::sendError(void) {
 	(*stream) << ERROR_MSG;
 }
 
