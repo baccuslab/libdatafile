@@ -193,7 +193,6 @@ void DaqClient::recvData(int16_t *buffer) {
 	(*stream) >> type >> msg_size;
 	(*stream) >> nchannels >> nsamples;
 	qint64 nread = socket->read((char *) buffer, nchannels * nsamples * sizeof(int16_t));
-	qDebug() << "Read" << nread << "bytes from socket";
 }
 
 bool DaqClient::isConnected(void) {

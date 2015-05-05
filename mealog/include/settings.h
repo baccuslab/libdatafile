@@ -47,10 +47,11 @@ const QSet<int> RESCALED_CHANNELS {
 
 /* Default location to save new files */
 #ifdef Q_OS_WIN
-const QString STARTING_SAVE_DIR("C:/Desktop/");
+const QString DEFAULT_SAVE_DIR("C:/Desktop/");
 #else
-const QString STARTING_SAVE_DIR("~/Desktop");
+const QString DEFAULT_SAVE_DIR("~/Desktop");
 #endif
+const QString DEFAULT_SAVE_FILENAME("default-data.h5");
 const unsigned int DEFAULT_EXPERIMENT_LENGTH = 1000; 	// seconds
 
 /* Information about AIB binary files */
@@ -79,12 +80,13 @@ const float DEFAULT_DISPLAY_SCALE = 0.5;
 const QList<float> DISPLAY_SCALES {
 		0.125, 0.25, 0.5, 1, 2, 4
 };
-const unsigned int DISPLAY_REFRESH_INTERVAL = 2000; // ms
+const unsigned int DEFAULT_REFRESH_INTERVAL = 2000; // ms
 const unsigned int MIN_REFRESH_INTERVAL = 100;
 const unsigned int MAX_REFRESH_INTERVAL = 10000;
 const unsigned int JUMP_MIN = 100;		// ms
 const unsigned int JUMP_MAX = 10 * AIB_BLOCK_SIZE;
 const unsigned int JUMP_STEP_SIZE = 100;
+const unsigned int DEFAULT_JUMP_SIZE = DEFAULT_REFRESH_INTERVAL;
 
 /* Online analysis parameters */
 const unsigned int ONLINE_ANALYSIS_MAX_LENGTH = 30;
@@ -92,15 +94,16 @@ const unsigned int ONLINE_ANALYSIS_MIN_LENGTH = 5;
 const unsigned int DEFAULT_ONLINE_ANALYSIS_LENGTH = 15;
 
 /* Plot colors */
-const QString DEFAULT_PLOT_COLOR("Black");
+//const QString DEFAULT_PLOT_COLOR("Black");
 const double PEN_SIZE = 1;
-const QMap<QString, QPair<QColor, QPen> > PLOT_COLOR_MAP {
-	{"Black", {QColor(Qt::black), QPen(QBrush(QColor(Qt::black)), PEN_SIZE)}},
-	{"Blue", {QColor(76, 114, 176), QPen(QBrush(QColor(76, 114, 176)), PEN_SIZE)}}, 
-	{"Green", {QColor(85, 168, 104), QPen(QBrush(QColor(85, 168, 104)), PEN_SIZE)}}, 
-	{"Red", {QColor(196, 78, 82), QPen(QBrush(QColor(196, 78, 82)), PEN_SIZE)}}
-};
-const QStringList PLOT_COLOR_STRINGS(PLOT_COLOR_MAP.uniqueKeys());
+const QPen PLOT_PEN = QPen(QColor(Qt::black));
+//const QMap<QString, QPair<QColor, QPen> > PLOT_COLOR_MAP {
+	//{"Black", {QColor(Qt::black), QPen(QBrush(QColor(Qt::black)), PEN_SIZE)}},
+	//{"Blue", {QColor(76, 114, 176), QPen(QBrush(QColor(76, 114, 176)), PEN_SIZE)}}, 
+	//{"Green", {QColor(85, 168, 104), QPen(QBrush(QColor(85, 168, 104)), PEN_SIZE)}}, 
+	//{"Red", {QColor(196, 78, 82), QPen(QBrush(QColor(196, 78, 82)), PEN_SIZE)}}
+//};
+//const QStringList PLOT_COLOR_STRINGS(PLOT_COLOR_MAP.uniqueKeys());
 
 /* Possible arrangements of the electrodes in the window */
 const QString DEFAULT_VIEW("Channel order");
@@ -143,14 +146,11 @@ class Settings {
 		~Settings();
 
 		/* Getters */
+		QPen getPlotPen();
 		float getDisplayRange();
 		float getDisplayScale();
 		QList<float> getDisplayScales();
 		unsigned int getRefreshInterval();
-		QString getPlotColorString();
-		QColor getPlotColor();
-		QPen getPlotPen();
-		QStringList getPlotColorStrings();
 		QString getChannelViewString();
 		QList<QPair<int, int> > getChannelView();
 		QStringList getChannelViews();
@@ -165,9 +165,9 @@ class Settings {
 		bool getAutoMean();
 
 		/* Setters */
+		void setPlotPen(QPen pen);
 		void setDisplayScale(float);
 		void setRefreshInterval(unsigned int);
-		void setPlotColor(QString);
 		void setChannelView(QString);
 		void setSaveDir(QString);
 		void setSaveFilename(QString);

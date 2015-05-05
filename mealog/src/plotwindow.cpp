@@ -53,3 +53,7 @@ void PlotWindow::toggleVisible() {
 ChannelPlot *PlotWindow::getChannelPlot() {
 	return this->channelPlot;
 }
+
+void PlotWindow::clear(void) {
+	channelPlot->clear();
+}

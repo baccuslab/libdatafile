@@ -74,7 +74,6 @@ QCPAxisRect *ChannelPlot::getSubplotAxis(int row, int col) {
 
 void ChannelPlot::distributedPlot(H5Rec::Samples &s) {
 	this->constructXData();
-	qDebug() << "X data size: " << xData.size();
 	for (auto i = 0; i < 8; i++)
 		QtConcurrent::run(this, &ChannelPlot::plotSubBlock, s, i);
 }
@@ -229,5 +228,11 @@ void ChannelPlot::mouseDoubleClickEvent(QMouseEvent *event) {
 	//qDebug() << "Outer rect: " << this->axisRects().at(index)->outerRect();
 	qDebug() << "(x,y) = " << event->x() << event->y() << endl;
 	emit subplotDoubleClicked(index);
+}
+
+void ChannelPlot::clear(void) {
+	for (auto i = 0; i < H5Rec::NUM_CHANNELS; i++)
+		getSubplot(i)->clearData();
+	replot();
 }
 

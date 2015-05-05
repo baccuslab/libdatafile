@@ -17,19 +17,15 @@
 #include <QDate>
 #include <QDataStream>
 #include <QFileDialog>
-#include <QErrorMessage>
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QtConcurrent>
-
-#include <cstdio>
 
 #include <armadillo>
 
 #include "mealogwindow.h"
 
 MealogWindow::MealogWindow(QWidget *parent) : QMainWindow(parent) {
-	initSettings();
 	initGui();
 	initMenuBar();
 	initPlotWindow();
@@ -38,23 +34,6 @@ MealogWindow::MealogWindow(QWidget *parent) : QMainWindow(parent) {
 }
 
 MealogWindow::~MealogWindow() {
-}
-
-void MealogWindow::initSettings() {
-	settings.setSaveDir(STARTING_SAVE_DIR);
-	settings.setChannelView(DEFAULT_VIEW);
-	settings.setExperimentLength(DEFAULT_EXPERIMENT_LENGTH);
-	settings.setDisplayScale(DEFAULT_DISPLAY_SCALE);
-	settings.setRefreshInterval(DISPLAY_REFRESH_INTERVAL);
-	settings.setPlotColor(DEFAULT_PLOT_COLOR);
-	settings.setAutoscale(false);
-	settings.setOnlineAnalysisLength(DEFAULT_ONLINE_ANALYSIS_LENGTH);
-	settings.setJump(DISPLAY_REFRESH_INTERVAL);
-	QPair<int, int> plotSize = CHANNEL_COL_ROW_MAP.value(
-			settings.getChannelViewString());
-	settings.setNumRows(plotSize.first);
-	settings.setNumCols(plotSize.second);
-	settings.setAutoMean(false);
 }
 
 void MealogWindow::initGui(void) {
@@ -74,6 +53,10 @@ void MealogWindow::initGui(void) {
 	/* Initialize playback control group */
 	playbackGroup = new QGroupBox("Controls");
 	playbackLayout = new QGridLayout();
+	newRecordingButton = new QPushButton("New");
+	newRecordingButton->setToolTip("Create new recording with given parameters");
+	loadRecordingButton = new QPushButton("Load");
+	loadRecordingButton->setToolTip("Load a previous recording for playback");
 	timeLabel = new QLabel("Time:");
 	timeLine = new QLineEdit();
 	timeLine->setReadOnly(true);
@@ -81,32 +64,34 @@ void MealogWindow::initGui(void) {
 	totalTimeLine->setToolTip("Length of the experiment (seconds)");
 	totalTimeValidator = new QIntValidator(1, Mealog::MAX_EXPERIMENT_LENGTH);
 	totalTimeLine->setValidator(totalTimeValidator);
-	playButton = new QPushButton("Play");
-	playButton->setToolTip("Play or pause recording. Does not affect saving of data");
+	startButton = new QPushButton("Start");
+	startButton->setToolTip("Play or pause recording. Does not affect saving of data");
 	stopButton = new QPushButton("Stop");
 	stopButton->setToolTip("Stop recording, including the saving of data");
-	skipBackButton = new QPushButton("Back");
-	skipBackButton->setToolTip("Skip backwards, without affecting saving");
-	skipForwardButton = new QPushButton("Forward");
-	skipForwardButton->setToolTip("Skip forwards, without affecting saving");
-	skipToBeginningButton = new QPushButton("Start");
-	skipToBeginningButton->setToolTip("Jump back to the start of the recording."\
+	jumpBackButton = new QPushButton("Back");
+	jumpBackButton->setToolTip("Skip backwards, without affecting saving");
+	jumpForwardButton = new QPushButton("Forward");
+	jumpForwardButton->setToolTip("Skip forwards, without affecting saving");
+	jumpToBeginningButton = new QPushButton("Start");
+	jumpToBeginningButton->setToolTip("Jump back to the start of the recording."\
 			" Does not affect saving.");
-	skipToEndButton = new QPushButton("End");
-	skipToEndButton->setToolTip("Jump to end of recording or most recent data");
+	jumpToEndButton = new QPushButton("End");
+	jumpToEndButton->setToolTip("Jump to end of recording or most recent data");
 	setPlaybackButtonsEnabled(false);
-	playbackLayout->addWidget(fileLabel, 0, 0);
-	playbackLayout->addWidget(fileLine, 0, 1);
-	playbackLayout->addWidget(choosePathButton, 0, 2);
-	playbackLayout->addWidget(timeLabel, 1, 0);
-	playbackLayout->addWidget(timeLine, 1, 1);
-	playbackLayout->addWidget(totalTimeLine, 1, 2);
-	playbackLayout->addWidget(skipBackButton, 2, 0);
-	playbackLayout->addWidget(playButton, 2, 1);
-	playbackLayout->addWidget(skipForwardButton, 2, 2);
-	playbackLayout->addWidget(skipToBeginningButton, 3, 0);
-	playbackLayout->addWidget(stopButton, 3, 1);
-	playbackLayout->addWidget(skipToEndButton, 3, 2);
+	playbackLayout->addWidget(newRecordingButton, 0, 0);
+	playbackLayout->addWidget(loadRecordingButton, 0, 1);
+	playbackLayout->addWidget(fileLabel, 1, 0);
+	playbackLayout->addWidget(fileLine, 1, 1);
+	playbackLayout->addWidget(choosePathButton, 1, 2);
+	playbackLayout->addWidget(timeLabel, 2, 0);
+	playbackLayout->addWidget(timeLine, 2, 1);
+	playbackLayout->addWidget(totalTimeLine, 2, 2);
+	playbackLayout->addWidget(jumpBackButton, 3, 0);
+	playbackLayout->addWidget(startButton, 3, 1);
+	playbackLayout->addWidget(jumpForwardButton, 3, 2);
+	playbackLayout->addWidget(jumpToBeginningButton, 4, 0);
+	playbackLayout->addWidget(stopButton, 4, 1);
+	playbackLayout->addWidget(jumpToEndButton, 4, 2);
 	playbackGroup->setLayout(playbackLayout);
 	mainLayout->addWidget(playbackGroup, 0, 0, 1, 2);
 
@@ -160,6 +145,13 @@ void MealogWindow::initGui(void) {
 	/* Initialize group with parameters of the data display window */
 	displayGroup = new QGroupBox("Display");
 	displayLayout = new QGridLayout();
+	refreshLabel = new QLabel("Refresh");
+	refreshBox = new QSpinBox();
+	refreshBox->setSingleStep(100);
+	refreshBox->setRange(MIN_REFRESH_INTERVAL, MAX_REFRESH_INTERVAL);
+	refreshBox->setSuffix("ms");
+	refreshBox->setValue(settings.getRefreshInterval());
+	refreshBox->setToolTip("Interval at which plots refresh");
 	viewLabel = new QLabel("View:");
 	viewBox = new QComboBox();
 	viewBox->setToolTip("Set arrangement of subplots to match array");
@@ -167,13 +159,14 @@ void MealogWindow::initGui(void) {
 		viewBox->addItem(view);
 	viewBox->setCurrentIndex(
 			viewBox->findText(settings.getChannelViewString()));
-	colorLabel = new QLabel("Color:");
-	colorBox = new QComboBox();
-	colorBox->setToolTip("Set color of data plots");
-	for (auto &color : PLOT_COLOR_STRINGS)
-		colorBox->addItem(color);
-	colorBox->setCurrentIndex(
-			colorBox->findText(settings.getPlotColorString()));
+	jumpSizeLabel = new QLabel("Jump size:");
+	jumpSizeBox = new QSpinBox();
+	jumpSizeBox->setToolTip("Set size of a jump when skipping forward"\
+			" or backward through recording");
+	jumpSizeBox->setRange(JUMP_MIN, JUMP_MAX);
+	jumpSizeBox->setSingleStep(JUMP_STEP_SIZE);
+	jumpSizeBox->setValue(settings.getRefreshInterval());
+	jumpSizeBox->setSuffix("ms");
 	scaleLabel = new QLabel("Scale:");
 	scaleBox = new QComboBox();
 	scaleBox->setToolTip("Change y-axis scaling, larger means larger axis extent");
@@ -191,16 +184,18 @@ void MealogWindow::initGui(void) {
 	automeanBox->setToolTip("If checked, mean-subtract each plot individually");
 	automeanBox->setTristate(false);
 	automeanBox->setChecked(false);
-	displayLayout->addWidget(viewLabel, 0, 0);
-	displayLayout->addWidget(viewBox, 0, 1);
-	displayLayout->addWidget(colorLabel, 1, 0);
-	displayLayout->addWidget(colorBox, 1, 1);
-	displayLayout->addWidget(scaleLabel, 2, 0);
-	displayLayout->addWidget(scaleBox, 2, 1);
-	displayLayout->addWidget(autoscaleLabel, 3, 0);
-	displayLayout->addWidget(autoscaleBox, 3, 1);
-	displayLayout->addWidget(automeanLabel, 4, 0);
-	displayLayout->addWidget(automeanBox, 4, 1);
+	displayLayout->addWidget(refreshLabel, 0, 0);
+	displayLayout->addWidget(refreshBox, 0, 1);
+	displayLayout->addWidget(viewLabel, 1, 0);
+	displayLayout->addWidget(viewBox, 1, 1);
+	displayLayout->addWidget(jumpSizeLabel, 2, 0);
+	displayLayout->addWidget(jumpSizeBox, 2, 1);
+	displayLayout->addWidget(scaleLabel, 3, 0);
+	displayLayout->addWidget(scaleBox, 3, 1);
+	displayLayout->addWidget(autoscaleLabel, 4, 0);
+	displayLayout->addWidget(autoscaleBox, 4, 1);
+	displayLayout->addWidget(automeanLabel, 5, 0);
+	displayLayout->addWidget(automeanBox, 5, 1);
 	displayGroup->setLayout(displayLayout);
 	mainLayout->addWidget(displayGroup, 0, 2);
 
@@ -212,12 +207,12 @@ void MealogWindow::initGui(void) {
 }
 
 void MealogWindow::setPlaybackButtonsEnabled(bool enabled) {
-	skipBackButton->setEnabled(enabled);
-	playButton->setEnabled(enabled);
-	skipForwardButton->setEnabled(enabled);
-	skipToBeginningButton->setEnabled(enabled);
+	jumpBackButton->setEnabled(enabled);
+	startButton->setEnabled(enabled);
+	jumpForwardButton->setEnabled(enabled);
+	jumpToBeginningButton->setEnabled(enabled);
 	stopButton->setEnabled(enabled);
-	skipToEndButton->setEnabled(enabled);
+	jumpToEndButton->setEnabled(enabled);
 }
 
 void MealogWindow::initMenuBar(void) {
@@ -233,23 +228,17 @@ void MealogWindow::initMenuBar(void) {
 	/* New recording menu item */
 	newRecordingAction = new QAction(tr("&New"), fileMenu);
 	newRecordingAction->setShortcut(QKeySequence("Ctrl+N"));
-	connect(newRecordingAction, SIGNAL(triggered()), 
-			this, SLOT(createNewRecording()));
 	fileMenu->addAction(newRecordingAction);
 
 	/* Load recording for replay */
 	loadRecordingAction = new QAction(tr("&Open"), fileMenu);
 	loadRecordingAction->setShortcut(QKeySequence("Ctrl+O"));
-	connect(loadRecordingAction, SIGNAL(triggered()), 
-			this, SLOT(loadRecording()));
 	fileMenu->addAction(loadRecordingAction);
 
 	/* Close recording */
 	closeRecordingAction = new QAction(tr("&Close"), fileMenu);
 	closeRecordingAction->setShortcut(QKeySequence("Ctrl+C"));
 	closeRecordingAction->setEnabled(false);
-	connect(closeRecordingAction, SIGNAL(triggered()), 
-			this, SLOT(closeRecordingWithCheck()));
 	fileMenu->addAction(closeRecordingAction);
 
 	/* Windows menu */
@@ -279,9 +268,19 @@ void MealogWindow::initMenuBar(void) {
 void MealogWindow::initPlotWindow(void) {
 	plotWindow = new PlotWindow(this);
 	plotWindow->show();
+	lastSamplePlotted = 0;
 }
 
 void MealogWindow::createNewRecording(void) {
+
+	/* Confirm closing of a current recording */
+	if ((recordingStatus & Mealog::STARTED) || 
+			(recordingStatus & Mealog::INITIALIZED)) {
+		if (confirmCloseRecording() == QMessageBox::Cancel)
+			return;
+		closeRecording();
+	}
+
 	statusBar->showMessage("Initializing recording");
 	/* Construct the filename from the save directory and the
 	 * filename, and check if it exists, asking the user to confirm
@@ -312,12 +311,17 @@ void MealogWindow::createNewRecording(void) {
 
 	/* Enable the "Start" button, if connection to the Daqsrv */
 	if ((daqClient != nullptr) && (daqClient->isConnected()))
-		playButton->setEnabled(true);
+		startButton->setEnabled(true);
 
 	/* Finalize initialisation */
-	recordingStatus = Mealog::INITIALIZED | Mealog::NOT_STARTED;
+	recordingStatus = (
+			Mealog::INITIALIZED | 
+			Mealog::NOT_STARTED | 
+			Mealog::RECORDING
+		);
+	newRecordingButton->setEnabled(false);
+	newRecordingAction->setEnabled(false);
 	statusBar->showMessage("Ready");
-
 }
 
 QString MealogWindow::getFullFilename(void) {
@@ -386,7 +390,7 @@ bool MealogWindow::confirmFileOverwrite(const QFile &path) {
 void MealogWindow::setParameterSelectionsEnabled(bool enabled) {
 	adcRangeBox->setEnabled(enabled);
 	triggerBox->setEnabled(enabled);
-	totalTimeLine->setEnabled(enabled);
+	totalTimeLine->setReadOnly(enabled);
 	fileLine->setEnabled(enabled);
 	choosePathButton->setEnabled(enabled);
 }
@@ -401,15 +405,34 @@ void MealogWindow::closeRecordingWithCheck(void) {
 }
 
 void MealogWindow::closeRecording(void) {
-	recording->flush();
-	delete recording;
-	recording = nullptr;
-	recordingStatus = Mealog::UNINITIALIZED & Mealog::NOT_STARTED;
+	if (recordingStatus & Mealog::RECORDING) {
+		recording->flush();
+		delete recording;
+		recording = nullptr;
+	} else {
+		playbackTimer->stop();
+		delete playbackTimer;
+		playbackTimer = nullptr;
+	}
+	statusBar->showMessage("Ready");
+	plotWindow->clear();
+	recordingStatus = Mealog::UNINITIALIZED | Mealog::NOT_STARTED;
 	setParameterSelectionsEnabled(true);
+	setPlaybackButtonsEnabled(false);
 	closeRecordingAction->setEnabled(false);
-	if (daqClient->isConnected()) {
+	setNidaqInterfaceEnabled(true);
+	newRecordingButton->setEnabled(true);
+	newRecordingAction->setEnabled(true);
+	if ((daqClient != nullptr) && (daqClient->isConnected())) {
+		disconnect(daqClient, SIGNAL(disconnected()), 
+				this, SLOT(handleServerDisconnection()));
+		disconnect(daqClient, SIGNAL(error()), 
+				this, SLOT(handleServerError()));
 		daqClient->disconnectFromDaqsrv();
-		setNidaqInterfaceEnabled(true);
+		nidaqStatus->setText("Not connected");
+		connectToNidaqButton->setText("Connect");
+		connect(connectToNidaqButton, SIGNAL(clicked()),
+				this, SLOT(connectToDaqsrv()));
 	}
 }
 
@@ -437,7 +460,7 @@ void MealogWindow::loadRecording() {
 	statusBar->showMessage("Loading recording");
 	QString filename = QFileDialog::getOpenFileName(
 			this, tr("Load recording"),
-			STARTING_SAVE_DIR, tr("Recordings (*.h5)"));
+			settings.getSaveDir(), tr("Recordings (*.h5)"));
 	if (filename.isNull()) {
 		statusBar->showMessage("Ready");
 		return;
@@ -455,9 +478,31 @@ void MealogWindow::loadRecording() {
 	fileLine->setText(filename.section("/", -1));
 	QString path = filename.section("/", 1, -2);
 	settings.setSaveFilename(fileLine->text());
+	recordingStatus = (
+			Mealog::INITIALIZED |
+			Mealog::NOT_STARTED |
+			Mealog::PLAYBACK
+		);
+	initPlayback();
 	settings.setSaveDir(path);
 	setNidaqInterfaceEnabled(false);
+	setParameterSelectionsEnabled(false);
+
+	/* Set parameters of the recording from the file */
+	totalTimeLine->setText(QString::number(recording->length()));
+	totalTimeLine->setReadOnly(true);
+	adcRangeBox->setCurrentIndex(
+			Mealog::ADC_RANGES.indexOf(-(recording->offset())));
+	triggerBox->setCurrentIndex(Mealog::TRIGGERS.length() - 1);
 	statusBar->showMessage("Ready");
+}
+
+void MealogWindow::initPlayback() {
+	playbackTimer = new QTimer(this);
+	playbackTimer->setInterval(settings.getRefreshInterval());
+	connect(playbackTimer, SIGNAL(timeout()), 
+			this, SLOT(plotNextPlaybackDataBlock()));
+	startButton->setEnabled(true);
 }
 
 void MealogWindow::setNidaqInterfaceEnabled(bool enabled) {
@@ -599,12 +644,48 @@ void MealogWindow::setNidaqInterfaceEnabled(bool enabled) {
 void MealogWindow::initSignals(void) {
 	//connect(this->server, SIGNAL(newConnection()), 
 			//this, SLOT(acceptClients()));
-	connect(this->choosePathButton, SIGNAL(clicked()),
+	connect(choosePathButton, SIGNAL(clicked()),
 			this, SLOT(chooseSaveDir()));
-	connect(this->connectToNidaqButton, SIGNAL(clicked()),
+	connect(connectToNidaqButton, SIGNAL(clicked()),
 			this, SLOT(connectToDaqsrv()));
-	connect(this->playButton, SIGNAL(clicked()), 
+	connect(startButton, SIGNAL(clicked()), 
 			this, SLOT(startRecording()));
+	connect(showPlotWindow, SIGNAL(triggered()),
+			plotWindow, SLOT(toggleVisible()));
+	connect(showControlsWindow, SIGNAL(toggled(bool)),
+			this, SLOT(setVisible(bool)));
+	connect(this, SIGNAL(newDataAvailable()),
+			this, SLOT(checkReadyForPlotting()));
+	connect(newRecordingAction, SIGNAL(triggered()), 
+			this, SLOT(createNewRecording()));
+	connect(loadRecordingAction, SIGNAL(triggered()), 
+			this, SLOT(loadRecording()));
+	connect(closeRecordingAction, SIGNAL(triggered()), 
+			this, SLOT(closeRecordingWithCheck()));
+	connect(newRecordingButton, SIGNAL(clicked()),
+			this, SLOT(createNewRecording()));
+	connect(loadRecordingButton, SIGNAL(clicked()),
+			this, SLOT(loadRecording()));
+	connect(jumpBackButton, SIGNAL(clicked()),
+			this, SLOT(jumpBackward()));
+	connect(jumpForwardButton, SIGNAL(clicked()),
+			this, SLOT(jumpForward()));
+	connect(jumpToBeginningButton, SIGNAL(clicked()),
+			this, SLOT(jumpToBeginning()));
+	connect(jumpToEndButton, SIGNAL(clicked()),
+			this, SLOT(jumpToEnd()));
+	connect(refreshBox, SIGNAL(valueChanged(int)),
+			this, SLOT(updateRefreshInterval(int)));
+	connect(jumpSizeBox, SIGNAL(valueChanged(int)),
+			this, SLOT(updateJumpSize(int)));
+	connect(viewBox, SIGNAL(currentTextChanged(const QString &)),
+			this, SLOT(updateChannelView(const QString &)));
+	connect(autoscaleBox, SIGNAL(stateChanged(int)),
+			this, SLOT(updateAutoscale(int)));
+	connect(automeanBox, SIGNAL(stateChanged(int)),
+			this, SLOT(updateAutomean(int)));
+	connect(scaleBox, SIGNAL(currentIndexChanged(int)),
+			this, SLOT(updateDisplayScale(int)));
 }
 
 void MealogWindow::chooseSaveDir(void) {
@@ -661,20 +742,36 @@ void MealogWindow::handleServerError(void) {
 	nidaqStatus->setText("Connection to server interrupted");
 	if (recordingStatus & Mealog::STARTED) {
 		closeRecording();
-		QErrorMessage *errMsg = new QErrorMessage(this);
-		errMsg->showMessage("Connection to NI-DAQ server interrupted"\
-				", recording terminated!");
+		QMessageBox::critical(this, "Connection interrupted",
+				"Connection to NI-DAQ server application interrupted."\
+				" Recording has been stopped, with all previous data "\
+				"written to disk.");
 	}
 	setNidaqInterfaceEnabled(true);
 	setPlaybackButtonsEnabled(false);
 	setParameterSelectionsEnabled(true);
+	startButton->setText("Start");
+	statusBar->showMessage("Ready");
+	disconnect(connectToNidaqButton, SIGNAL(clicked()), 
+			this, SLOT(disconnectFromDaqsrv()));
+	connect(connectToNidaqButton, SIGNAL(clicked()),
+			this, SLOT(connectToDaqsrv()));
+	disconnect(daqClient, SIGNAL(disconnected()), 
+			this, SLOT(handleServerDisconnection()));
+	disconnect(daqClient, SIGNAL(error()), 
+			this, SLOT(handleServerError()));
 }
 
 void MealogWindow::disconnectFromDaqsrv(void) {
+	if (recordingStatus & Mealog::STARTED) {
+		if (confirmCloseRecording() == QMessageBox::Cancel)
+			return;
+	}
 	daqClient->disconnectFromDaqsrv();
 	connectToNidaqButton->setText("Connect");
 	nidaqStatus->setText("Not connected");
 	setNidaqInterfaceEnabled(true);
+	statusBar->showMessage("Ready");
 	disconnect(connectToNidaqButton, SIGNAL(clicked()), 
 			this, SLOT(disconnectFromDaqsrv()));
 	connect(connectToNidaqButton, SIGNAL(clicked()),
@@ -697,7 +794,7 @@ void MealogWindow::handleDaqsrvConnection(bool made) {
 				this, SLOT(disconnectFromDaqsrv()));
 		if (recordingStatus & Mealog::INITIALIZED) {
 			sendDaqsrvInitMessage();
-			playButton->setEnabled(true);
+			startButton->setEnabled(true);
 		}
 		statusBar->showMessage("Ready");
 	} else {
@@ -710,10 +807,70 @@ void MealogWindow::handleDaqsrvConnection(bool made) {
 }
 
 void MealogWindow::startRecording(void) {
-	connect(daqClient, SIGNAL(dataAvailable()), this, SLOT(recvData()));
-	daqClient->startRecording();
-	statusBar->showMessage(QString("Recording data to %1").arg(
-				getFullFilename()));
+	if (recordingStatus & Mealog::RECORDING) {
+		connect(daqClient, SIGNAL(dataAvailable()), this, SLOT(recvData()));
+		daqClient->startRecording();
+		statusBar->showMessage(QString("Recording data to %1").arg(
+					getFullFilename()));
+		recordingStatus = (
+				Mealog::INITIALIZED | 
+				Mealog::STARTED | 
+				Mealog::RECORDING
+			);
+	} else {
+		playbackTimer->start();
+		statusBar->showMessage(QString("Playing back data from %1").arg(
+					getFullFilename()));
+		recordingStatus = (
+				Mealog::INITIALIZED | 
+				Mealog::STARTED | 
+				Mealog::PLAYBACK
+			);
+	}
+	setPlaybackButtonsEnabled(true);
+	startButton->setText("Pause");
+	disconnect(startButton, SIGNAL(clicked()),
+				this, SLOT(startRecording()));
+	connect(startButton, SIGNAL(clicked()), 
+			this, SLOT(pauseRecording()));
+	connect(stopButton, SIGNAL(clicked()), 
+			this, SLOT(closeRecordingWithCheck()));
+}
+
+void MealogWindow::pauseRecording(void) {
+	if (recordingStatus & Mealog::PLAYBACK) {
+		playbackTimer->stop();
+		statusBar->showMessage("Playback paused");
+	} else { 
+		disconnect(this, SIGNAL(newDataAvailable()),
+				this, SLOT(checkReadyForPlotting()));
+		statusBar->showMessage("Display paused, data still recording");
+	}
+	startButton->setText("Start");
+	disconnect(startButton, SIGNAL(clicked()),
+			this, SLOT(pauseRecording()));
+	connect(startButton, SIGNAL(clicked()), 
+			this, SLOT(restartRecording()));
+}
+
+void MealogWindow::restartRecording(void) {
+	if (recordingStatus & Mealog::PLAYBACK) {
+		playbackTimer->start();
+		statusBar->showMessage(QString("Playing back data from %1").arg(
+					getFullFilename()));
+	} else { 
+		statusBar->showMessage(QString("Recording data to %1").arg(
+					getFullFilename()));
+		lastSamplePlotted = (numSamplesAcquired / 
+				settings.getRefreshInterval()) * settings.getRefreshInterval();
+		connect(this, SIGNAL(newDataAvailable()),
+				this, SLOT(checkReadyForPlotting()));
+	}
+	startButton->setText("Pause");
+	disconnect(startButton, SIGNAL(clicked()),
+			this, SLOT(restartRecording()));
+	connect(startButton, SIGNAL(clicked()),
+			this, SLOT(pauseRecording()));
 }
 
 void MealogWindow::recvData(void) {
@@ -724,6 +881,89 @@ void MealogWindow::recvData(void) {
 	numSamplesAcquired += daqClient->blockSize();
 	recording->setLastValidSample(numSamplesAcquired);
 	emit newDataAvailable();
-	qDebug() << numSamplesAcquired << "acquired";
+}
+
+void MealogWindow::checkReadyForPlotting(void) {
+	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
+			recording->sampleRate());
+	size_t numNewSamples = (numSamplesAcquired - lastSamplePlotted);
+	if (numNewSamples > numSamplesPerPlotBlock) {
+		plotDataBlock(lastSamplePlotted, 
+				lastSamplePlotted + numSamplesPerPlotBlock);
+	}
+}
+
+void MealogWindow::plotDataBlock(uint64_t start, uint64_t end) {
+	size_t nsamples = end - start;
+	H5Rec::Samples s = recording->data(start, end);
+	qDebug() << "Plotting" << start << "to" << end;
+	plotWindow->plotData(s);
+	lastSamplePlotted += nsamples;
+	updateTime();
+}
+
+void MealogWindow::plotNextPlaybackDataBlock(void) {
+	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
+			H5Rec::SAMPLE_RATE);
+	plotDataBlock(lastSamplePlotted, lastSamplePlotted + numSamplesPerPlotBlock);
+}
+
+void MealogWindow::updateTime(void) {
+	float sampleRate = recording->sampleRate();
+	float offset = (settings.getRefreshInterval() / 1000) * sampleRate;
+	timeLine->setText(QString("%1 - %2").arg(
+				(lastSamplePlotted - offset) / sampleRate).arg(
+				lastSamplePlotted / recording->sampleRate()));
+}
+
+void MealogWindow::jumpForward(void) {
+	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
+			H5Rec::SAMPLE_RATE);
+	if (recordingStatus & Mealog::PLAYBACK) {
+		lastSamplePlotted += numSamplesPerPlotBlock;
+	} else {
+		lastSamplePlotted = (((numSamplesAcquired - lastSamplePlotted) 
+				< numSamplesPerPlotBlock) ? lastSamplePlotted : 
+				lastSamplePlotted + numSamplesPerPlotBlock);
+	}
+}
+
+void MealogWindow::jumpBackward(void) {
+	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
+			H5Rec::SAMPLE_RATE);
+	lastSamplePlotted = (lastSamplePlotted >= numSamplesPerPlotBlock) ? 
+			lastSamplePlotted - numSamplesPerPlotBlock : 0;
+}
+
+void MealogWindow::jumpToBeginning(void) {
+}
+
+void MealogWindow::jumpToEnd(void) {
+}
+
+void MealogWindow::updateRefreshInterval(int val) {
+	settings.setRefreshInterval(val);
+	if (recordingStatus & Mealog::PLAYBACK)
+		playbackTimer->setInterval(settings.getRefreshInterval());
+}
+
+void MealogWindow::updateJumpSize(int val) {
+	settings.setJump(val);
+}
+
+void MealogWindow::updateChannelView(const QString &text) {
+	settings.setChannelView(text);
+}
+
+void MealogWindow::updateAutoscale(int state) {
+	settings.setAutoscale(state);
+}
+
+void MealogWindow::updateAutomean(int state) {
+	settings.setAutoMean(state);
+}
+
+void MealogWindow::updateDisplayScale(int index) {
+	settings.setDisplayScale(DISPLAY_SCALES.at(index));
 }
 

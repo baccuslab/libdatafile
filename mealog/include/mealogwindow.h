@@ -60,10 +60,15 @@ enum INIT_STATUS:uint8_t {
 };
 
 enum RECORDING_STATUS:uint8_t {
-	NOT_STARTED = 2,
-	STARTED = 4,
-	FINISHED = 8,
-	ERROR = 16
+	NOT_STARTED = 1 << 1,
+	STARTED = 1 << 2,
+	FINISHED = 1 << 3,
+	ERROR = 1 << 4
+};
+
+enum DATA_SOURCE:uint8_t {
+	PLAYBACK = 1 << 5,
+	RECORDING = 1 << 6
 };
 
 class MealogWindow;
@@ -94,19 +99,42 @@ class MealogWindow : public QMainWindow {
 		void handleServerDisconnection(void);
 		void handleServerError(void);
 		void startRecording(void);
+		void pauseRecording(void);
+		void restartRecording(void);
 		void recvData(void);
+		void checkReadyForPlotting(void);
+		void plotNextPlaybackDataBlock(void);
+
+		/* Playback control slots */
+		void jumpForward(void);
+		void jumpBackward(void);
+		void jumpToBeginning(void);
+		void jumpToEnd(void);
+		void updateRefreshInterval(int val);
+		void updateJumpSize(int val);
+		void updateChannelView(const QString &view);
+		void updateAutoscale(int state);
+		void updateAutomean(int state);
+		void updateDisplayScale(int index);
+		
+		/* Update functions for display params */
+		//void updateExperimentLength(void);
+		//void updateChannelView(void);
+		//void updatePlotScale(void);
+		//void updateSkipSize(void);
 
 	private:
 
 		/* Initialisation functions */
-		void initSettings(void);
 		void initGui(void);
 		void initMenuBar(void);
 		void initPlotWindow(void);
 		void initServer(void);
 		void initSignals(void);
+		void initPlayback(void);
 
 		/* Helpers */
+		void plotDataBlock(uint64_t startSample, uint64_t endSample);
 		void setPlaybackButtonsEnabled(bool enabled);
 		void sendDaqsrvInitMessage(void);
 		//bool checkMeaviewRunning(void);
@@ -119,6 +147,8 @@ class MealogWindow : public QMainWindow {
 		void setRecordingParameters(void);
 		void setParameterSelectionsEnabled(bool enabled);
 		void setNidaqInterfaceEnabled(bool enabled);
+		void updateTime(void);
+
 		mearec::RecordingStatusReply constructStatusReply(
 				mearec::RecordingStatusRequest req);
 		bool readMessage(QTcpSocket *socket, 
@@ -136,8 +166,12 @@ class MealogWindow : public QMainWindow {
 		 */
 		DaqClient *daqClient = nullptr;
 		H5Recording *recording = nullptr;
-		uint8_t recordingStatus = Mealog::INITIALIZED & Mealog::NOT_STARTED;
+		uint8_t recordingStatus = Mealog::UNINITIALIZED | Mealog::NOT_STARTED;
 		uint64_t numSamplesAcquired = 0;
+		uint64_t lastSamplePlotted = 0;
+
+		/* Playback stuff */
+		QTimer *playbackTimer;
 
 		/* The PlotWindow is the class containing the actual data plots */
 		PlotWindow *plotWindow = nullptr;
@@ -179,12 +213,12 @@ class MealogWindow : public QMainWindow {
 		QLineEdit *timeLine;
 		QLineEdit *totalTimeLine;
 		QIntValidator *totalTimeValidator;
-		QPushButton *playButton;
+		QPushButton *startButton;
 		QPushButton *stopButton;
-		QPushButton *skipBackButton;
-		QPushButton *skipForwardButton;
-		QPushButton *skipToBeginningButton;
-		QPushButton *skipToEndButton;
+		QPushButton *jumpBackButton;
+		QPushButton *jumpForwardButton;
+		QPushButton *jumpToBeginningButton;
+		QPushButton *jumpToEndButton;
 
 		/* NIDAQ stuff */
 		QGroupBox *nidaqGroup;
@@ -216,18 +250,18 @@ class MealogWindow : public QMainWindow {
 		/* Display parameters */
 		QGroupBox *displayGroup;
 		QGridLayout *displayLayout;
+		QLabel *refreshLabel;
+		QSpinBox *refreshBox;
 		QLabel *viewLabel;
 		QComboBox *viewBox;
 		QLabel *scaleLabel;
 		QComboBox *scaleBox;
-		QLabel *colorLabel;
-		QComboBox *colorBox;
+		QLabel *jumpSizeLabel;
+		QSpinBox *jumpSizeBox;
 		QLabel *automeanLabel;
 		QCheckBox *automeanBox;
 		QLabel *autoscaleLabel;
 		QCheckBox *autoscaleBox;
-		QLabel *jumpSizeLabel;
-		QSpinBox *jumpSize;
 
 		/* Eventually online analysis stuff too */
 };

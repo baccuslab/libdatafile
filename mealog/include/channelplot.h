@@ -35,6 +35,7 @@ class ChannelPlot : public QCustomPlot {
 		QCPAxisRect *getSubplotAxis(int row, int col);
 		//void plotData(QVector<QVector<int16_t> > data);
 		void plotData(QVector<QVector<double> > &data);
+		void clear();
 
 		QVector<double> xData;
 		void distributedPlot(H5Rec::Samples &s);

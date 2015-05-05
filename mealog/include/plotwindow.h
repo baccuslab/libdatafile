@@ -36,6 +36,7 @@ class PlotWindow : public QWidget {
 		void toggleVisible();
 	
 	private:
+		void clear();
 		void initPlotGroup();
 		ChannelPlot *channelPlot;
 		Settings settings;
