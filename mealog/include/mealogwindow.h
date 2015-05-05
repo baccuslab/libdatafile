@@ -84,11 +84,13 @@ class MealogWindow : public QMainWindow {
 
 	signals:
 		void newDataAvailable(void);
+		void recordingFinished(void);
 
 	private slots:
 		void createNewRecording(void);
 		void loadRecording(void);
 		void closeRecordingWithCheck(void);
+		void endRecording(void);
 		//void startMeaview(void);
 		//void acceptClients(void);
 		//void respondToClient(void);
@@ -136,6 +138,7 @@ class MealogWindow : public QMainWindow {
 		/* Helpers */
 		void plotDataBlock(uint64_t startSample, uint64_t endSample);
 		void setPlaybackButtonsEnabled(bool enabled);
+		void setPlaybackMovementButtonsEnabled(bool enabled);
 		void sendDaqsrvInitMessage(void);
 		//bool checkMeaviewRunning(void);
 		bool confirmFileOverwrite(const QFile &path);
@@ -199,6 +202,7 @@ class MealogWindow : public QMainWindow {
 		QGridLayout *topLayout;
 		QPushButton *newRecordingButton;
 		QPushButton *loadRecordingButton;
+		QPushButton *closeRecordingButton;
 		QLabel *fileLabel;
 		QLineEdit *fileLine;
 		QRegExpValidator *fileValidator;

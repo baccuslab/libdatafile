@@ -173,6 +173,15 @@ def accept_client(server):
     return client
 
 def cleanup(server, client):
+    while True:
+        try:
+            buf = client.recv(BUFFER_SIZE)
+            if len(buf) == 0:
+                break
+        except BlockingIOError:
+            pass
+        except ConnectionResetError:
+            break
     try:
         client.shutdown(socket.SHUT_RDWR)
         server.shutdown(socket.SHUT_RDWR)
