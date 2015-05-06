@@ -29,27 +29,24 @@ QMAKE_CXXFLAGS_RELEASE += -O3
 HEADERS += messaging/logserver.pb.h \
            daqclient/include/daqclient.h \
            h5recording/include/h5recording.h \
-           mealog/include/mealog.h \
-           meaview/include/channelplot.h \
-           meaview/include/ctrlwindow.h \
-           meaview/include/plotwindow.h \
-           meaview/include/qcustomplot.h \
-           meaview/include/settings.h \
-           meaview/include/windows.h \
+           mealog/include/mealogwindow.h \
+           mealog/include/channelplot.h \
+           mealog/include/plotwindow.h \
+           mealog/include/qcustomplot.h \
+           mealog/include/settings.h \
+           mealog/include/windows.h \
            tools/include/bintools.h \
            tools/include/hdftools.h
 SOURCES += messaging/logserver.pb.cc \
            daqclient/src/daqclient.cpp \
            h5recording/src/h5recording.cpp \
            mealog/src/main.cpp \
-           mealog/src/mealog.cpp \
-           meaview/src/channelplot.cpp \
-           meaview/src/ctrlwindow.cpp \
-           meaview/src/main.cpp \
-           meaview/src/plotwindow.cpp \
-           meaview/src/qcustomplot.cpp \
-           meaview/src/settings.cpp \
-           meaview/src/windows.cpp \
+           mealog/src/mealogwindow.cpp \
+           mealog/src/channelplot.cpp \
+           mealog/src/plotwindow.cpp \
+           mealog/src/qcustomplot.cpp \
+           mealog/src/settings.cpp \
+           mealog/src/windows.cpp \
            tools/bin2hdf/bin2hdf.c \
            tools/common/bintools.c \
            tools/hdf2bin/hdf2bin.c \
