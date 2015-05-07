@@ -41,12 +41,15 @@
 /* Settings */
 namespace Mealog {
 
+const int WINDOW_XPOS = PLOT_WINDOW_WIDTH + 10;
+const int WINDOW_YPOS = 0;
 const int WINDOW_WIDTH = 600;
 const int WINDOW_HEIGHT = 200;
 const QFile DEFAULT_SAVE_FILE("default-data.h5");
 const QDir DEFAULT_SAVE_DIR(QDir::homePath());
 const unsigned int DEFAULT_EXPERIMENT_LENGTH = 1000;
 const unsigned int MAX_EXPERIMENT_LENGTH = 10000;
+const unsigned int RECORDING_FINISH_WAIT_TIME = 1000; // ms
 const QList<double> ADC_RANGES = { 1, 2, 5, 10 };
 const double DEFAULT_ADC_RANGE = 5;
 const QStringList TRIGGERS = {"Photodiode", "None"};
@@ -117,7 +120,7 @@ class MealogWindow : public QMainWindow {
 		void updateChannelView(const QString &view);
 		void updateAutoscale(int state);
 		void updateAutomean(int state);
-		void updateDisplayScale(int index);
+		void updateDisplayScale(const QString &text);
 		
 		/* Update functions for display params */
 		//void updateExperimentLength(void);
@@ -151,6 +154,7 @@ class MealogWindow : public QMainWindow {
 		void setParameterSelectionsEnabled(bool enabled);
 		void setNidaqInterfaceEnabled(bool enabled);
 		void updateTime(void);
+		void waitForRecordingFinish(void);
 
 		mearec::RecordingStatusReply constructStatusReply(
 				mearec::RecordingStatusRequest req);

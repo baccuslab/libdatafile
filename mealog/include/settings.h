@@ -75,14 +75,14 @@ const char DATE_FORMAT[] = "ddd, MMM dd, yyyy";	// QDate format
 /* Display properties for recording/playback */
 const unsigned int PLAYBACK_BUFFER_NUM_BLOCKS = 5;
 const float NEG_DISPLAY_RANGE = (2 << 11);
-const float POS_DISPLAY_RANGE = (2 << 12);
-const float DEFAULT_DISPLAY_SCALE = 0.5;
+const float POS_DISPLAY_RANGE = (2 << 13);
+const float DEFAULT_DISPLAY_SCALE = 1;
 const QList<float> DISPLAY_SCALES {
 		0.125, 0.25, 0.5, 1, 2, 4
 };
-const unsigned int DEFAULT_REFRESH_INTERVAL = 2000; // ms
-const unsigned int MIN_REFRESH_INTERVAL = 100;
-const unsigned int MAX_REFRESH_INTERVAL = 10000;
+const float DEFAULT_REFRESH_INTERVAL = 2000; // ms
+const float MIN_REFRESH_INTERVAL = 1000;
+const float MAX_REFRESH_INTERVAL = 10000;
 const unsigned int JUMP_MIN = 100;		// ms
 const unsigned int JUMP_MAX = 10 * AIB_BLOCK_SIZE;
 const unsigned int JUMP_STEP_SIZE = 100;
@@ -150,7 +150,7 @@ class Settings {
 		float getDisplayRange();
 		float getDisplayScale();
 		QList<float> getDisplayScales();
-		unsigned int getRefreshInterval();
+		float getRefreshInterval();
 		QString getChannelViewString();
 		QList<QPair<int, int> > getChannelView();
 		QStringList getChannelViews();
@@ -167,7 +167,7 @@ class Settings {
 		/* Setters */
 		void setPlotPen(QPen pen);
 		void setDisplayScale(float);
-		void setRefreshInterval(unsigned int);
+		void setRefreshInterval(float);
 		void setChannelView(QString);
 		void setSaveDir(QString);
 		void setSaveFilename(QString);

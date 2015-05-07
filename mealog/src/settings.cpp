@@ -48,11 +48,11 @@ QList<float> Settings::getDisplayScales() {
 	return DISPLAY_SCALES;
 }
 
-unsigned int Settings::getRefreshInterval() {
+float Settings::getRefreshInterval() {
 	return settings.value("refresh-interval").toFloat();
 }
 
-void Settings::setRefreshInterval(unsigned int interval) {
+void Settings::setRefreshInterval(float interval) {
 	float i = qMin(qMax(interval, MIN_REFRESH_INTERVAL), MAX_REFRESH_INTERVAL);
 	settings.setValue("refresh-interval", QVariant(i));
 }

@@ -208,7 +208,7 @@ void H5Recording::data(int startSample, int endSample, H5Rec::Samples &s) {
 	}
 
 	/* Define dataspace of memory region, which is contiguous
-	 * data chunk of Boost multi-array, and its hyperslab.
+	 * data chunk of Armadillo matrix and its hyperslab.
 	 */
 	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
 			nchannels_};
@@ -248,7 +248,7 @@ void H5Recording::data(int startSample, int endSample, H5Rec::SamplesD &s) {
 	}
 
 	/* Define dataspace of memory region, which is contiguous
-	 * data chunk of Boost multi-array, and its hyperslab.
+	 * data chunk of Armadillo matrix and its hyperslab.
 	 */
 	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
 			nchannels_};
@@ -279,6 +279,46 @@ void H5Recording::setFilename(std::string filename) {
 
 void H5Recording::setData(int startSample, int endSample, 
 		std::vector<std::vector<int16_t> > &data) {
+	int req_nsamples = endSample - startSample;
+	if (req_nsamples <= 0) {
+		std::cerr << "Requested sample range is invalid: (" <<
+				startSample << ", " << endSample << ")" << std::endl;
+		throw;
+	}
+
+	/* Select hyperslab of datapace where data will be written */
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(startSample), 0};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
+			nchannels_};
+	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+	if (!dataspace.selectValid()) {
+		std::cerr << "Dataset selection invalid: " << std::endl;
+		std::cerr << "Offset: (" << startSample << ", 0)" << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw;
+	}
+
+	/* Define dataspace of memory region, from which data is read */
+	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
+			nchannels_};
+	DataSpace memspace(H5Rec::DATASET_RANK, dims);
+	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
+			nchannels_};
+	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
+	if (!memspace.selectValid()) {
+		std::cerr << "Memory dataspace selection invalid: " << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw;
+	}
+
+	/* Write data 
+	 * XXX: This is big-endian because it comes over the network. But 
+	 * if we move away from sockets as the "source" of the data, this will
+	 * likely change.
+	 */
+	dataset.write(data.data(), PredType::STD_I16BE, memspace, dataspace);
+	flush();
 }
 
 void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) {
@@ -294,6 +334,12 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) 
 	hsize_t space_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
 			nchannels_};
 	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+	if (!dataspace.selectValid()) {
+		std::cerr << "Dataset selection invalid: " << std::endl;
+		std::cerr << "Offset: (" << startSample << ", 0)" << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw;
+	}
 
 	/* Define dataspace of memory region, from which data is read */
 	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
@@ -303,6 +349,11 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) 
 	hsize_t mem_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
 			nchannels_};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
+	if (!memspace.selectValid()) {
+		std::cerr << "Memory dataspace selection invalid: " << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw;
+	}
 
 	/* Write data 
 	 * XXX: This is big-endian because it comes over the network. But 
@@ -370,10 +421,10 @@ void H5Recording::writeDataStringAttr(std::string name, std::string value) {
 void H5Recording::writeAllAttributes(void) {
 	writeFileAttr("is-live", PredType::STD_U8LE, &live_);
 	writeFileAttr("last-valid-sample", 
-			PredType::STD_U64LE, &lastValidSample_);
+			PredType::STD_U32LE, &lastValidSample_);
 	writeDataAttr("bin-file-type", PredType::STD_I16LE, &type_);
 	writeDataAttr("bin-file-version", PredType::STD_I16LE, &version_);
-	writeDataAttr("sample-rate", PredType::STD_U32LE, &sampleRate_);
+	writeDataAttr("sample-rate", PredType::IEEE_F32LE, &sampleRate_);
 	writeDataAttr("block-size", PredType::STD_U32LE, &blockSize_);
 	writeDataAttr("gain", PredType::IEEE_F32LE, &gain_);
 	writeDataAttr("offset", PredType::IEEE_F32LE, &offset_);
@@ -387,8 +438,8 @@ void H5Recording::setLive(bool live) {
 	live_ = live;
 }
 
-void H5Recording::setLastValidSample(size_t sample) {
-	writeFileAttr("last-valid-sample", PredType::STD_U64LE, &sample);
+void H5Recording::setLastValidSample(uint32_t sample) {
+	writeFileAttr("last-valid-sample", PredType::STD_U32LE, &sample);
 	lastValidSample_ = sample;
 }
 

@@ -77,9 +77,10 @@ void DaqClient::setTrigger(QString trigger) {
 }
 
 bool DaqClient::connectToDaqsrv(void) {
-	connect(socket, SIGNAL(connected()), this, SLOT(connectionSuccessful()));
-	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), 
-			this, SLOT(connectionUnsuccessful(QAbstractSocket::SocketError)));
+	connect(socket, &QAbstractSocket::connected, 
+			this, &DaqClient::connectionSuccessful);
+	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
+			this, SLOT(connectionUnsuccessful()));
 	socket->connectToHost(host_, port_);
 	return true;
 }
@@ -89,28 +90,30 @@ void DaqClient::handleDisconnection(void) {
 		emit disconnected();
 }
 
-void DaqClient::handleSocketError(QAbstractSocket::SocketError e) {
+void DaqClient::handleSocketError(void) {
 	emit error();
 }
 
 void DaqClient::connectionSuccessful(void) {
 	emit connectionMade(true);
-	disconnect(socket, SIGNAL(connected()), this, SLOT(connectionSuccessful()));
+	disconnect(socket, &QAbstractSocket::connected, 
+			this, &DaqClient::connectionSuccessful);
 	disconnect(socket, SIGNAL(error(QAbstractSocket::SocketError)), 
-			this, SLOT(connectionUnsuccessful(QAbstractSocket::SocketError)));
-	connect(socket, SIGNAL(disconnected()), 
-			this, SLOT(handleDisconnection()));
+			this, SLOT(connectionUnsuccessful()));
+	connect(socket, &QAbstractSocket::disconnected,
+			this, &DaqClient::handleDisconnection);
 	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
-			this, SLOT(handleSocketError(QAbstractSocket::SocketError)));
-	connect(socket, SIGNAL(readyRead()), 
-			this, SLOT(checkDataAvailable()));
+			this, SLOT(handleSocketError()));
+	connect(socket, &QAbstractSocket::readyRead,
+			this, &DaqClient::checkDataAvailable);
 	isConnected_ = true;
 }
 
-void DaqClient::connectionUnsuccessful(QAbstractSocket::SocketError error) {
-	disconnect(socket, SIGNAL(connected()), this, SLOT(connectionSuccessful()));
+void DaqClient::connectionUnsuccessful(void) {
+	disconnect(socket, &QAbstractSocket::connected, 
+			this, &DaqClient::connectionSuccessful);
 	disconnect(socket, SIGNAL(error(QAbstractSocket::SocketError)), 
-			this, SLOT(connectionUnsuccessful(QAbstractSocket::SocketError)));
+			this, SLOT(connectionUnsuccessful()));
 	emit connectionMade(false);
 }
 
@@ -192,7 +195,7 @@ void DaqClient::recvData(int16_t *buffer) {
 	uint16_t nchannels;
 	(*stream) >> type >> msg_size;
 	(*stream) >> nchannels >> nsamples;
-	qint64 nread = socket->read((char *) buffer, nchannels * nsamples * sizeof(int16_t));
+	socket->read((char *) buffer, nchannels * nsamples * sizeof(int16_t));
 }
 
 bool DaqClient::isConnected(void) {

@@ -68,9 +68,9 @@ class DaqClient : public QObject {
 	private slots:
 		void checkDataAvailable(void);
 		void connectionSuccessful(void);
-		void connectionUnsuccessful(QAbstractSocket::SocketError);
+		void connectionUnsuccessful(void);
 		void handleDisconnection(void);
-		void handleSocketError(QAbstractSocket::SocketError);
+		void handleSocketError(void);
 
 	private:
 		QTcpSocket *socket;

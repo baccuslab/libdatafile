@@ -27,12 +27,12 @@ const int BIN_FILE_VERSION = 1;
 const int DATASET_RANK = 2;
 const int NUM_CHANNELS = 64;
 const int BLOCK_SIZE = 20000;
-const int SAMPLE_RATE = 10000;
+const float SAMPLE_RATE = 10000;
 const unsigned int CHUNK_CACHE_SIZE = 5; // In number of chunks
 const hsize_t DATASET_DEFAULT_DIMS[DATASET_RANK] = {BLOCK_SIZE, NUM_CHANNELS};
 const hsize_t DATASET_CHUNK_DIMS[DATASET_RANK]= {BLOCK_SIZE, NUM_CHANNELS};
 const hsize_t DATASET_MAX_DIMS[DATASET_RANK] = {H5S_UNLIMITED, NUM_CHANNELS};
-const std::string DEFAULT_ROOM_STRING("recording in d239");
+const std::string DEFAULT_ROOM_STRING("recorded in d239");
 
 using Samples = arma::Mat<short>;
 using SamplesD = arma::mat;
@@ -127,7 +127,7 @@ class H5Recording {
 		void flush();
 		void setFilename(std::string filename);
 		void setLength(double length);	
-		void setLastValidSample(size_t sample);
+		void setLastValidSample(uint32_t sample);
 		void setLive(bool live);
 		void setFileType(int16_t type);
 		void setFileVersion(int16_t version);

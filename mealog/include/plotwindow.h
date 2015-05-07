@@ -34,6 +34,8 @@ class PlotWindow : public QWidget {
 		~PlotWindow();
 
 		void plotData(H5Rec::Samples &s);
+		void waitAll(void);
+		void forceReplot(void);
 
 	signals:
 		void sendData(QSemaphore *sem, int workerId, int channel, 

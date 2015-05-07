@@ -14,7 +14,7 @@ PlotWindow::PlotWindow(int numRows, int numCols, QWidget *parent) :
 	ncols = numCols;
 	sem = new QSemaphore(NUM_THREADS);
 	setGeometry(0, 0, PLOT_WINDOW_WIDTH, PLOT_WINDOW_HEIGHT);
-	setWindowTitle("Meaview: Channel view");
+	setWindowTitle("Mealog: Channel view");
 	initThreadPool();
 	initPlotGroup();
 	qRegisterMetaType<QSemaphore *>("QSemaphore *");
@@ -139,6 +139,8 @@ void PlotWindow::createChannelInspector(QMouseEvent *event) {
 }
 
 void PlotWindow::handleChannelClick(QMouseEvent *event) {
+	if (event->button() != Qt::RightButton)
+		return;
 	int channel = findSubplotClicked(event->pos());
 	if (channel == -1)
 		return;
@@ -158,5 +160,16 @@ int PlotWindow::findSubplotClicked(QPoint pos) {
 		}
 	}
 	return channel;
+}
+
+void PlotWindow::waitAll(void) {
+	sem->acquire(NUM_THREADS);
+}
+
+void PlotWindow::forceReplot(void) {
+	//emit allSubplotsUpdated(sem, NUM_THREADS, plot);
+	sem->acquire(NUM_THREADS);
+	plot->replot();
+	sem->release(NUM_THREADS);
 }
 
