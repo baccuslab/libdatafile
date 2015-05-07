@@ -24,11 +24,13 @@ HEADERS += include/mealogwindow.h \
 			include/qcustomplot.h \
 			include/settings.h \
 			include/windows.h \
-			include/channelplot.h
+			include/channelplot.h \
+			include/plotworker.h
 SOURCES += src/main.cpp \
 			src/mealogwindow.cpp \
 			src/plotwindow.cpp \
 			src/qcustomplot.cpp \
 			src/settings.cpp \
 			src/windows.cpp \
-			src/channelplot.cpp
+			src/channelplot.cpp \
+			src/plotworker.cpp

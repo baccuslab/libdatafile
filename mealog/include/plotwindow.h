@@ -10,40 +10,54 @@
 /* C++ includes */
 
 /* Qt includes */
-#include <QHBoxLayout>
-#include <QtConcurrent>
+#include <QGridLayout>
+#include <QList>
+#include <QThread>
+#include <QSemaphore>
 
 /* meaview includes */
-#include "channelplot.h"
+#include "qcustomplot.h"
 #include "settings.h"
-
+#include "plotworker.h"
 #include "h5recording/include/h5recording.h"
+
+const unsigned int NUM_THREADS = 64;
 
 class PlotWindow : public QWidget {
 	Q_OBJECT
 
-	friend class MealogWindow;
 	public:
-		PlotWindow(QWidget *parent = 0);
+		PlotWindow(int nrows, int ncols, QWidget *parent = 0);
 		~PlotWindow();
-		ChannelPlot *getChannelPlot();
 
-	public slots:
-		void plotNextDataBlock();
 		void plotData(H5Rec::Samples &s);
 
-	private slots:
-		void toggleVisible();
-	
+	signals:
+		void sendData(QSemaphore *sem, int workerId, int channel, 
+				QCPGraph *subplot, QVector<double> *data);
+		void allSubplotsUpdated(QSemaphore *sem,
+				const int nthreads, QCustomPlot *p);
+
+
+	public slots:
+		void toggleVisible(void);
+		void clearAll(void);
+		void countPlotsUpdated(void);
+
 	private:
-		void clear();
+		void initThreadPool();
 		void initPlotGroup();
-		ChannelPlot *channelPlot;
+
+		int nrows;
+		int ncols;
+		int numPlotsUpdated = 0;
 		Settings settings;
-		//Playback *playback = nullptr;
-		//Recording *recording = nullptr;
-		H5Recording *recording = nullptr;
-		QHBoxLayout *layout;
+		QGridLayout *layout;
+		QCustomPlot *plot;
+		QList<QCPGraph *> subplotList;
+		QList<QThread *> threadList;
+		QList<PlotWorker *> workerList;
+		QSemaphore *sem;
 };
 
 #endif

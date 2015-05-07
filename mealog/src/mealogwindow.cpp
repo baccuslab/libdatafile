@@ -21,6 +21,7 @@
 #include <QFutureWatcher>
 #include <QtConcurrent>
 #include <QShortcut>
+#include <QPair>
 
 #include <armadillo>
 
@@ -276,7 +277,8 @@ void MealogWindow::initMenuBar(void) {
 }
 
 void MealogWindow::initPlotWindow(void) {
-	plotWindow = new PlotWindow(this);
+	QPair<int, int> p = CHANNEL_COL_ROW_MAP.value(settings.getChannelViewString());
+	plotWindow = new PlotWindow(p.first, p.second, this);
 	plotWindow->show();
 	lastSamplePlotted = 0;
 }
@@ -426,7 +428,7 @@ void MealogWindow::closeRecording(void) {
 		playbackTimer = nullptr;
 	}
 	statusBar->showMessage("Ready");
-	plotWindow->clear();
+	plotWindow->clearAll();
 	recordingStatus = Mealog::UNINITIALIZED | Mealog::NOT_STARTED;
 
 	/* Reset recording parameters */
@@ -441,6 +443,11 @@ void MealogWindow::closeRecording(void) {
 	setParameterSelectionsEnabled(true);
 
 	/* Re-enable GUI components */
+	startButton->setText("Start");
+	disconnect(startButton, SIGNAL(clicked()),
+			this, SLOT(pauseRecording()));
+	connect(startButton, SIGNAL(clicked()),
+			this, SLOT(startRecording()));
 	setPlaybackButtonsEnabled(false);
 	setPlaybackMovementButtonsEnabled(false);
 	closeRecordingAction->setEnabled(false);
@@ -501,7 +508,6 @@ void MealogWindow::loadRecording() {
 	} catch (std::exception &e) {
 		qDebug() << "error creating h5recording";
 	}
-	plotWindow->recording = recording;
 	fileLine->setText(filename.section("/", -1));
 	QString path = filename.section("/", 1, -2);
 	settings.setSaveFilename(fileLine->text());

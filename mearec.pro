@@ -8,13 +8,11 @@ INCLUDEPATH += . \
                messaging \
                h5recording/include \
                mealog/include \
-               meaview/include \
                tools/include
 SUBDIRS += h5recording \
 			messaging \
 			tools \
 			daqclient \
-			meaview \
 			mealog
 QT_CONFIG -= no-pkg-config
 CONFIG += ordered c++11 debug_and_release link_pkgconfig
