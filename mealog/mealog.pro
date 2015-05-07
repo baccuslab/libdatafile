@@ -25,7 +25,8 @@ HEADERS += include/mealogwindow.h \
 			include/settings.h \
 			include/windows.h \
 			include/channelplot.h \
-			include/plotworker.h
+			include/plotworker.h \
+			include/channelinspector.h
 SOURCES += src/main.cpp \
 			src/mealogwindow.cpp \
 			src/plotwindow.cpp \
@@ -33,4 +34,5 @@ SOURCES += src/main.cpp \
 			src/settings.cpp \
 			src/windows.cpp \
 			src/channelplot.cpp \
-			src/plotworker.cpp
+			src/plotworker.cpp \
+			src/channelinspector.cpp

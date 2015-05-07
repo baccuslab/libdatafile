@@ -24,7 +24,8 @@ class PlotWorker : public QObject {
 	
 	public slots:
 		void transferPlotData(QSemaphore *sem, int workerId, 
-				int channel, QCPGraph *subplot, QVector<double> *data);
+				int channel, QCPGraph *subplot, QVector<double> *data,
+				bool isClicked);
 		void replot(QSemaphore *sem, const int nthreads, QCustomPlot *p);
 
 	signals:
@@ -36,6 +37,7 @@ class PlotWorker : public QObject {
 
 		int id;
 		QPen pen;
+		QPen redPen;
 		bool transferring;
 		bool automean;
 		bool autoscale;

@@ -10,11 +10,13 @@
 PlotWorker::PlotWorker(int id, QObject *parent) : QObject(parent) {
 	this->id = id;
 	getSettings();
+	redPen = QPen(Qt::red);
 	transferring = false;
 }
 
 PlotWorker::PlotWorker(const PlotWorker &other) {
 	pen = QPen(other.pen);
+	redPen = QPen(other.redPen);
 	automean = other.automean;
 	autoscale = other.autoscale;
 	scale = other.scale;
@@ -26,7 +28,7 @@ PlotWorker::~PlotWorker() {
 }
 
 void PlotWorker::transferPlotData(QSemaphore *sem, int workerId, 
-		int channel, QCPGraph *subplot, QVector<double> *data) {
+		int channel, QCPGraph *subplot, QVector<double> *data, bool isClicked) {
 
 	if (workerId != id)
 		return;
@@ -43,8 +45,11 @@ void PlotWorker::transferPlotData(QSemaphore *sem, int workerId,
 		for (auto i = data->begin(); i != data->end(); i++)
 			(*i) -= mean;
 	}
-	subplot->setPen(pen);
 	sem->acquire();
+	if (isClicked)
+		subplot->setPen(redPen);
+	else
+		subplot->setPen(pen);
 	subplot->setData(xData, *data);
 	if ( (autoscale) || RESCALED_CHANNELS.contains(channel) )
 		subplot->valueAxis()->rescale();

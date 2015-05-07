@@ -14,6 +14,9 @@
 #include <QList>
 #include <QThread>
 #include <QSemaphore>
+#include <QMouseEvent>
+#include <QPoint>
+#include <QSet>
 
 /* meaview includes */
 #include "qcustomplot.h"
@@ -34,7 +37,8 @@ class PlotWindow : public QWidget {
 
 	signals:
 		void sendData(QSemaphore *sem, int workerId, int channel, 
-				QCPGraph *subplot, QVector<double> *data);
+				QCPGraph *subplot, QVector<double> *data,
+				bool isClicked);
 		void allSubplotsUpdated(QSemaphore *sem,
 				const int nthreads, QCustomPlot *p);
 
@@ -43,14 +47,18 @@ class PlotWindow : public QWidget {
 		void toggleVisible(void);
 		void clearAll(void);
 		void countPlotsUpdated(void);
+		void createChannelInspector(QMouseEvent *event);
+		void handleChannelClick(QMouseEvent *event);
 
 	private:
 		void initThreadPool();
 		void initPlotGroup();
+		int findSubplotClicked(QPoint pos);
 
 		int nrows;
 		int ncols;
 		int numPlotsUpdated = 0;
+		QSet<int> clickedPlots;
 		Settings settings;
 		QGridLayout *layout;
 		QCustomPlot *plot;

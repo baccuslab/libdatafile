@@ -6,6 +6,7 @@
 
 #include <QPair>
 #include "plotwindow.h"
+#include "channelinspector.h"
 
 PlotWindow::PlotWindow(int numRows, int numCols, QWidget *parent) : 
 		QWidget(parent, Qt::Window) {
@@ -81,7 +82,12 @@ void PlotWindow::initPlotGroup(void) {
 					settings.getDisplayScale() * POS_DISPLAY_RANGE);
 		}
 	}
-	
+
+	connect(plot, &QCustomPlot::mouseDoubleClick,
+			this, &PlotWindow::createChannelInspector);
+	connect(plot, &QCustomPlot::mousePress,
+			this, &PlotWindow::handleChannelClick);
+
 	layout = new QGridLayout(this);
 	layout->addWidget(plot);
 	setLayout(layout);
@@ -96,7 +102,8 @@ void PlotWindow::plotData(H5Rec::Samples &s) {
 			for (auto k = 0; k < s.n_rows; k++)
 				data->replace(k, s(k, channel));
 			emit sendData(sem, channel, channel, 
-					subplotList.at(channel), data);
+					subplotList.at(channel), data, 
+					clickedPlots.contains(channel));
 		}
 	}
 }
@@ -119,5 +126,37 @@ void PlotWindow::clearAll(void) {
 		subplot->clearData();
 	plot->replot();
 	sem->release(NUM_THREADS);
+}
+
+void PlotWindow::createChannelInspector(QMouseEvent *event) {
+	/* Find the graph that was clicked */
+	int channel = findSubplotClicked(event->pos());
+	if (channel == -1)
+		return;
+	ChannelInspector *c = new ChannelInspector(plot,
+			subplotList.at(channel), channel, this);
+	c->show();
+}
+
+void PlotWindow::handleChannelClick(QMouseEvent *event) {
+	int channel = findSubplotClicked(event->pos());
+	if (channel == -1)
+		return;
+	if (clickedPlots.contains(channel))
+		clickedPlots.remove(channel);
+	else
+		clickedPlots.insert(channel);
+}
+
+int PlotWindow::findSubplotClicked(QPoint pos) {
+	QList<QCPAxisRect *> rects = plot->axisRects();
+	int channel = -1;
+	for (auto i = 0; i < rects.size(); i++) {
+		if (rects.at(i)->outerRect().contains(pos)) {
+			channel = i;
+			break;
+		}
+	}
+	return channel;
 }
 
