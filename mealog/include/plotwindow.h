@@ -24,8 +24,6 @@
 #include "plotworker.h"
 #include "h5recording/include/h5recording.h"
 
-const unsigned int NUM_THREADS = 64;
-
 class PlotWindow : public QWidget {
 	Q_OBJECT
 
@@ -57,6 +55,8 @@ class PlotWindow : public QWidget {
 		void initPlotGroup();
 		int findSubplotClicked(QPoint pos);
 
+		const unsigned int numThreads = QThread::idealThreadCount();
+		int numWorkersPerThread;
 		int nrows;
 		int ncols;
 		int numPlotsUpdated = 0;

@@ -180,7 +180,7 @@ void MealogWindow::initGui(void) {
 	for (auto &scale : DISPLAY_SCALES)
 		scaleBox->addItem(QString::number(scale));
 	scaleBox->setCurrentIndex(
-			settings.getDisplayScales().indexOf(settings.getDisplayScale()));
+			settings.getDisplayScales().indexOf(DEFAULT_DISPLAY_SCALE));
 	autoscaleLabel = new QLabel("Autoscale:", displayGroup);
 	autoscaleBox = new QCheckBox(displayGroup);
 	autoscaleBox->setToolTip("If checked, each subplot will scale to fit its data");
@@ -472,11 +472,11 @@ void MealogWindow::closeRecording(void) {
 		daqClient = nullptr;
 		connect(connectToNidaqButton, &QPushButton::clicked,
 				this, &MealogWindow::connectToDaqsrv);
-		nidaqStatus->setText("Not connected");
-		connectToNidaqButton->setText("Connect");
 		connect(connectToNidaqButton, &QPushButton::clicked,
 				this, &MealogWindow::connectToDaqsrv);
 	}
+	nidaqStatus->setText("Not connected");
+	connectToNidaqButton->setText("Connect");
 }
 
 int MealogWindow::confirmCloseRecording(void) {
@@ -871,7 +871,8 @@ void MealogWindow::startRecording(void) {
 		recordingStatus = (
 				Mealog::INITIALIZED | 
 				Mealog::STARTED | 
-				Mealog::RECORDING
+				Mealog::RECORDING |
+				Mealog::PLAYING
 			);
 	} else {
 		playbackTimer->start();
@@ -880,7 +881,8 @@ void MealogWindow::startRecording(void) {
 		recordingStatus = (
 				Mealog::INITIALIZED | 
 				Mealog::STARTED | 
-				Mealog::PLAYBACK
+				Mealog::PLAYBACK | 
+				Mealog::PLAYING
 			);
 	}
 	setPlaybackButtonsEnabled(true);
@@ -910,6 +912,8 @@ void MealogWindow::pauseRecording(void) {
 	connect(startButton, &QPushButton::clicked,
 			this, &MealogWindow::restartRecording);
 	startButton->setShortcut(Qt::Key_Space);
+	uint16_t oldStatus = recordingStatus & ~Mealog::PLAYING;
+	recordingStatus = oldStatus | Mealog::PAUSED;
 }
 
 void MealogWindow::restartRecording(void) {
@@ -933,6 +937,8 @@ void MealogWindow::restartRecording(void) {
 	connect(startButton, &QPushButton::clicked,
 			this, &MealogWindow::pauseRecording);
 	startButton->setShortcut(Qt::Key_Space);
+	uint16_t oldStatus = recordingStatus & ~Mealog::PAUSED;
+	recordingStatus = oldStatus | Mealog::PLAYING;
 }
 
 void MealogWindow::recvData(void) {
@@ -964,7 +970,8 @@ void MealogWindow::plotDataBlock(uint64_t start, uint64_t end) {
 	plotWindow->plotData(s);
 	lastSamplePlotted += nsamples;
 	updateTime();
-	if (recordingStatus & Mealog::PLAYBACK) {
+	if ((recordingStatus & Mealog::PLAYBACK) && 
+			(recordingStatus & Mealog::PLAYING)) {
 		if (lastSamplePlotted == recording->nsamples())
 			emit recordingFinished();
 	}
@@ -973,6 +980,10 @@ void MealogWindow::plotDataBlock(uint64_t start, uint64_t end) {
 void MealogWindow::plotNextPlaybackDataBlock(void) {
 	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
 			H5Rec::SAMPLE_RATE);
+	if (lastSamplePlotted == recording->nsamples()) {
+		emit recordingFinished();
+		return;
+	}
 	plotDataBlock(lastSamplePlotted, lastSamplePlotted + numSamplesPerPlotBlock);
 }
 

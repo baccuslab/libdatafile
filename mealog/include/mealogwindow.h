@@ -57,21 +57,26 @@ const QString DEFAULT_NIDAQ_HOST = "127.0.0.1";
 const QString IPC_HOST = "127.0.0.1";
 const quint16 IPC_PORT = 44444;
 
-enum INIT_STATUS:uint8_t {
+enum INIT_STATUS:uint16_t {
 	UNINITIALIZED = 0,
 	INITIALIZED = 1
 };
 
-enum RECORDING_STATUS:uint8_t {
+enum RECORDING_STATUS:uint16_t {
 	NOT_STARTED = 1 << 1,
 	STARTED = 1 << 2,
 	FINISHED = 1 << 3,
 	ERROR = 1 << 4
 };
 
-enum DATA_SOURCE:uint8_t {
+enum DATA_SOURCE:uint16_t {
 	PLAYBACK = 1 << 5,
 	RECORDING = 1 << 6
+};
+
+enum PLAYBACK_STATUS:uint16_t {
+	PLAYING = 1 << 7,
+	PAUSED = 1 << 8
 };
 
 class MealogWindow;

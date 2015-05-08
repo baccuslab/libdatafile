@@ -5,6 +5,8 @@
  */
 
 #include <QPair>
+#include <QFont>
+#include <QStringList>
 #include "plotwindow.h"
 #include "channelinspector.h"
 
@@ -12,7 +14,7 @@ PlotWindow::PlotWindow(int numRows, int numCols, QWidget *parent) :
 		QWidget(parent, Qt::Window) {
 	nrows = numRows;
 	ncols = numCols;
-	sem = new QSemaphore(NUM_THREADS);
+	sem = new QSemaphore(numThreads);
 	setGeometry(0, 0, PLOT_WINDOW_WIDTH, PLOT_WINDOW_HEIGHT);
 	setWindowTitle("Mealog: Channel view");
 	initThreadPool();
@@ -31,11 +33,11 @@ PlotWindow::~PlotWindow() {
 }
 
 void PlotWindow::initThreadPool() {
-	int nworkersPerThread = H5Rec::NUM_CHANNELS / NUM_THREADS;
-	for (auto i = 0; i < NUM_THREADS; i++) {
+	numWorkersPerThread = H5Rec::NUM_CHANNELS / numThreads;
+	for (auto i = 0; i < numThreads; i++) {
 		threadList.append(new QThread());
-		for (auto j = 0; j < nworkersPerThread; j++) {
-			int workerNum = i * nworkersPerThread + j;
+		for (auto j = 0; j < numWorkersPerThread; j++) {
+			int workerNum = i * numWorkersPerThread + j;
 			workerList.append(new PlotWorker(workerNum));
 			workerList.at(workerNum)->moveToThread(threadList.at(i));
 			connect(this, &PlotWindow::sendData, 
@@ -55,6 +57,18 @@ void PlotWindow::initPlotGroup(void) {
 	plot = new QCustomPlot(this);
 	plot->plotLayout()->removeAt(0);
 	plot->plotLayout()->expandTo(nrows, ncols);
+	plot->plotLayout()->setRowSpacing(-10);
+	plot->plotLayout()->setColumnSpacing(-10);
+
+	QFont labelFont("Helvetica", 12, QFont::Light);
+	int labelPadding = 3;
+	QStringList channelLabels;
+	channelLabels << QString("Photodiode");
+	channelLabels << QString("Intracellular Vm");
+	channelLabels << QString("Intracellular Im");
+	channelLabels << QString("Extra");
+	for (auto i = 4; i < (nrows * ncols); i++)
+		channelLabels << QString::number(i);
 
 	for (auto i = 0; i < nrows; i++) {
 		for (auto j = 0; j < nrows; j++) {
@@ -74,6 +88,10 @@ void PlotWindow::initPlotGroup(void) {
 			g->keyAxis()->grid()->setVisible(false);
 			g->keyAxis()->setRange(0, H5Rec::SAMPLE_RATE *
 					settings.getRefreshInterval() / 1000);
+			g->keyAxis()->setLabel(channelLabels.at(chan));
+			g->keyAxis()->setLabelFont(labelFont);
+			g->keyAxis()->setLabelPadding(labelPadding);
+
 			g->valueAxis()->setTicks(false);
 			g->valueAxis()->setTickLabels(false);
 			g->valueAxis()->grid()->setVisible(false);
@@ -89,6 +107,7 @@ void PlotWindow::initPlotGroup(void) {
 			this, &PlotWindow::handleChannelClick);
 
 	layout = new QGridLayout(this);
+	layout->setContentsMargins(0, 0, 0, 0);
 	layout->addWidget(plot);
 	setLayout(layout);
 }
@@ -113,7 +132,7 @@ void PlotWindow::countPlotsUpdated(void) {
 	if (numPlotsUpdated < subplotList.size())
 		return;
 	numPlotsUpdated = 0;
-	emit allSubplotsUpdated(sem, NUM_THREADS, plot);
+	emit allSubplotsUpdated(sem, numThreads, plot);
 }
 
 void PlotWindow::toggleVisible() {
@@ -121,11 +140,11 @@ void PlotWindow::toggleVisible() {
 }
 
 void PlotWindow::clearAll(void) {
-	sem->acquire(NUM_THREADS);
+	sem->acquire(numThreads);
 	for (auto &subplot : subplotList)
 		subplot->clearData();
 	plot->replot();
-	sem->release(NUM_THREADS);
+	sem->release(numThreads);
 }
 
 void PlotWindow::createChannelInspector(QMouseEvent *event) {
@@ -163,13 +182,12 @@ int PlotWindow::findSubplotClicked(QPoint pos) {
 }
 
 void PlotWindow::waitAll(void) {
-	sem->acquire(NUM_THREADS);
+	sem->acquire(numThreads);
 }
 
 void PlotWindow::forceReplot(void) {
-	//emit allSubplotsUpdated(sem, NUM_THREADS, plot);
-	sem->acquire(NUM_THREADS);
+	sem->acquire(numThreads);
 	plot->replot();
-	sem->release(NUM_THREADS);
+	sem->release(numThreads);
 }
 
