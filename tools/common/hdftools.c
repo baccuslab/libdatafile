@@ -34,7 +34,7 @@ int bin2hdf(char *infile, char *outfile) {
 
 	/* Identifiers and attributes for the HDF5 output file */
 	hid_t file_id, dset_id, dspace_id, dset_create_props;
-	hsize_t dims[RANK] = {hdr->nsamples, hdr->nchannels};
+	hsize_t dims[RANK] = {hdr->nchannels, hdr->nsamples};
 
 	/* Open the output file. No compression for now */
 	if ((file_id = H5Fcreate(outfile, H5F_ACC_TRUNC, 
@@ -53,7 +53,7 @@ int bin2hdf(char *infile, char *outfile) {
 		H5Fclose(file_id);
 		return -1;
 	}
-	hsize_t chunk_size[RANK] = {hdr->block_size, hdr->nchannels};
+	hsize_t chunk_size[RANK] = {hdr->nchannels, hdr->block_size};
 	if ((H5Pset_chunk(dset_create_props, RANK, chunk_size)) < 0) {
 		printf("Could not set dataset properties\n");
 		free_bin_header(hdr);
@@ -316,16 +316,16 @@ int write_data_to_hdf(hid_t dset_id, hid_t dspace_id, bin_hdr_t *hdr, FILE *fp) 
 	/* Create dataspace information for blocks from the bin file, and select
 	 * the appropriate hyperslab (all of the data)
 	 */
-	hsize_t block_dims[RANK] = {hdr->block_size, hdr->nchannels};
+	hsize_t block_dims[RANK] = {hdr->nchannels, hdr->block_size};
 	hid_t block_id = H5Screate_simple(RANK, block_dims, NULL);
 	hsize_t block_start[RANK] = {0, 0};
-	hsize_t block_count[RANK] = {hdr->block_size, hdr->nchannels};
+	hsize_t block_count[RANK] = {hdr->nchannels, hdr->block_size};
 	herr_t status = H5Sselect_hyperslab(block_id, H5S_SELECT_SET, 
 			block_start, NULL, block_count, NULL);
 
 	/* Create parameters for the hyperslab selection of the data set */
 	hsize_t start[RANK] = {0, 0};
-	hsize_t count[RANK] = {hdr->block_size, hdr->nchannels};
+	hsize_t count[RANK] = {hdr->nchannels, hdr->block_size};
 
 	/* Write the data by blocks */
 	int nblocks = hdr->nsamples / hdr->block_size;
@@ -335,7 +335,7 @@ int write_data_to_hdf(hid_t dset_id, hid_t dspace_id, bin_hdr_t *hdr, FILE *fp) 
 		int16_t *data = read_data_block(hdr, fp, i);
 
 		/* Offset the start of the H5 dataset and select the target hyperslab */
-		start[0] = i * hdr->block_size;
+		start[1] = i * hdr->block_size;
 		status = H5Sselect_hyperslab(dspace_id, H5S_SELECT_SET,
 				start, NULL, count, NULL);
 		if (status) {
@@ -583,16 +583,16 @@ int write_data_to_bin(hid_t dset_id, hid_t dspace_id, bin_hdr_t *hdr, FILE *fp) 
 	/* Create dataspace information for blocks from the bin file, and select
 	 * the appropriate hyperslab (all of the data)
 	 */
-	hsize_t block_dims[RANK] = {hdr->block_size, hdr->nchannels};
+	hsize_t block_dims[RANK] = {hdr->nchannels, hdr->block_size};
 	hid_t block_id = H5Screate_simple(RANK, block_dims, NULL);
 	hsize_t block_start[RANK] = {0, 0};
-	hsize_t block_count[RANK] = {hdr->block_size, hdr->nchannels};
+	hsize_t block_count[RANK] = {hdr->nchannels, hdr->block_size};
 	herr_t status = H5Sselect_hyperslab(block_id, H5S_SELECT_SET, 
 			block_start, NULL, block_count, NULL);
 
 	/* Create parameters for the hyperslab selection of the data set */
 	hsize_t start[RANK] = {0, 0};
-	hsize_t count[RANK] = {hdr->block_size, hdr->nchannels};
+	hsize_t count[RANK] = {hdr->nchannels, hdr->block_size};
 
 	/* Allocate buffer to hold data from HDF5 file */
 	int write_size = hdr->nchannels * hdr->block_size;
@@ -626,7 +626,7 @@ int write_data_to_bin(hid_t dset_id, hid_t dspace_id, bin_hdr_t *hdr, FILE *fp) 
 	for (int i = 0; i < nblocks; i++) {
 
 		/* Offset the start of the H5 dataset and select the target hyperslab */
-		start[0] = i * hdr->block_size;
+		start[1] = i * hdr->block_size;
 		status = H5Sselect_hyperslab(dspace_id, H5S_SELECT_SET,
 				start, NULL, count, NULL);
 		if (status) {
@@ -664,3 +664,4 @@ int write_data_to_bin(hid_t dset_id, hid_t dspace_id, bin_hdr_t *hdr, FILE *fp) 
 
 	return 0;
 }
+

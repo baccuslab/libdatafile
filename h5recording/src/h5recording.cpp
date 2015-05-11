@@ -117,7 +117,7 @@ void H5Recording::setLength(double length) {
 	 */
 	if (readOnly)
 		return;
-	hsize_t newSize[H5Rec::DATASET_RANK] = {nsamples_, H5Rec::NUM_CHANNELS};
+	hsize_t newSize[H5Rec::DATASET_RANK] = {H5Rec::NUM_CHANNELS, nsamples_};
 	dataset.extend(newSize);
 	dataspace = dataset.getSpace();
 }
@@ -196,9 +196,10 @@ void H5Recording::data(int startSample, int endSample, H5Rec::Samples &s) {
 	}
 
 	/* Select hyperslab from data set itself */
-	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(startSample), 0};
-	hsize_t space_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
-			nchannels_};
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, 
+			static_cast<hsize_t>(startSample)};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {nchannels_, 
+			static_cast<hsize_t>(req_nsamples)};
 	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
 	if (!dataspace.selectValid()) {
 		std::cerr << "Dataset selection invalid: " << std::endl;
@@ -210,12 +211,12 @@ void H5Recording::data(int startSample, int endSample, H5Rec::Samples &s) {
 	/* Define dataspace of memory region, which is contiguous
 	 * data chunk of Armadillo matrix and its hyperslab.
 	 */
-	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
-			nchannels_};
+	hsize_t dims[H5Rec::DATASET_RANK] = {nchannels_,
+			static_cast<hsize_t>(req_nsamples)};
 	DataSpace memspace(H5Rec::DATASET_RANK, dims);
 	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
-	hsize_t mem_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
-			nchannels_};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {nchannels_,
+			static_cast<hsize_t>(req_nsamples)};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
 	if (!memspace.selectValid()) {
 		std::cerr << "Memory dataspace selection invalid: " << std::endl;
@@ -236,9 +237,10 @@ void H5Recording::data(int startSample, int endSample, H5Rec::SamplesD &s) {
 	}
 
 	/* Select hyperslab from data set itself */
-	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(startSample), 0};
-	hsize_t space_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
-			nchannels_};
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, 
+			static_cast<hsize_t>(startSample)};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {nchannels_, 
+			static_cast<hsize_t>(req_nsamples)};
 	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
 	if (!dataspace.selectValid()) {
 		std::cerr << "Dataset selection invalid: " << std::endl;
@@ -250,12 +252,12 @@ void H5Recording::data(int startSample, int endSample, H5Rec::SamplesD &s) {
 	/* Define dataspace of memory region, which is contiguous
 	 * data chunk of Armadillo matrix and its hyperslab.
 	 */
-	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
-			nchannels_};
+	hsize_t dims[H5Rec::DATASET_RANK] = {nchannels_,
+			static_cast<hsize_t>(req_nsamples)};
 	DataSpace memspace(H5Rec::DATASET_RANK, dims);
 	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
-	hsize_t mem_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
-			nchannels_};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {nchannels_,
+			static_cast<hsize_t>(req_nsamples)};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
 	if (!memspace.selectValid()) {
 		std::cerr << "Memory dataspace selection invalid: " << std::endl;
@@ -287,9 +289,10 @@ void H5Recording::setData(int startSample, int endSample,
 	}
 
 	/* Select hyperslab of datapace where data will be written */
-	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(startSample), 0};
-	hsize_t space_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
-			nchannels_};
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, 
+			static_cast<hsize_t>(startSample)};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {nchannels_, 
+			static_cast<hsize_t>(req_nsamples)};
 	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
 	if (!dataspace.selectValid()) {
 		std::cerr << "Dataset selection invalid: " << std::endl;
@@ -299,12 +302,12 @@ void H5Recording::setData(int startSample, int endSample,
 	}
 
 	/* Define dataspace of memory region, from which data is read */
-	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
-			nchannels_};
+	hsize_t dims[H5Rec::DATASET_RANK] = {nchannels_, 
+			static_cast<hsize_t>(req_nsamples)};
 	DataSpace memspace(H5Rec::DATASET_RANK, dims);
 	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
-	hsize_t mem_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
-			nchannels_};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {nchannels_,
+			static_cast<hsize_t>(req_nsamples)};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
 	if (!memspace.selectValid()) {
 		std::cerr << "Memory dataspace selection invalid: " << std::endl;
@@ -330,9 +333,10 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) 
 	}
 
 	/* Select hyperslab of dataspace where data will be written */
-	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(startSample), 0};
-	hsize_t space_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
-			nchannels_};
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {0, 
+			static_cast<hsize_t>(startSample)};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {nchannels_,
+			static_cast<hsize_t>(req_nsamples)};
 	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
 	if (!dataspace.selectValid()) {
 		std::cerr << "Dataset selection invalid: " << std::endl;
@@ -342,12 +346,12 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) 
 	}
 
 	/* Define dataspace of memory region, from which data is read */
-	hsize_t dims[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples),
-			nchannels_};
+	hsize_t dims[H5Rec::DATASET_RANK] = {nchannels_, 
+			static_cast<hsize_t>(req_nsamples)};
 	DataSpace memspace(H5Rec::DATASET_RANK, dims);
 	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
-	hsize_t mem_count[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(req_nsamples), 
-			nchannels_};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {nchannels_, 
+			static_cast<hsize_t>(req_nsamples)};
 	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
 	if (!memspace.selectValid()) {
 		std::cerr << "Memory dataspace selection invalid: " << std::endl;
@@ -564,13 +568,13 @@ void H5Recording::readBlockSize(void) {
 void H5Recording::readNumSamples(void) {
 	hsize_t dims[H5Rec::DATASET_RANK] = {0, 0};
 	dataset.getSpace().getSimpleExtentDims(dims, NULL);
-	nsamples_ = dims[0];
+	nsamples_ = dims[1];
 }
 
 void H5Recording::readNumChannels(void) {
 	hsize_t dims[H5Rec::DATASET_RANK] = {0, 0};
 	dataset.getSpace().getSimpleExtentDims(dims, NULL);
-	nchannels_ = dims[1];
+	nchannels_ = dims[0];
 }
 
 void H5Recording::readGain(void) {

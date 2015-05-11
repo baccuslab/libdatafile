@@ -82,7 +82,7 @@ const QList<float> DISPLAY_SCALES {
 		0.125, 0.25, 0.5, 1, 2, 4
 };
 const float DEFAULT_REFRESH_INTERVAL = 2000; // ms
-const float MIN_REFRESH_INTERVAL = 1000;
+const float MIN_REFRESH_INTERVAL = 500;
 const float MAX_REFRESH_INTERVAL = 10000;
 const unsigned int JUMP_MIN = 100;		// ms
 const unsigned int JUMP_MAX = 10 * AIB_BLOCK_SIZE;

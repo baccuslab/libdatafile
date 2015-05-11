@@ -971,7 +971,7 @@ void MealogWindow::restartRecording(void) {
 }
 
 void MealogWindow::recvData(qint64 nsamples) {
-	H5Rec::Samples samples(nsamples, daqClient->nchannels());
+	H5Rec::Samples samples(daqClient->nchannels(), nsamples);
 	daqClient->recvData(nsamples, samples.memptr());
 	recording->setData(numSamplesAcquired, 
 			numSamplesAcquired + nsamples, samples);
@@ -1025,7 +1025,7 @@ void MealogWindow::updateTime(void) {
 }
 
 void MealogWindow::jumpForward(void) {
-	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
+	size_t numSamplesPerPlotBlock = ((settings.getJump() / 1000) *
 			H5Rec::SAMPLE_RATE);
 	if (recordingStatus & Mealog::PLAYBACK) {
 		plotDataBlock(lastSamplePlotted, 
@@ -1039,7 +1039,7 @@ void MealogWindow::jumpForward(void) {
 }
 
 void MealogWindow::jumpBackward(void) {
-	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
+	size_t numSamplesPerPlotBlock = ((settings.getJump() / 1000) *
 			H5Rec::SAMPLE_RATE);
 	if (lastSamplePlotted > numSamplesPerPlotBlock) {
 		lastSamplePlotted -= 2 * numSamplesPerPlotBlock;
@@ -1049,14 +1049,14 @@ void MealogWindow::jumpBackward(void) {
 }
 
 void MealogWindow::jumpToBeginning(void) {
-	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
+	size_t numSamplesPerPlotBlock = ((settings.getJump() / 1000) *
 			H5Rec::SAMPLE_RATE);
 	lastSamplePlotted = 0;
 	plotDataBlock(lastSamplePlotted, lastSamplePlotted + numSamplesPerPlotBlock);
 }
 
 void MealogWindow::jumpToEnd(void) {
-	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
+	size_t numSamplesPerPlotBlock = ((settings.getJump() / 1000) *
 			H5Rec::SAMPLE_RATE);
 	if (recordingStatus & Mealog::RECORDING) {
 		lastSamplePlotted = ((numSamplesAcquired / numSamplesPerPlotBlock) * 

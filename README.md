@@ -48,6 +48,22 @@ those components that are not written using Qt. Each component has its own
 The entire project can be built, either in debug or release mode, by just calling
 `qmake5` in the top `mearec` directory.
 
+Data files
+==========
+
+A quick note about data file formats. Data is stored in HDF5 format, and the
+`mearec` suite includes tools to convert old-school binary files to HDF5 and
+back. However, data is stored in memory using the Armadillo C++ linear algebra
+library's matrices, since the format is efficient, convenient, and allows 
+easy online computations if desired.
+
+This presents a bit of a weird situation, because HDF5 uses row-major data 
+ordering, while Armadillo uses column-major. This means data is stored on
+disk as a dataset with shape (numChannels, numSamples), but in memory as
+(numSamples, numChannels). This doesn't mean data is transposed, because of
+the different ordering formats of the two libraries. Thus it's not a source
+of inefficiency, just possible programming confusion.
+
 Attributions
 ============
 
