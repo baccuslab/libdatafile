@@ -9,6 +9,8 @@
 #define _PLOT_WORKER_H_
 
 #include <QVector>
+#include <QString>
+#include <QSet>
 #include <QSemaphore>
 
 #include "qcustomplot.h"
@@ -18,14 +20,13 @@ class PlotWorker : public QObject {
 	Q_OBJECT
 
 	public:
-		PlotWorker(int id, QObject *parent = 0);
+		PlotWorker(QSet<int> channelSet, QObject *parent = 0);
 		PlotWorker(const PlotWorker &other);
 		~PlotWorker();
 	
 	public slots:
-		void transferPlotData(QSemaphore *sem, int workerId, 
-				int channel, QCPGraph *subplot, QVector<double> *data,
-				bool isClicked);
+		void transferPlotData(QSemaphore *sem, int channel, QString label, 
+				QCPGraph *subplot, QVector<double> *data, bool isClicked);
 		void replot(QSemaphore *sem, const int nthreads, QCustomPlot *p);
 
 	signals:
@@ -35,7 +36,7 @@ class PlotWorker : public QObject {
 		void getSettings(void);
 		void constructXData(int npoints);
 
-		int id;
+		QSet<int> channelSet;
 		QPen pen;
 		QPen redPen;
 		bool transferring;

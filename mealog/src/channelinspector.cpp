@@ -36,6 +36,7 @@ ChannelInspector::ChannelInspector(QCustomPlot *parentPlot,
 
 	/* Add to window */
 	layout = new QGridLayout(this);
+	layout->setContentsMargins(0, 0, 0, 0);
 	layout->addWidget(plot);
 	setLayout(layout);
 	setWindowTitle(QString("Mealog: Channel %1").arg(channel));
@@ -52,5 +53,13 @@ void ChannelInspector::replot() {
 	graph->setData(sourceGraph->data(), true);
 	graph->rescaleValueAxis();
 	plot->replot();
+}
+
+int ChannelInspector::getChannel(void) {
+	return channel;
+}
+
+void ChannelInspector::updateSourceGraph(QCPGraph *source) {
+	sourceGraph = source;
 }
 

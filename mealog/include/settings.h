@@ -14,6 +14,7 @@
 
 /* Qt includes */
 #include <QSettings>
+#include <QDir>
 #include <QString>
 #include <QColor>
 #include <QList>
@@ -49,7 +50,7 @@ const QSet<int> RESCALED_CHANNELS {
 #ifdef Q_OS_WIN
 const QString DEFAULT_SAVE_DIR("C:/Desktop/");
 #else
-const QString DEFAULT_SAVE_DIR("~/Desktop");
+const QString DEFAULT_SAVE_DIR = QDir::homePath() + "/Desktop";
 #endif
 const QString DEFAULT_SAVE_FILENAME("default-data.h5");
 const unsigned int DEFAULT_EXPERIMENT_LENGTH = 1000; 	// seconds
@@ -108,9 +109,7 @@ const QPen PLOT_PEN = QPen(QColor(Qt::black));
 /* Possible arrangements of the electrodes in the window */
 const QString DEFAULT_VIEW("Channel order");
 const QStringList CHANNEL_VIEW_STRINGS { 
-	"Hexagonal", 
-	"Low density", 
-	"High density", 
+	"Pin mapping", 
 	"Channel order" 
 };
 
@@ -125,13 +124,26 @@ const QList<QPair<int, int> > CHANNEL_ORDER_VIEW {
 	{6, 0}, {6, 1}, {6, 2}, {6, 3}, {6, 4}, {6, 5}, {6, 6}, {6, 7},
 	{7, 0}, {7, 1}, {7, 2}, {7, 3}, {7, 4}, {7, 5}, {7, 6}, {7, 7},
 };
+const QList<QPair<int, int> > LOW_DENSITY_VIEW {
+	{0, 0}, {0, 7}, {7, 0}, {7, 7}, 
+	{4, 1}, {4, 0}, {4, 2}, {4, 3}, {5, 0}, {5, 1}, {6, 0}, {5, 2},
+	{6, 1}, {7, 1}, {6, 2}, {7, 2}, {5, 3}, {6, 3}, {7, 3}, {7, 4}, 
+	{6, 4}, {5, 4}, {7, 4}, {6, 5}, {7, 6}, {6, 6}, {5, 5}, {6, 7}, 
+	{5, 6}, {5, 7}, {4, 4}, {4, 5}, {4, 7}, {4, 6}, {3, 6}, {3, 7}, 
+	{3, 5}, {3, 4}, {2, 7}, {2, 6}, {1, 7}, {2, 5}, {1, 6}, {0, 6}, 
+	{1, 5}, {0, 5}, {2, 4}, {1, 4}, {0, 4}, {0, 3}, {1, 3}, {2, 3}, 
+	{0, 2}, {1, 2}, {0, 1}, {1, 1}, {2, 2}, {1, 0}, {2, 1}, {2, 0}, 
+	{3, 3}, {3, 2}, {3, 0}, {3, 1}
+};
 
 const QMap<QString, QList<QPair<int, int> > > CHANNEL_VIEW_MAP {
-	{"Channel order", CHANNEL_ORDER_VIEW}
+	{"Channel order", CHANNEL_ORDER_VIEW},
+	{"Pin mapping", LOW_DENSITY_VIEW}
 };
 
 const QMap<QString, QPair<int, int> > CHANNEL_COL_ROW_MAP {
-	{"Channel order", {8, 8}}
+	{"Channel order", {8, 8}},
+	{"Pin mapping", {8, 8}}
 };
 
 /* class: Settings

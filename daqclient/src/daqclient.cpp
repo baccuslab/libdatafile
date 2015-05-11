@@ -118,8 +118,12 @@ void DaqClient::connectionUnsuccessful(void) {
 }
 
 void DaqClient::checkDataAvailable(void) {
-	if (socket->bytesAvailable() >= sizeOfDataMessage_)
-		emit dataAvailable();
+	qint64 nbytes = socket->bytesAvailable();
+	qint64 bytesPerBlock = blockSize_ * nchannels_ * sizeof(int16_t);
+	qint64 blocksAvailable = nbytes / bytesPerBlock;
+	qint64 samplesAvailable = blocksAvailable * blockSize_;
+	if (samplesAvailable > 0)
+		emit dataAvailable(samplesAvailable);
 }
 
 void DaqClient::disconnectFromDaqsrv(void) {
@@ -181,21 +185,29 @@ void DaqClient::startRecording(void) {
 	socket->flush();
 }
 
-QByteArray DaqClient::recvData(void) {
+QByteArray DaqClient::recvData(qint64 nsamples) {
+	/*
 	uint32_t type;
 	uint32_t nchannels, nsamples;
 	(*stream) >> type;
 	(*stream) >> nchannels >> nsamples;
 	QByteArray data = socket->read(nchannels * nsamples * sizeof(int16_t));
 	return data;
+	*/
+	qint64 nbytes = nsamples * nchannels_ * sizeof(int16_t);
+	return socket->read(nbytes);
 }
 
-void DaqClient::recvData(int16_t *buffer) {
+void DaqClient::recvData(qint64 nsamples, int16_t *buffer) {
+	/*
 	uint32_t type, msg_size, nsamples;
 	uint16_t nchannels;
 	(*stream) >> type >> msg_size;
 	(*stream) >> nchannels >> nsamples;
 	socket->read((char *) buffer, nchannels * nsamples * sizeof(int16_t));
+	*/
+	qint64 nbytes = nsamples * nchannels_ * sizeof(int16_t);
+	socket->read((char *) buffer, nbytes);
 }
 
 bool DaqClient::isConnected(void) {

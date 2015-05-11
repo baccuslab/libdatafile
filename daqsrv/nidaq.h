@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#ifdef _WIN32_WINNT
+#ifdef _WIN32
 #include "NIDAQmx.h"
 #define NIDAQ_TRIGGER_EDGE DAQmx_Val_Rising
 #define NIDAQ_SAMPLE_MODE DAQmx_Val_ContSamps
@@ -27,7 +27,7 @@
 #define NIDAQ_DATE_FORMAT "%Y-%m-%d_%H-%M-%S"
 #define NIDAQ_DATE_BUFFER_SIZE 64
 
-#ifdef _WIN32_WINNT
+#ifdef _WIN32
 /* The task_t type wraps the information important to 
  * run an actual NIDAQmxBase task.
  */

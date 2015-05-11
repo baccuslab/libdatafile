@@ -7,8 +7,8 @@
 
 #include "plotworker.h"
 
-PlotWorker::PlotWorker(int id, QObject *parent) : QObject(parent) {
-	this->id = id;
+PlotWorker::PlotWorker(QSet<int> channels, QObject *parent) : QObject(parent) {
+	channelSet = channels;
 	getSettings();
 	redPen = QPen(Qt::red);
 	transferring = false;
@@ -27,10 +27,10 @@ PlotWorker::PlotWorker(const PlotWorker &other) {
 PlotWorker::~PlotWorker() {
 }
 
-void PlotWorker::transferPlotData(QSemaphore *sem, int workerId, 
-		int channel, QCPGraph *subplot, QVector<double> *data, bool isClicked) {
+void PlotWorker::transferPlotData(QSemaphore *sem, int channel, QString label, 
+		QCPGraph *subplot, QVector<double> *data, bool isClicked) {
 
-	if (workerId != id)
+	if (!channelSet.contains(channel))
 		return;
 
 	transferring = true;
@@ -50,6 +50,7 @@ void PlotWorker::transferPlotData(QSemaphore *sem, int workerId,
 		subplot->setPen(redPen);
 	else
 		subplot->setPen(pen);
+	subplot->keyAxis()->setLabel(label);
 	subplot->setData(xData, *data);
 	if ( (autoscale) || RESCALED_CHANNELS.contains(channel) )
 		subplot->valueAxis()->rescale();

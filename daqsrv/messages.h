@@ -73,7 +73,7 @@ typedef struct {
 } err_msg_t;
 
 
-#ifdef _WIN32_WINNT
+#ifdef _WIN32_WINNT_WIN7
 int read_msg_header(char *data, msg_t *type, uint32_t *size);
 init_msg_t *parse_init_msg(char *data);
 void free_init_msg(init_msg_t *msg);

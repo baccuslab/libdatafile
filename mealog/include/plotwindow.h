@@ -17,11 +17,14 @@
 #include <QMouseEvent>
 #include <QPoint>
 #include <QSet>
+#include <QStringList>
+#include <QPair>
 
 /* meaview includes */
 #include "qcustomplot.h"
 #include "settings.h"
 #include "plotworker.h"
+#include "channelinspector.h"
 #include "h5recording/include/h5recording.h"
 
 class PlotWindow : public QWidget {
@@ -36,9 +39,8 @@ class PlotWindow : public QWidget {
 		void forceReplot(void);
 
 	signals:
-		void sendData(QSemaphore *sem, int workerId, int channel, 
-				QCPGraph *subplot, QVector<double> *data,
-				bool isClicked);
+		void sendData(QSemaphore *sem, int channel, QString label, 
+				QCPGraph *subplot, QVector<double> *data, bool isClicked);
 		void allSubplotsUpdated(QSemaphore *sem,
 				const int nthreads, QCustomPlot *p);
 
@@ -49,18 +51,22 @@ class PlotWindow : public QWidget {
 		void countPlotsUpdated(void);
 		void createChannelInspector(QMouseEvent *event);
 		void handleChannelClick(QMouseEvent *event);
+		void updateChannelView(void);
 
 	private:
 		void initThreadPool();
 		void initPlotGroup();
 		int findSubplotClicked(QPoint pos);
+		void removeChannelInspector(QObject *c);
 
 		const unsigned int numThreads = QThread::idealThreadCount();
-		int numWorkersPerThread;
 		int nrows;
 		int ncols;
 		int numPlotsUpdated = 0;
+		QStringList channelLabels;
+		QList<QPair<int, int> > channelView;
 		QSet<int> clickedPlots;
+		QSet<ChannelInspector *> channelInspectors;
 		Settings settings;
 		QGridLayout *layout;
 		QCustomPlot *plot;

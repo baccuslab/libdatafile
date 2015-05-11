@@ -17,6 +17,7 @@
 #include <QDate>
 #include <QDataStream>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QPair>
 
 #include <armadillo>
@@ -24,6 +25,7 @@
 #include "mealogwindow.h"
 
 MealogWindow::MealogWindow(QWidget *parent) : QMainWindow(parent) {
+	initSettings();
 	initGui();
 	initMenuBar();
 	initPlotWindow();
@@ -32,6 +34,11 @@ MealogWindow::MealogWindow(QWidget *parent) : QMainWindow(parent) {
 }
 
 MealogWindow::~MealogWindow() {
+}
+
+void MealogWindow::initSettings(void) {
+	settings.setSaveDir(Mealog::DEFAULT_SAVE_DIR.absolutePath());
+	settings.setDisplayScale(DEFAULT_DISPLAY_SCALE);
 }
 
 void MealogWindow::initGui(void) {
@@ -44,7 +51,7 @@ void MealogWindow::initGui(void) {
 	fileLabel = new QLabel("File:", this);
 	fileLine = new QLineEdit(Mealog::DEFAULT_SAVE_FILE.fileName(), this);
 	fileLine->setToolTip("Name of file to which data is saved");
-	fileValidator = new QRegExpValidator(QRegExp("(\\w+[-_]*)+"), this);
+	fileValidator = new QRegExpValidator(QRegExp("(\\w+[-._]*)+"), this);
 	fileLine->setValidator(fileValidator);
 	choosePathButton = new QPushButton("Path", this);
 	choosePathButton->setToolTip("Choose save directory");
@@ -297,7 +304,7 @@ void MealogWindow::createNewRecording(void) {
 	 */
 	QFile path(getFullFilename());
 	if (path.exists()) {
-		if (!(path.fileName().contains(Mealog::DEFAULT_SAVE_FILE.fileName()))) {
+		if (!isDefaultSaveFile()) {
 			if (!confirmFileOverwrite(path))
 				return;
 		}	
@@ -336,9 +343,17 @@ void MealogWindow::createNewRecording(void) {
 }
 
 QString MealogWindow::getFullFilename(void) {
-	//return QDir::cleanPath(settings.getSaveDir() + "/" + fileLine->text());
-	return QDir::cleanPath(Mealog::DEFAULT_SAVE_DIR.absolutePath() 
-			+ "/" + fileLine->text());
+	QString name(fileLine->text());
+	if (!name.endsWith(".h5")) {
+		name.append(".h5");
+		fileLine->setText(name);
+	}
+	return settings.getSaveDir() + "/" + name;
+}
+
+bool MealogWindow::isDefaultSaveFile(void) {
+	return ( (fileLine->text() == Mealog::DEFAULT_SAVE_FILE.fileName()) && 
+			(settings.getSaveDir() == Mealog::DEFAULT_SAVE_DIR.dirName()));
 }
 
 bool MealogWindow::deleteOldRecording(QFile &path) {
@@ -426,6 +441,8 @@ void MealogWindow::closeRecording(void) {
 			delete playbackTimer;
 			playbackTimer = nullptr;
 		}
+		if (recordingStatus & Mealog::NOT_STARTED)
+			QFile::remove(getFullFilename());
 	}
 	statusBar->showMessage("Ready");
 	plotWindow->clearAll();
@@ -726,6 +743,8 @@ void MealogWindow::initSignals(void) {
 			this, SLOT(updateJumpSize(int)));
 	connect(viewBox, &QComboBox::currentTextChanged,
 			this, &MealogWindow::updateChannelView);
+	connect(viewBox, &QComboBox::currentTextChanged,
+			plotWindow, &PlotWindow::updateChannelView);
 	connect(autoscaleBox, &QCheckBox::stateChanged,
 			this, &MealogWindow::updateAutoscale);
 	connect(automeanBox, &QCheckBox::stateChanged,
@@ -741,6 +760,15 @@ void MealogWindow::chooseSaveDir(void) {
 			"Choose save directory",
 			settings.getSaveDir(),
 			QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+	if (dir.isNull())
+		return;
+	QFileInfo info(dir);
+	if (!info.isWritable()) {
+		QMessageBox::critical(this, 
+				"Permissions error",
+				"You don't have write permissions to the chosen directory");
+		return;
+	}
 	settings.setSaveDir(dir);
 }
 
@@ -808,6 +836,7 @@ void MealogWindow::handleServerError(void) {
 			this, &MealogWindow::handleServerDisconnection);
 	disconnect(daqClient, &DaqClient::error,
 			this, &MealogWindow::handleServerError);
+	delete daqClient;
 }
 
 void MealogWindow::disconnectFromDaqsrv(void) {
@@ -941,14 +970,13 @@ void MealogWindow::restartRecording(void) {
 	recordingStatus = oldStatus | Mealog::PLAYING;
 }
 
-void MealogWindow::recvData(void) {
-	H5Rec::Samples samples(daqClient->blockSize(), daqClient->nchannels());
-	daqClient->recvData(samples.memptr());
+void MealogWindow::recvData(qint64 nsamples) {
+	H5Rec::Samples samples(nsamples, daqClient->nchannels());
+	daqClient->recvData(nsamples, samples.memptr());
 	recording->setData(numSamplesAcquired, 
-			numSamplesAcquired + daqClient->blockSize(), samples);
-	numSamplesAcquired += daqClient->blockSize();
+			numSamplesAcquired + nsamples, samples);
+	numSamplesAcquired += nsamples;
 	recording->setLastValidSample(numSamplesAcquired);
-	qDebug() << numSamplesAcquired << "samples acquired";
 	emit newDataAvailable();
 	if (numSamplesAcquired == recording->nsamples())
 		emit recordingFinished();

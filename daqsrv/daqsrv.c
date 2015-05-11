@@ -104,6 +104,7 @@ int send_params_msg(SOCKET client, params_msg_t *msg) {
 }
 
 int send_data_msg(SOCKET client, data_msg_t *msg) {
+	/*
 	int buffer_size = (sizeof(data_msg_t) - sizeof(int16_t *) +
 		msg->nsamples * msg->nchannels * sizeof(int16_t));	
 	char *buffer = calloc(buffer_size, 1);
@@ -120,6 +121,15 @@ int send_data_msg(SOCKET client, data_msg_t *msg) {
 	offset += sizeof(uint32_t);
 	memcpy(buffer + offset, msg->data, 
 		msg->nsamples * msg->nchannels * sizeof(int16_t));
+	int nsent = send(client, buffer, buffer_size, 0);
+	free(buffer);
+	return nsent;
+	*/
+	int buffer_size = msg->nsamples * msg->nchannels *sizeof(int16_t);
+	char *buffer = calloc(buffer_size, 1);
+	if (buffer == NULL)
+		return -1;
+	memcpy(buffer, msg->data, buffer_size);
 	int nsent = send(client, buffer, buffer_size, 0);
 	free(buffer);
 	return nsent;

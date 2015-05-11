@@ -101,9 +101,10 @@ def serve_data(task, client):
     data = array.array('h', data_base)
     if sys.byteorder != 'big':
         data.byteswap()
-    hdr = int(DATA_CHUNK).to_bytes(4, 'big') + int(len(data) + 14).to_bytes(4, 'big')
-    data_hdr = int(NUM_CHANNELS).to_bytes(2, 'big') + int(task.block_size).to_bytes(4, 'big')
-    msg = hdr + data_hdr + data.tobytes()
+    data_bytes = data.tobytes()
+    #hdr = int(DATA_CHUNK).to_bytes(4, 'big') + int(len(data) + 14).to_bytes(4, 'big')
+    #data_hdr = int(NUM_CHANNELS).to_bytes(2, 'big') + int(task.block_size).to_bytes(4, 'big')
+    #msg = hdr + data_hdr + data.tobytes()
 
     # Send random datas
     nsamples = 0
@@ -115,7 +116,8 @@ def serve_data(task, client):
                 sys.exit(0)
         except BlockingIOError:
             pass
-        client.send(msg)
+        #client.send(msg)
+        client.send(data_bytes)
         time.sleep(task.block_size / task.sample_rate)
         nsamples += task.block_size
         print("{0} total samples sent".format(nsamples))

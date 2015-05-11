@@ -19,6 +19,8 @@ class ChannelInspector : public QWidget {
 		ChannelInspector(QCustomPlot *parentPlot, QCPGraph *sourceGraph, 
 				int channel, QWidget *parent = 0);
 		~ChannelInspector();
+		int getChannel(void);
+		void updateSourceGraph(QCPGraph *);
 
 	public slots:
 		void replot(void);

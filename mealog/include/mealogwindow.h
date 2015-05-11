@@ -46,7 +46,7 @@ const int WINDOW_YPOS = 0;
 const int WINDOW_WIDTH = 600;
 const int WINDOW_HEIGHT = 200;
 const QFile DEFAULT_SAVE_FILE("default-data.h5");
-const QDir DEFAULT_SAVE_DIR(QDir::homePath());
+const QDir DEFAULT_SAVE_DIR(QDir::homePath() + "/Desktop");
 const unsigned int DEFAULT_EXPERIMENT_LENGTH = 1000;
 const unsigned int MAX_EXPERIMENT_LENGTH = 10000;
 const unsigned int RECORDING_FINISH_WAIT_TIME = 1000; // ms
@@ -111,7 +111,7 @@ class MealogWindow : public QMainWindow {
 		void startRecording(void);
 		void pauseRecording(void);
 		void restartRecording(void);
-		void recvData(void);
+		void recvData(qint64 nsamples);
 		void checkReadyForPlotting(void);
 		void plotNextPlaybackDataBlock(void);
 
@@ -136,6 +136,7 @@ class MealogWindow : public QMainWindow {
 	private:
 
 		/* Initialisation functions */
+		void initSettings(void);
 		void initGui(void);
 		void initMenuBar(void);
 		void initPlotWindow(void);
@@ -154,6 +155,7 @@ class MealogWindow : public QMainWindow {
 		void closeRecording(void);
 		void cleanupRecording(void);
 		QString getFullFilename(void);
+		bool isDefaultSaveFile(void);
 		bool deleteOldRecording(QFile &path);
 		void setRecordingParameters(void);
 		void setParameterSelectionsEnabled(bool enabled);

@@ -42,8 +42,8 @@ class DaqClient : public QObject {
 		void setTrigger(QString trigger);
 
 		/* Data */
-		QByteArray recvData(void);	// Receive a data message 
-		void recvData(int16_t *);	// Receive a data message into given buffer
+		QByteArray recvData(qint64);		// Receive a data message 
+		void recvData(qint64, int16_t *);	// Read data into buffer
 
 		/* Check if currently connected to NIDAQ server */
 		bool isConnected();
@@ -61,7 +61,7 @@ class DaqClient : public QObject {
 
 	signals:
 		void connectionMade(bool made);	// Emitted when connection to server is made
-		void dataAvailable(void);		// Emitted when a full block of data is available
+		void dataAvailable(qint64);		// Emitted when data is available, with number of samples
 		void disconnected(void);		// Emitted when disconnects from server normally
 		void error(void);				// Emitted when disconnects from server with error
 

@@ -33,7 +33,14 @@ Usage
 Compile and run the `daqsrv` application on any Windows machine that connects
 to a DAQmx-capable NI device. Client applications connect to the server via
 port 12345. Communication is described via the messages in `messages.c`. 
-In general, they're a simple pack binary blob format.
+In general, they're a simple pack binary blob format. The notable exception
+is data. Clients initialize experiments and request parameters with messages,
+but, after the experiment begins, all data is sent as a single stream of
+bytes. This means the client must keep track of their position in the 
+stream, and remember how many samples were requested and how many channels
+exist in the stream. The reason for this is simplicity and efficiency. This
+allows clients to read as much data as they want at a time, without regard
+to message blocks.
 
 fakeserver.py
 -------------

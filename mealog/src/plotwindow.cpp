@@ -8,13 +8,19 @@
 #include <QFont>
 #include <QStringList>
 #include "plotwindow.h"
-#include "channelinspector.h"
 
 PlotWindow::PlotWindow(int numRows, int numCols, QWidget *parent) : 
 		QWidget(parent, Qt::Window) {
 	nrows = numRows;
 	ncols = numCols;
 	sem = new QSemaphore(numThreads);
+	channelView = settings.getChannelView();
+	channelLabels << QString("Photodiode");
+	channelLabels << QString("Intracellular Vm");
+	channelLabels << QString("Intracellular Im");
+	channelLabels << QString("Extra");
+	for (auto i = 4; i < (nrows * ncols); i++)
+		channelLabels << QString::number(i);
 	setGeometry(0, 0, PLOT_WINDOW_WIDTH, PLOT_WINDOW_HEIGHT);
 	setWindowTitle("Mealog: Channel view");
 	initThreadPool();
@@ -33,18 +39,18 @@ PlotWindow::~PlotWindow() {
 }
 
 void PlotWindow::initThreadPool() {
-	numWorkersPerThread = H5Rec::NUM_CHANNELS / numThreads;
+	int numPlotsPerWorker = H5Rec::NUM_CHANNELS / numThreads;
 	for (auto i = 0; i < numThreads; i++) {
 		threadList.append(new QThread());
-		for (auto j = 0; j < numWorkersPerThread; j++) {
-			int workerNum = i * numWorkersPerThread + j;
-			workerList.append(new PlotWorker(workerNum));
-			workerList.at(workerNum)->moveToThread(threadList.at(i));
-			connect(this, &PlotWindow::sendData, 
-				workerList.at(workerNum), &PlotWorker::transferPlotData);
-			connect(workerList.at(workerNum), &PlotWorker::dataTransferDone,
-					this, &PlotWindow::countPlotsUpdated);
-		}
+		QSet<int> channelSet;
+		for (auto j = 0; j < numPlotsPerWorker; j++)
+			channelSet += i * numPlotsPerWorker + j;
+		workerList.append(new PlotWorker(channelSet));
+		workerList.at(i)->moveToThread(threadList.at(i));
+		connect(this, &PlotWindow::sendData,
+				workerList.at(i), &PlotWorker::transferPlotData);
+		connect(workerList.at(i), &PlotWorker::dataTransferDone,
+				this, &PlotWindow::countPlotsUpdated);
 		threadList.at(i)->start();
 	}
 
@@ -62,13 +68,6 @@ void PlotWindow::initPlotGroup(void) {
 
 	QFont labelFont("Helvetica", 12, QFont::Light);
 	int labelPadding = 3;
-	QStringList channelLabels;
-	channelLabels << QString("Photodiode");
-	channelLabels << QString("Intracellular Vm");
-	channelLabels << QString("Intracellular Im");
-	channelLabels << QString("Extra");
-	for (auto i = 4; i < (nrows * ncols); i++)
-		channelLabels << QString::number(i);
 
 	for (auto i = 0; i < nrows; i++) {
 		for (auto j = 0; j < nrows; j++) {
@@ -116,12 +115,14 @@ void PlotWindow::plotData(H5Rec::Samples &s) {
 	for (auto i = 0; i < nrows; i++) {
 		for (auto j = 0; j < ncols; j++) {
 			int channel = i * ncols + j;
+			QPair<int, int> pos = channelView.at(channel);
+			int position = pos.first * ncols + pos.second;
 			// Plotting thread must delete this!
 			QVector<double> *data = new QVector<double>(s.n_rows);
 			for (auto k = 0; k < s.n_rows; k++)
 				data->replace(k, s(k, channel));
-			emit sendData(sem, channel, channel, 
-					subplotList.at(channel), data, 
+			emit sendData(sem, channel, channelLabels.at(channel),
+					subplotList.at(position), data, 
 					clickedPlots.contains(channel));
 		}
 	}
@@ -152,9 +153,18 @@ void PlotWindow::createChannelInspector(QMouseEvent *event) {
 	int channel = findSubplotClicked(event->pos());
 	if (channel == -1)
 		return;
+	QPair<int, int> p = channelView.at(channel);
 	ChannelInspector *c = new ChannelInspector(plot,
-			subplotList.at(channel), channel, this);
+			subplotList.at(p.first * ncols + p.second), channel, this);
+	connect(c, &ChannelInspector::destroyed, 
+			this, &PlotWindow::removeChannelInspector);
+	channelInspectors += c;
 	c->show();
+}
+
+void PlotWindow::removeChannelInspector(QObject *obj) {
+	ChannelInspector *c = qobject_cast<ChannelInspector *>(obj);
+	channelInspectors -= c;
 }
 
 void PlotWindow::handleChannelClick(QMouseEvent *event) {
@@ -172,10 +182,16 @@ void PlotWindow::handleChannelClick(QMouseEvent *event) {
 int PlotWindow::findSubplotClicked(QPoint pos) {
 	QList<QCPAxisRect *> rects = plot->axisRects();
 	int channel = -1;
-	for (auto i = 0; i < rects.size(); i++) {
-		if (rects.at(i)->outerRect().contains(pos)) {
-			channel = i;
-			break;
+	int tmp = -1;
+	for (auto i = 0; i < nrows; i++) {
+		for (auto j = 0; j < ncols; j++) {
+			tmp = i * ncols + j;
+			if (rects.at(tmp)->outerRect().contains(pos)) {
+				QPair<int, int> p(i, j);
+				channel = channelView.indexOf(p);
+				break;
+
+			}
 		}
 	}
 	return channel;
@@ -189,5 +205,17 @@ void PlotWindow::forceReplot(void) {
 	sem->acquire(numThreads);
 	plot->replot();
 	sem->release(numThreads);
+}
+
+void PlotWindow::updateChannelView(void) {
+	channelView = settings.getChannelView();
+	if (!channelInspectors.isEmpty()) {
+		for (auto &c : channelInspectors) {
+			QPair<int, int> newPos = channelView.at(c->getChannel());
+			QCPGraph *source = subplotList.at(
+					newPos.first * ncols + newPos.second);
+			c->updateSourceGraph(source);
+		}
+	}
 }
 
