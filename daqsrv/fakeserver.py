@@ -10,6 +10,8 @@ import sys
 from collections import namedtuple
 from datetime import datetime
 
+import h5py
+
 PORT = 12345
 HOSTNAME = 'localhost'
 TASK_HANDLE = 1
@@ -33,7 +35,6 @@ init_msg = namedtuple('init_msg', ['msg_type', 'msg_size', 'trigger_length',
 params_msg = namedtuple('params_msg', ['msg_type', 'msg_size', 'nseconds', 'nsamples',
         'sample_rate', 'adc_range', 'adc_resolution', 'block_size', 'nchannels',
         'trigger_length', 'trigger', 'date_length', 'date'])
-data_msg = namedtuple('data_msg', ['msg_type', 'nchannels', 'nsamples', 'data'])
 err_msg = namedtuple('err_msg', ['msg_type', 'err_msg_size', 'err_msg'])
 task = namedtuple('task', ['handle', 'nchannels', 'length', 'nsamples', 
         'block_size', 'sample_rate', 'adc_range', 'adc_resolution', 
@@ -74,8 +75,7 @@ def recv_init_msg(client):
                         sel.unregister(client)
                         return parse_init_msg(buf)
                 else:
-                    # empty message, client disconnected
-                    sys.exit(0)
+                    raise ConnectionResetError # If client disconnects
 
 def create_task(init_msg):
     t = task(TASK_HANDLE, NUM_CHANNELS, init_msg.expt_length,
@@ -88,6 +88,32 @@ def create_task(init_msg):
     for field in t._fields:
         print(" {0}: {1}".format(field, getattr(t, field)))
     return t
+
+def serve_file_data(task, client, f):
+    nsamples = 0
+    while nsamples < task.nsamples:
+        try:
+            buf = client.recv(BUFFER_SIZE)
+            if len(buf) == 0:
+                print("Client disconnected, closing task")
+                return
+        except BlockingIOError:
+            pass
+        tmp = array.array('h', 
+                f['data'][:, nsamples : nsamples + task.block_size].tobytes())
+        if sys.byteorder != 'big':
+            tmp.byteswap()
+        try:
+            client.send(tmp.tobytes())
+        except BlockingIOError:
+            print("Client would block, closing task")
+            return
+        nsamples += task.block_size
+        print("{0} total samples sent".format(nsamples))
+        time.sleep(task.block_size / task.sample_rate)
+
+    print("Task completed, {0} total samples sent ({1} bytes)".format(
+            nsamples, nsamples * task.nchannels * 2))
 
 def serve_data(task, client):
     print("Recieved START_EXPT message, serving data to client")
@@ -112,20 +138,24 @@ def serve_data(task, client):
         try: 
             buf = client.recv(BUFFER_SIZE)
             if len(buf) == 0:
-                print("Client disconnected, exiting");
-                sys.exit(0)
+                print("Client disconnected, closing task");
+                return
         except BlockingIOError:
             pass
         #client.send(msg)
-        client.send(data_bytes)
-        time.sleep(task.block_size / task.sample_rate)
+        try:
+            client.send(data_bytes)
+        except BlockingIOError:
+            print("Client would block, closing task")
+            return
         nsamples += task.block_size
         print("{0} total samples sent".format(nsamples))
+        time.sleep(task.block_size / task.sample_rate)
 
     print("Task completed, {0} total samples sent ({1} bytes)".format(
             nsamples, nsamples * task.nchannels * 2))
 
-def serve(task, client):
+def serve(task, client, f=None):
     sel = selectors.DefaultSelector()
     sel.register(client, selectors.EVENT_READ)
     while True:
@@ -141,12 +171,14 @@ def serve(task, client):
                     elif msg_type == START_EXPT:
                         break
                 else:
-                    # empty message, client disconnected
-                    sys.exit(0)
+                    return # If client disconnects
 
     sel.unregister(client)
     del sel
-    serve_data(task, client)
+    if f is None:
+        serve_data(task, client)
+    else:
+        serve_file_data(task, client, f)
 
 def send_expt_params(task, client):
     msg = bytes()
@@ -174,7 +206,7 @@ def accept_client(server):
     print("Accepted client at {0}:{1}".format(*addr))
     return client
 
-def cleanup(server, client):
+def cleanup(client):
     while True:
         try:
             buf = client.recv(BUFFER_SIZE)
@@ -186,19 +218,49 @@ def cleanup(server, client):
             break
     try:
         client.shutdown(socket.SHUT_RDWR)
-        server.shutdown(socket.SHUT_RDWR)
         client.close()
-        server.close()
     except:
         pass
 
-def main():
+def serve_fake_data():
     server = init_server()
-    client = accept_client(server)
-    init_msg = recv_init_msg(client)
-    task = create_task(init_msg)
-    serve(task, client)
-    cleanup(server, client)
+    while True:
+        try:
+            client = accept_client(server)
+            init_msg = recv_init_msg(client)
+            task = create_task(init_msg)
+            serve(task, client, None)
+
+        except ConnectionResetError:
+            cleanup(client)
+
+    server.shutdown(socket.SHUT_RDWR)
+    server.close()
+
+def serve_from_file(filename):
+    server = init_server()
+    while True:
+        try:
+            f = h5py.File(filename, 'r')
+            client = accept_client(server)
+            init_msg = recv_init_msg(client)
+            task = create_task(init_msg)
+            serve(task, client, f)
+
+        except ConnectionResetError:
+            cleanup(client)
+    server.shutdown(socket.SHUT_RDWR)
+    server.close()
+    f.close()
+
+def main():
+    try:
+        if len(sys.argv) > 1:
+            serve_from_file(sys.argv[1])
+        else:
+            serve_fake_data()
+    except KeyboardInterrupt:
+        pass
 
 if __name__ == '__main__':
     main()

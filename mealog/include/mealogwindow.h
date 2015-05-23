@@ -28,6 +28,7 @@
 #include <QAbstractSocket>
 #include <QFile>
 #include <QDir>
+#include <QPointer>
 
 /* Project library includes */
 #include "daqclient/include/daqclient.h"
@@ -38,9 +39,9 @@
 #include "settings.h"
 #include "plotwindow.h"
 
-/* Settings */
 namespace Mealog {
 
+/* Settings */
 const int WINDOW_XPOS = PLOT_WINDOW_WIDTH + 10;
 const int WINDOW_YPOS = 0;
 const int WINDOW_WIDTH = 600;
@@ -78,10 +79,7 @@ enum PLAYBACK_STATUS:uint16_t {
 	PLAYING = 1 << 7,
 	PAUSED = 1 << 8
 };
-
-class MealogWindow;
-
-};
+}; // End namespace
 
 class MealogWindow : public QMainWindow {
 	Q_OBJECT
@@ -178,14 +176,14 @@ class MealogWindow : public QMainWindow {
 		/* Internals for getting data from NI-DAQ server and 
 		 * writing it to disk.
 		 */
-		DaqClient *daqClient = nullptr;
-		H5Recording *recording = nullptr;
+		QPointer<DaqClient::DaqClient> daqClient = nullptr;
+		H5Rec::H5Recording *recording = nullptr;
 		uint8_t recordingStatus = Mealog::UNINITIALIZED | Mealog::NOT_STARTED;
 		uint64_t numSamplesAcquired = 0;
 		uint64_t lastSamplePlotted = 0;
 
 		/* Playback stuff */
-		QTimer *playbackTimer;
+		QPointer<QTimer> playbackTimer;
 
 		/* The PlotWindow is the class containing the actual data plots */
 		PlotWindow *plotWindow = nullptr;
@@ -279,6 +277,7 @@ class MealogWindow : public QMainWindow {
 		QCheckBox *autoscaleBox;
 
 		/* Eventually online analysis stuff too */
-};
+
+};	// End class
 
 #endif

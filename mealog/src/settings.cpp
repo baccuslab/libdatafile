@@ -6,19 +6,6 @@
 #include "settings.h"
 
 Settings::Settings() {
-	setPlotPen(PLOT_PEN);
-	setDisplayScale(DEFAULT_DISPLAY_SCALE);
-	setRefreshInterval(DEFAULT_REFRESH_INTERVAL);
-	setChannelView(DEFAULT_VIEW);
-	setSaveDir(DEFAULT_SAVE_DIR);
-	setSaveFilename(DEFAULT_SAVE_FILENAME);
-	setExperimentLength(DEFAULT_EXPERIMENT_LENGTH);
-	setAutoscale(false);
-	setAutoMean(false);
-	setOnlineAnalysisLength(DEFAULT_ONLINE_ANALYSIS_LENGTH);
-	setJump(DEFAULT_JUMP_SIZE);
-	setNumRows(CHANNEL_COL_ROW_MAP.value(DEFAULT_VIEW).first);
-	setNumCols(CHANNEL_COL_ROW_MAP.value(DEFAULT_VIEW).second);
 }
 
 Settings::~Settings() {

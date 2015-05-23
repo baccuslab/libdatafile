@@ -6,7 +6,7 @@ TEMPLATE = app
 TARGET = mealog
 OBJECTS_DIR = build
 MOC_DIR = build
-QT += network printsupport widgets concurrent
+QT += network printsupport widgets
 QT_CONFIG -= no-pkg-config
 CONFIG += c++11 debug_and_release link_pkgconfig
 PKGCONFIG += protobuf
@@ -23,8 +23,6 @@ HEADERS += include/mealogwindow.h \
 			include/plotwindow.h \
 			include/qcustomplot.h \
 			include/settings.h \
-			include/windows.h \
-			include/channelplot.h \
 			include/plotworker.h \
 			include/channelinspector.h
 SOURCES += src/main.cpp \
@@ -32,7 +30,5 @@ SOURCES += src/main.cpp \
 			src/plotwindow.cpp \
 			src/qcustomplot.cpp \
 			src/settings.cpp \
-			src/windows.cpp \
-			src/channelplot.cpp \
 			src/plotworker.cpp \
 			src/channelinspector.cpp

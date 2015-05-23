@@ -38,7 +38,18 @@ MealogWindow::~MealogWindow() {
 
 void MealogWindow::initSettings(void) {
 	settings.setSaveDir(Mealog::DEFAULT_SAVE_DIR.absolutePath());
+	settings.setSaveFilename(Mealog::DEFAULT_SAVE_FILE.fileName());
 	settings.setDisplayScale(DEFAULT_DISPLAY_SCALE);
+	settings.setPlotPen(PLOT_PEN);
+	settings.setRefreshInterval(DEFAULT_REFRESH_INTERVAL);
+	settings.setChannelView(DEFAULT_VIEW);
+	settings.setExperimentLength(Mealog::DEFAULT_EXPERIMENT_LENGTH);
+	settings.setAutoscale(false);
+	settings.setAutoMean(false);
+	settings.setOnlineAnalysisLength(DEFAULT_ONLINE_ANALYSIS_LENGTH);
+	settings.setJump(DEFAULT_JUMP_SIZE);
+	settings.setNumRows(CHANNEL_COL_ROW_MAP.value(DEFAULT_VIEW).first);
+	settings.setNumCols(CHANNEL_COL_ROW_MAP.value(DEFAULT_VIEW).second);
 }
 
 void MealogWindow::initGui(void) {
@@ -305,18 +316,33 @@ void MealogWindow::createNewRecording(void) {
 	QFile path(getFullFilename());
 	if (path.exists()) {
 		if (!isDefaultSaveFile()) {
-			if (!confirmFileOverwrite(path))
+			if (!confirmFileOverwrite(path)) {
+				statusBar->showMessage("Ready");
 				return;
-		}	
-		if (!deleteOldRecording(path))
+			}
+		}
+		if (!deleteOldRecording(path)) {
+			statusBar->showMessage("Ready");
 			return;
+		}
 	}
+	//struct stat buffer;
+	//if (stat(path.fileName().toStdString().c_str(), &buffer) == 0) {
+		//if (!isDefaultSaveFile() && !confirmFileOverwrite(path)) {
+			//statusBar->showMessage("Ready");
+			//return;
+		//}
+		//if (!deleteOldRecording(path)) {
+			//statusBar->showMessage("Ready");
+			//return;
+		//}
+	//}
 
 	/* Construct a recording object and set parameters */
-	recording = new H5Recording(path.fileName().toStdString());
+	recording = new H5Rec::H5Recording(path.fileName().toStdString());
 	setRecordingParameters();
 	recording->flush();
-	if (daqClient != nullptr)
+	if (daqClient)
 		sendDaqsrvInitMessage();
 
 	/* Disable parameter selections */
@@ -327,7 +353,7 @@ void MealogWindow::createNewRecording(void) {
 	closeRecordingButton->setEnabled(true);
 
 	/* Enable the "Start" button, if connection to the Daqsrv */
-	if ((daqClient != nullptr) && (daqClient->isConnected()))
+	if ((daqClient) && (daqClient->isConnected()))
 		startButton->setEnabled(true);
 
 	/* Finalize initialisation */
@@ -348,12 +374,15 @@ QString MealogWindow::getFullFilename(void) {
 		name.append(".h5");
 		fileLine->setText(name);
 	}
-	return settings.getSaveDir() + "/" + name;
+	QDir saveDir = settings.getSaveDir();
+	return saveDir.absolutePath() + "/" + name;
 }
 
 bool MealogWindow::isDefaultSaveFile(void) {
-	return ( (fileLine->text() == Mealog::DEFAULT_SAVE_FILE.fileName()) && 
-			(settings.getSaveDir() == Mealog::DEFAULT_SAVE_DIR.dirName()));
+	return ( (fileLine->text() == 
+				Mealog::DEFAULT_SAVE_FILE.fileName()) && 
+			(settings.getSaveDir() == 
+			 	Mealog::DEFAULT_SAVE_DIR.absolutePath()));
 }
 
 bool MealogWindow::deleteOldRecording(QFile &path) {
@@ -397,7 +426,7 @@ void MealogWindow::setRecordingParameters(void) {
 void MealogWindow::sendDaqsrvInitMessage(void) {
 	daqClient->setLength(recording->length());
 	daqClient->setAdcRange(recording->offset());
-	daqClient->setBlockSize(BLOCK_SIZE);
+	daqClient->setBlockSize(DaqClient::BLOCK_SIZE);
 	daqClient->setTrigger(triggerBox->currentText());
 	daqClient->initExperiment();
 }
@@ -410,7 +439,7 @@ bool MealogWindow::confirmFileOverwrite(const QFile &path) {
 			path.fileName() + "\" already exists. Overwrite?");
 	box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
 	box.setDefaultButton(QMessageBox::Cancel);
-	return box.exec();
+	return (box.exec() == QMessageBox::Ok);
 }
 
 void MealogWindow::setParameterSelectionsEnabled(bool enabled) {
@@ -422,11 +451,11 @@ void MealogWindow::setParameterSelectionsEnabled(bool enabled) {
 }
 
 void MealogWindow::closeRecordingWithCheck(void) {
-	if (recordingStatus & Mealog::STARTED) {
+	if ((recordingStatus & Mealog::STARTED) && 
+			(recordingStatus & Mealog::RECORDING)) {
 		if (confirmCloseRecording() == QMessageBox::Cancel)
 			return;
 	}
-
 	closeRecording();
 }
 
@@ -439,10 +468,9 @@ void MealogWindow::closeRecording(void) {
 		if (recordingStatus & Mealog::PLAYBACK) {
 			playbackTimer->stop();
 			delete playbackTimer;
-			playbackTimer = nullptr;
 		}
-		if (recordingStatus & Mealog::NOT_STARTED)
-			QFile::remove(getFullFilename());
+		//if (recordingStatus & Mealog::NOT_STARTED)
+			//QFile::remove(getFullFilename());
 	}
 	statusBar->showMessage("Ready");
 	plotWindow->clearAll();
@@ -477,16 +505,15 @@ void MealogWindow::closeRecording(void) {
 	newRecordingAction->setEnabled(true);
 
 	/* Disconnect NI-DAQ client, if this is a recording */
-	if ((daqClient != nullptr) && (daqClient->isConnected())) {
-		disconnect(daqClient, &DaqClient::disconnected,
+	if ((daqClient) && (daqClient->isConnected())) {
+		disconnect(daqClient, &DaqClient::DaqClient::disconnected,
 				this, &MealogWindow::handleServerDisconnection);
-		disconnect(daqClient, &DaqClient::error,
+		disconnect(daqClient, &DaqClient::DaqClient::error,
 				this, &MealogWindow::handleServerError);
 		disconnect(connectToNidaqButton, &QPushButton::clicked,
 				this, &MealogWindow::disconnectFromDaqsrv);
 		daqClient->disconnectFromDaqsrv();
-		delete daqClient;
-		daqClient = nullptr;
+		daqClient->deleteLater();
 		connect(connectToNidaqButton, &QPushButton::clicked,
 				this, &MealogWindow::connectToDaqsrv);
 		connect(connectToNidaqButton, &QPushButton::clicked,
@@ -530,12 +557,12 @@ void MealogWindow::loadRecording() {
 	if (recording != nullptr)
 		delete recording;
 	try {
-		recording = new H5Recording(filename.toStdString());
+		recording = new H5Rec::H5Recording(filename.toStdString());
 	} catch (std::exception &e) {
 		qDebug() << "error creating h5recording";
 	}
 	fileLine->setText(filename.section("/", -1));
-	QString path = filename.section("/", 1, -2);
+	QString path = filename.section("/", 0, -2);
 	settings.setSaveFilename(fileLine->text());
 	recordingStatus = (
 			Mealog::INITIALIZED |
@@ -795,8 +822,8 @@ void MealogWindow::chooseSaveDir(void) {
 void MealogWindow::connectToDaqsrv(void) {
 	statusBar->showMessage("Connecting to NI-DAQ server");
 	nidaqStatus->setText("Connecting ...");
-	daqClient = new DaqClient(nidaqHost->text());
-	connect(daqClient, &DaqClient::connectionMade,
+	daqClient = new DaqClient::DaqClient(nidaqHost->text());
+	connect(daqClient, &DaqClient::DaqClient::connectionMade,
 			this, &MealogWindow::handleDaqsrvConnection);
 	disconnect(connectToNidaqButton, &QPushButton::clicked,
 			this, &MealogWindow::connectToDaqsrv);
@@ -816,27 +843,29 @@ void MealogWindow::handleServerError(void) {
 	connectToNidaqButton->setText("Connect");
 	nidaqStatus->setText("Connection to server interrupted");
 	if (recordingStatus & Mealog::STARTED) {
+		disconnect(daqClient, &DaqClient::DaqClient::dataAvailable,
+				this, &MealogWindow::recvData);
 		closeRecording();
 		QMessageBox::critical(this, "Connection interrupted",
 				"Connection to NI-DAQ server application interrupted."\
 				" Recording has been stopped, with all previous data "\
 				"written to disk.");
 	}
-	setNidaqInterfaceEnabled(true);
-	setPlaybackButtonsEnabled(false);
-	setPlaybackMovementButtonsEnabled(false);
-	setParameterSelectionsEnabled(true);
-	startButton->setText("Start");
-	statusBar->showMessage("Ready");
-	disconnect(connectToNidaqButton, &QPushButton::clicked,
-			this, &MealogWindow::disconnectFromDaqsrv);
-	connect(connectToNidaqButton, &QPushButton::clicked,
-			this, &MealogWindow::connectToDaqsrv);
-	disconnect(daqClient, &DaqClient::disconnected,
-			this, &MealogWindow::handleServerDisconnection);
-	disconnect(daqClient, &DaqClient::error,
-			this, &MealogWindow::handleServerError);
-	delete daqClient;
+	//setNidaqInterfaceEnabled(true);
+	//setPlaybackButtonsEnabled(false);
+	//setPlaybackMovementButtonsEnabled(false);
+	//setParameterSelectionsEnabled(true);
+	//startButton->setText("Start");
+	//statusBar->showMessage("Ready");
+	//disconnect(connectToNidaqButton, &QPushButton::clicked,
+			//this, &MealogWindow::disconnectFromDaqsrv);
+	//connect(connectToNidaqButton, &QPushButton::clicked,
+			//this, &MealogWindow::connectToDaqsrv);
+	//disconnect(daqClient, &DaqClient::DaqClient::disconnected,
+			//this, &MealogWindow::handleServerDisconnection);
+	//disconnect(daqClient, &DaqClient::DaqClient::error,
+			//this, &MealogWindow::handleServerError);
+	//delete daqClient;
 }
 
 void MealogWindow::disconnectFromDaqsrv(void) {
@@ -852,9 +881,9 @@ void MealogWindow::disconnectFromDaqsrv(void) {
 			this, &MealogWindow::disconnectFromDaqsrv);
 	connect(connectToNidaqButton, &QPushButton::clicked,
 			this, &MealogWindow::connectToDaqsrv);
-	disconnect(daqClient, &DaqClient::disconnected,
+	disconnect(daqClient, &DaqClient::DaqClient::disconnected,
 			this, &MealogWindow::handleServerDisconnection);
-	disconnect(daqClient, &DaqClient::error,
+	disconnect(daqClient, &DaqClient::DaqClient::error,
 			this, &MealogWindow::handleServerError);
 	daqClient->disconnectFromDaqsrv();
 	closeRecording();
@@ -868,9 +897,9 @@ void MealogWindow::handleDaqsrvConnection(bool made) {
 		nidaqHost->setEnabled(false);
 		connect(connectToNidaqButton, &QPushButton::clicked,
 				this, &MealogWindow::disconnectFromDaqsrv);
-		connect(daqClient, &DaqClient::disconnected,
+		connect(daqClient, &DaqClient::DaqClient::disconnected,
 				this, &MealogWindow::handleServerDisconnection);
-		connect(daqClient, &DaqClient::error,
+		connect(daqClient, &DaqClient::DaqClient::error,
 				this, &MealogWindow::handleServerError);
 		if (recordingStatus & Mealog::INITIALIZED) {
 			sendDaqsrvInitMessage();
@@ -884,7 +913,6 @@ void MealogWindow::handleDaqsrvConnection(bool made) {
 				this, &MealogWindow::connectToDaqsrv);
 		nidaqStatus->setText("Error connecting to NI-DAQ, correct IP?");
 		delete daqClient;
-		daqClient = nullptr;
 		setNidaqInterfaceEnabled(true);
 		statusBar->showMessage("Ready");
 	}
@@ -892,7 +920,7 @@ void MealogWindow::handleDaqsrvConnection(bool made) {
 
 void MealogWindow::startRecording(void) {
 	if (recordingStatus & Mealog::RECORDING) {
-		connect(daqClient, &DaqClient::dataAvailable,
+		connect(daqClient, &DaqClient::DaqClient::dataAvailable,
 				this, &MealogWindow::recvData);
 		daqClient->startRecording();
 		statusBar->showMessage(QString("Recording data to %1").arg(
@@ -971,7 +999,7 @@ void MealogWindow::restartRecording(void) {
 }
 
 void MealogWindow::recvData(qint64 nsamples) {
-	H5Rec::Samples samples(daqClient->nchannels(), nsamples);
+	H5Rec::Samples samples(nsamples, daqClient->nchannels());
 	daqClient->recvData(nsamples, samples.memptr());
 	recording->setData(numSamplesAcquired, 
 			numSamplesAcquired + nsamples, samples);
@@ -1008,7 +1036,8 @@ void MealogWindow::plotDataBlock(uint64_t start, uint64_t end) {
 void MealogWindow::plotNextPlaybackDataBlock(void) {
 	size_t numSamplesPerPlotBlock = ((settings.getRefreshInterval() / 1000) *
 			H5Rec::SAMPLE_RATE);
-	if (lastSamplePlotted == recording->nsamples()) {
+	//if (lastSamplePlotted == recording->nsamples()) {
+	if (lastSamplePlotted >= recording->lastValidSample()) {
 		emit recordingFinished();
 		return;
 	}
@@ -1091,7 +1120,7 @@ void MealogWindow::updateAutomean(int state) {
 }
 
 void MealogWindow::updateDisplayScale(const QString &text) {
-	settings.setDisplayScale(DISPLAY_SCALES.at(text.toUInt()));
+	settings.setDisplayScale(text.toFloat());
 }
 
 void MealogWindow::endRecording(void) {

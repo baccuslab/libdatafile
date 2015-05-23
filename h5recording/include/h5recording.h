@@ -18,9 +18,9 @@
 
 using namespace H5;
 
-/* Constants */
 namespace H5Rec {
 
+/* Constants */
 const std::string RECORDING_FILE_EXTENSION = ".h5";
 const int BIN_FILE_TYPE = 2;
 const int BIN_FILE_VERSION = 1;
@@ -34,21 +34,11 @@ const hsize_t DATASET_CHUNK_DIMS[DATASET_RANK]= {NUM_CHANNELS, BLOCK_SIZE};
 const hsize_t DATASET_MAX_DIMS[DATASET_RANK] = {NUM_CHANNELS, H5S_UNLIMITED};
 const std::string DEFAULT_ROOM_STRING("recorded in d239");
 
+/* Aliases for Armadillo matrices used to store data */
 using Samples = arma::Mat<short>;
 using SamplesD = arma::mat;
-class H5Recording;
-
-};
-
-/* Forward declaration of MealogWindow class, which is the
- * GUI class that streams data from the NI-DAQ server and writes
- * to disk. It is declared as a friend of the H5Recording, giving
- * it access to its private write methods.
- */
-class MealogWindow;
 
 class H5Recording {
-	friend class MealogWindow;
 
 	public:
 		/* Construct a new H5Recording object, either from an existing
@@ -78,36 +68,16 @@ class H5Recording {
 		 * in various data types. Data is stored on disk as signed 16-bit integers,
 		 * but can be returned as doubles, which will give the true voltage values.
 		 *
-		 * The data is stored in Boost multi-arrays, which have been typedef'd into
-		 * the convenience type `samples`.
+		 * The data is stored in the Armadillo library's matrix types, which have
+		 * been aliased as the "Samples" and "SamplesD" types, for signed short and
+		 * double samples, respectively.
 		 */
 		H5Rec::Samples data(int startSample, int endSample);
 		void data(int startSample, int endSample, H5Rec::Samples &data);
 		void data(int startSample, int endSample, H5Rec::SamplesD &data);
 
-	private:
-		H5File file;				// The actual HDF5 file
-		DataSpace dataspace;		// Data space for actual data
-		DataType datatype;			// Type for the actual data
-		DSetCreatPropList props;	// Properties for the dataset (chunking, etc)
-		DataSet dataset;			// The HDF5 dataset containing data
-		bool readOnly;				// Protection
-
-		std::string filename_;		// Full path name of HDF5 file
-		bool live_;					// True if file is currently being written to
-		int16_t type_;				// Bin-file type
-		int16_t version_; 			// Bin-file version
-		double length_;				// Length of recording in seconds
-		uint32_t nsamples_;			// Length of recording in samples
-		uint32_t nchannels_;		// Number of channels
-		uint32_t lastValidSample_;	// Latest valid sample index
-		uint32_t blockSize_;		// Size of HDF5 chunks and bin-file blocks
-		float sampleRate_;			// Data sample rate
-		float gain_;				// NI-DAQ ADC gain
-		float offset_;				// NI-DAQ ADC offset
-		std::string time_;			// Time of recording start
-		std::string date_;			// Date of recording
-		std::string room_; 			// Location of recording
+		/* Write data to the file */
+		void setData(int startSample, int endSample, H5Rec::Samples &data);
 
 		/* These functions implement the actual process of writing attributes
 		 * of either the HDF5 data file or the dataset. Where applicable,
@@ -117,11 +87,6 @@ class H5Recording {
 		void writeDataAttr(std::string name, const DataType &type, void *buf);
 		void writeDataStringAttr(std::string name, std::string value);
 		void writeAllAttributes(void);
-
-		/* Write data to the file */
-		void setData(int startSample, int endSample, H5Rec::Samples &data);
-		void setData(int startSample, int endSample, 
-				std::vector<std::vector<int16_t> > &data);
 
 		/* Setters for data attributes */
 		void flush();
@@ -167,7 +132,32 @@ class H5Recording {
 		void readTime(void);
 		void readRoom(void);
 
+	private:
+		H5File file;				// The actual HDF5 file
+		DataSpace dataspace;		// Data space for actual data
+		DataType datatype;			// Type for the actual data
+		DSetCreatPropList props;	// Properties for the dataset (chunking, etc)
+		DataSet dataset;			// The HDF5 dataset containing data
+		bool readOnly;				// Protection
+
+		std::string filename_;		// Full path name of HDF5 file
+		bool live_;					// True if file is currently being written to
+		int16_t type_;				// Bin-file type
+		int16_t version_; 			// Bin-file version
+		double length_;				// Length of recording in seconds
+		uint32_t nsamples_;			// Length of recording in samples
+		uint32_t nchannels_;		// Number of channels
+		uint32_t lastValidSample_;	// Latest valid sample index
+		uint32_t blockSize_;		// Size of HDF5 chunks and bin-file blocks
+		float sampleRate_;			// Data sample rate
+		float gain_;				// NI-DAQ ADC gain
+		float offset_;				// NI-DAQ ADC offset
+		std::string time_;			// Time of recording start
+		std::string date_;			// Date of recording
+		std::string room_; 			// Location of recording
+
 }; // End class
+}; // End namespace
 
 #endif
 

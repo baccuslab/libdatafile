@@ -9,7 +9,7 @@
 #include "daqclient.h"
 #include "daqsrv/messages.h"
 
-DaqClient::DaqClient(QString hostname, quint16 port) {
+DaqClient::DaqClient::DaqClient(QString hostname, quint16 port) {
 	socket = new QTcpSocket(this);
 	stream = new QDataStream(socket);
 	stream->setFloatingPointPrecision(QDataStream::SinglePrecision);
@@ -17,45 +17,44 @@ DaqClient::DaqClient(QString hostname, quint16 port) {
 	port_ = port;
 	host_ = QHostAddress(hostname);
 	isConnected_ = false;
-	nchannels_ = NUM_CHANNELS;
 }
 
-DaqClient::~DaqClient() {
+DaqClient::DaqClient::~DaqClient() {
 	if (socket->isValid()) {
 		socket->disconnectFromHost();
 		socket->close();
 	}
 }
 
-float DaqClient::length() {
+float DaqClient::DaqClient::length() {
 	return this->length_;
 }
 
-uint64_t DaqClient::nsamples() {
+uint64_t DaqClient::DaqClient::nsamples() {
 	return this->nsamples_;
 }
 
-float DaqClient::adcRange() {
+float DaqClient::DaqClient::adcRange() {
 	return this->adcRange_;
 }
 
-uint32_t DaqClient::nchannels() {
+uint32_t DaqClient::DaqClient::nchannels() {
 	return this->nchannels_;
 }
 
-uint32_t DaqClient::blockSize() {
+uint32_t DaqClient::DaqClient::blockSize() {
 	return this->blockSize_;
 }
 
-QString DaqClient::trigger() {
+QString DaqClient::DaqClient::trigger() {
 	return this->trigger_;
 }
 
-QString DaqClient::date() {
+QString DaqClient::DaqClient::date() {
 	return this->date_;
 }
 
-void DaqClient::setLength(float length) {
+void DaqClient::DaqClient::setLength(float length) {
 	this->length_ = length;
 	this->nsamples_ = length * SAMPLE_RATE;
 	sizeOfDataMessage_ = (
@@ -64,19 +63,19 @@ void DaqClient::setLength(float length) {
 		);
 }
 
-void DaqClient::setAdcRange(float adcRange) {
+void DaqClient::DaqClient::setAdcRange(float adcRange) {
 	this->adcRange_ = adcRange;
 }
 
-void DaqClient::setBlockSize(uint32_t blockSize) {
+void DaqClient::DaqClient::setBlockSize(uint32_t blockSize) {
 	this->blockSize_ = blockSize;
 }
 
-void DaqClient::setTrigger(QString trigger) {
+void DaqClient::DaqClient::setTrigger(QString trigger) {
 	this->trigger_ = trigger;
 }
 
-bool DaqClient::connectToDaqsrv(void) {
+bool DaqClient::DaqClient::connectToDaqsrv(void) {
 	connect(socket, &QAbstractSocket::connected, 
 			this, &DaqClient::connectionSuccessful);
 	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
@@ -85,16 +84,16 @@ bool DaqClient::connectToDaqsrv(void) {
 	return true;
 }
 
-void DaqClient::handleDisconnection(void) {
+void DaqClient::DaqClient::handleDisconnection(void) {
 	if (socket->error() == QAbstractSocket::UnknownSocketError)
 		emit disconnected();
 }
 
-void DaqClient::handleSocketError(void) {
+void DaqClient::DaqClient::handleSocketError(void) {
 	emit error();
 }
 
-void DaqClient::connectionSuccessful(void) {
+void DaqClient::DaqClient::connectionSuccessful(void) {
 	emit connectionMade(true);
 	disconnect(socket, &QAbstractSocket::connected, 
 			this, &DaqClient::connectionSuccessful);
@@ -109,7 +108,7 @@ void DaqClient::connectionSuccessful(void) {
 	isConnected_ = true;
 }
 
-void DaqClient::connectionUnsuccessful(void) {
+void DaqClient::DaqClient::connectionUnsuccessful(void) {
 	disconnect(socket, &QAbstractSocket::connected, 
 			this, &DaqClient::connectionSuccessful);
 	disconnect(socket, SIGNAL(error(QAbstractSocket::SocketError)), 
@@ -117,7 +116,7 @@ void DaqClient::connectionUnsuccessful(void) {
 	emit connectionMade(false);
 }
 
-void DaqClient::checkDataAvailable(void) {
+void DaqClient::DaqClient::checkDataAvailable(void) {
 	qint64 nbytes = socket->bytesAvailable();
 	qint64 bytesPerBlock = blockSize_ * nchannels_ * sizeof(int16_t);
 	qint64 blocksAvailable = nbytes / bytesPerBlock;
@@ -126,11 +125,11 @@ void DaqClient::checkDataAvailable(void) {
 		emit dataAvailable(samplesAvailable);
 }
 
-void DaqClient::disconnectFromDaqsrv(void) {
+void DaqClient::DaqClient::disconnectFromDaqsrv(void) {
 	socket->disconnectFromHost();
 }
 
-void DaqClient::initExperiment(void) {
+void DaqClient::DaqClient::initExperiment(void) {
 
 	/* Compute sizes for message */
 	uint32_t triggerLength = trigger_.length();
@@ -147,19 +146,19 @@ void DaqClient::initExperiment(void) {
 	socket->flush();
 }
 
-void DaqClient::requestExptParams(void) {
+void DaqClient::DaqClient::requestExptParams(void) {
 	(*stream) << EXPT_PARAMS_REQ;
 }
 
-void DaqClient::sendClose(void) {
+void DaqClient::DaqClient::sendClose(void) {
 	(*stream) << CLOSE;
 }
 
-void DaqClient::sendError(void) {
+void DaqClient::DaqClient::sendError(void) {
 	(*stream) << ERROR_MSG;
 }
 
-void DaqClient::recvExptParams(void) {
+void DaqClient::DaqClient::recvExptParams(void) {
 	uint32_t type, msgSize, nchannels, triggerSize, dateSize;
 	(*stream) >> type >> msgSize >> nchannels >> nsamples_ >>
 			this->length_ >> this->adcRange_ >> this->adcResolution_ >>
@@ -171,46 +170,31 @@ void DaqClient::recvExptParams(void) {
 	this->date_ = QString::fromStdString(d.toStdString());
 }
 
-QString DaqClient::recvError(void) {
+QString DaqClient::DaqClient::recvError(void) {
 	uint32_t errSize;
 	(*stream) >> errSize;
 	QByteArray data = socket->read(errSize);
 	return QString::fromStdString(data.toStdString());
 }
 
-void DaqClient::startRecording(void) {
+void DaqClient::DaqClient::startRecording(void) {
 	uint32_t type = START_EXPT;
 	uint32_t msg_size = 8;
 	(*stream) << type << msg_size;
 	socket->flush();
 }
 
-QByteArray DaqClient::recvData(qint64 nsamples) {
-	/*
-	uint32_t type;
-	uint32_t nchannels, nsamples;
-	(*stream) >> type;
-	(*stream) >> nchannels >> nsamples;
-	QByteArray data = socket->read(nchannels * nsamples * sizeof(int16_t));
-	return data;
-	*/
+QByteArray DaqClient::DaqClient::recvData(qint64 nsamples) {
 	qint64 nbytes = nsamples * nchannels_ * sizeof(int16_t);
 	return socket->read(nbytes);
 }
 
-void DaqClient::recvData(qint64 nsamples, int16_t *buffer) {
-	/*
-	uint32_t type, msg_size, nsamples;
-	uint16_t nchannels;
-	(*stream) >> type >> msg_size;
-	(*stream) >> nchannels >> nsamples;
-	socket->read((char *) buffer, nchannels * nsamples * sizeof(int16_t));
-	*/
+void DaqClient::DaqClient::recvData(qint64 nsamples, int16_t *buffer) {
 	qint64 nbytes = nsamples * nchannels_ * sizeof(int16_t);
 	socket->read((char *) buffer, nbytes);
 }
 
-bool DaqClient::isConnected(void) {
+bool DaqClient::DaqClient::isConnected(void) {
 	return isConnected_;
 }
 

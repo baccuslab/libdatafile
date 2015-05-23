@@ -15,6 +15,8 @@
 
 #include "daqsrv/messages.h"
 
+namespace DaqClient {
+
 const quint16 PORT = 12345;	// Port of NIDAQ server application
 const quint32 BLOCK_SIZE = NIDAQ_BLOCK_SIZE;
 const qint16 NUM_CHANNELS = NIDAQ_NUM_CHANNELS;
@@ -91,7 +93,8 @@ class DaqClient : public QObject {
 	
 		bool isConnected_;
 		uint32_t sizeOfDataMessage_;
-};
+}; 	// End class
+};	// End namespace
 
 #endif
 
