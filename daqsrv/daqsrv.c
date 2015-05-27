@@ -1,4 +1,4 @@
-/* daqsrv.c
+/* daqsrv.c 
  * This file implements the basic networking and server interface in the 
  * NI-DAQ server application.
  *
@@ -10,10 +10,6 @@
 #include "nidaq.h"
 
 /* Globals are evil ... */
-task_t *task = NULL;
-bool task_running = false;
-bool task_finished = false;
-uint64_t samples_collected = 0;
 
 void print_usage_and_exit(void) {
 	printf("NI-DAQ server program\n");
@@ -137,10 +133,10 @@ int send_data_msg(SOCKET client, data_msg_t *msg) {
 
 void start_experiment(task_t *task) {
 	DAQmxStartTask(task->handle);
-	task_running = true;
+	task->running = true;
 }
 
-int recv_message(SOCKET client) {
+int recv_message(SOCKET client, task_t **task) {
 	char buffer[BUFFER_SIZE] = {'\0'}; 
 	int nrecv = recv(client, buffer, BUFFER_SIZE, 0);
 	if (nrecv < 0)
@@ -159,20 +155,21 @@ int recv_message(SOCKET client) {
 
 	switch (msg_type) {
 		case INIT_EXPERIMENT:
-			if (task != NULL) // Ignore multiple init messages
+			if (*task != NULL) // Ignore multiple init messages
 				return -1;
 			printf("Received INIT message\n");
 			init_msg_t *init_msg = parse_init_msg(buffer);
-			task = init_task(init_msg->trigger, init_msg->block_size,
-				init_msg->expt_length, init_msg->adc_range);
+			*task = init_task(init_msg->trigger, 
+				init_msg->block_size, init_msg->expt_length, 
+				init_msg->adc_range);
 			free_init_msg(init_msg);
-			if (task == NULL) 
+			if (*task == NULL) 
 				return -1;
 			else
 				return 0;
 
 		case EXPT_PARAMS_REQ:
-			if (task == NULL) // must initialize first
+			if (*task == NULL) // must initialize first
 				return -1;
 			printf("Received PARAMS_REQ message. Responding.\n");
 			params_msg_t *params_msg = create_params_msg(task);
@@ -195,11 +192,13 @@ int recv_message(SOCKET client) {
 			return 0;
 
 		case START_EXPT:
-			if (task_finished || task_running)
+			if (*task == NULL)
+				return 0;
+			if ((*task)->finished || (*task)->running)
 				return 0;
 			printf("Received START_EXPT message. "\
 				"Starting data acquisition from NI-DAQ\n");
-			start_experiment(task);
+			start_experiment(*task);
 			return 0;
 
 		case DATA_CHUNK:
@@ -221,17 +220,17 @@ int recv_message(SOCKET client) {
 bool check_task_finished(task_t *task) {
 	if (task == NULL)
 		return false;
-	return (samples_collected >= task->nsamples);
+	return (task->samples_collected >= task->nsamples);
 }
 
-int read_and_send_data(SOCKET client, task_t *task) {
+int read_and_send_data(SOCKET client, task_t *task) { 
 	int16_t *data = get_next_data_block(task);
-	samples_collected += task->block_size;
+	task->samples_collected += task->block_size;
 
 	/* Notify of progress */
-	if ((samples_collected % (task->nsamples / 10)) == 0) {
+	if ((task->samples_collected % (task->nsamples / 10)) == 0) {
 		printf("Acquired %lu samples.\n", 
-			samples_collected);
+			task->samples_collected);
 	}
 
 	data_msg_t *msg = create_data_msg(task, data);
@@ -242,15 +241,15 @@ int read_and_send_data(SOCKET client, task_t *task) {
 		return -1;
 	}
 	if (check_task_finished(task)) {
-		task_running = false;
-		task_finished = true;
+		task->running = false;
+		task->finished = true;
 		printf("Task completed\n");
 	}
 	free_data_msg(msg);
 	return 0;
 } 
 
-int run_polling_loop(SOCKET server, SOCKET client) {
+int run_polling_loop(SOCKET server, SOCKET client, task_t **task) {
 	/* Setup polling */
 	int nfds = 2;
 	struct fd_set readfds, exceptfds;
@@ -269,8 +268,8 @@ int run_polling_loop(SOCKET server, SOCKET client) {
 	while (ret == 0) {
 
 		/* Read next data block and send */
-		if (task_running) 
-			read_and_send_data(client, task);
+		if (((*task) != NULL) && ((*task)->running))
+			read_and_send_data(client, *task);
 		
 		/* Must update all sets each pass through loop. */
 		FD_SET(server, &exceptfds);
@@ -294,7 +293,7 @@ int run_polling_loop(SOCKET server, SOCKET client) {
 
 		/* Deal with messages from the client */
 		if (FD_ISSET(client, &readfds))
-			ret = recv_message(client);
+			ret = recv_message(client, task);
 
 		/* Deal with exceptional conditions on server and client */
 		if (FD_ISSET(client, &exceptfds))
@@ -332,21 +331,30 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE;
 	freeaddrinfo(server_addr);
 
-	/* Accept a client */
-	SOCKET client = INVALID_SOCKET;
-	struct sockaddr_in client_addr;
-	ZeroMemory(&client_addr, sizeof(struct sockaddr_in));
-	if (accept_client(server, &client, &client_addr) == -1)
-		return EXIT_FAILURE;
+	/* Initialize task and some parameters */
+	task_t *task = NULL;
+	uint64_t samples_collected = 0;
 
-	/* Enter a polling loop, waiting for client messages and responding */
-	ret = run_polling_loop(server, client);
-	
-	/* Clean up resources */
-	if (task != NULL)
-		free_task(task);
+	while (true) {
+
+		/* Accept a client */
+		SOCKET client = INVALID_SOCKET;
+		struct sockaddr_in client_addr;
+		ZeroMemory(&client_addr, sizeof(struct sockaddr_in));
+		if (accept_client(server, &client, &client_addr) == -1)
+			return EXIT_FAILURE;
+
+		/* Enter a polling loop, 
+		 * waiting for client messages and responding 
+		 */
+		ret = run_polling_loop(server, client, &task);
+		
+		/* Clean up resources */
+		if (task != NULL)
+			free_task(task);
+		closesocket(client);
+	}
 	closesocket(server);
-	closesocket(client);
 	WSACleanup();
 	return ret;
 }

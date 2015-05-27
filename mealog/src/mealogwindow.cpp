@@ -211,10 +211,10 @@ void MealogWindow::initGui(void) {
 	automeanBox->setChecked(false);
 	displayLayout->addWidget(refreshLabel, 0, 0);
 	displayLayout->addWidget(refreshBox, 0, 1);
-	displayLayout->addWidget(viewLabel, 1, 0);
-	displayLayout->addWidget(viewBox, 1, 1);
-	displayLayout->addWidget(jumpSizeLabel, 2, 0);
-	displayLayout->addWidget(jumpSizeBox, 2, 1);
+	displayLayout->addWidget(jumpSizeLabel, 1, 0);
+	displayLayout->addWidget(jumpSizeBox, 1, 1);
+	displayLayout->addWidget(viewLabel, 2, 0);
+	displayLayout->addWidget(viewBox, 2, 1);
 	displayLayout->addWidget(scaleLabel, 3, 0);
 	displayLayout->addWidget(scaleBox, 3, 1);
 	displayLayout->addWidget(autoscaleLabel, 4, 0);

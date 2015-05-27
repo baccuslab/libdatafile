@@ -312,12 +312,8 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) 
 		throw;
 	}
 
-	/* Write data 
-	 * XXX: This is big-endian because it comes over the network. But 
-	 * if we move away from sockets as the "source" of the data, this will
-	 * likely change.
-	 */
-	dataset.write(data.memptr(), PredType::STD_I16BE, memspace, dataspace);
+	/* Write data */
+	dataset.write(data.memptr(), PredType::STD_I16LE, memspace, dataspace);
 	flush();
 }
 

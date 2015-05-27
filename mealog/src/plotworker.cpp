@@ -27,6 +27,10 @@ PlotWorker::PlotWorker(const PlotWorker &other) {
 PlotWorker::~PlotWorker() {
 }
 
+bool PlotWorker::isTransferring(void) {
+	return transferring;
+}
+
 void PlotWorker::transferPlotData(QSemaphore *sem, int channel, QString label, 
 		QCPGraph *subplot, QVector<double> *data, bool isClicked) {
 

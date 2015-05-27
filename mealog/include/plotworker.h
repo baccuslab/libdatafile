@@ -23,6 +23,7 @@ class PlotWorker : public QObject {
 		PlotWorker(QSet<int> channelSet, QObject *parent = 0);
 		PlotWorker(const PlotWorker &other);
 		~PlotWorker();
+		bool isTransferring(void);
 	
 	public slots:
 		void transferPlotData(QSemaphore *sem, int channel, QString label, 

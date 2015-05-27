@@ -9,6 +9,7 @@
 #define _NIDAQ_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
 #include "NIDAQmx.h"
@@ -44,6 +45,9 @@ typedef struct {
 	char *trigger;		// Triggering method
 	uint32_t date_length;	// Length of date string
 	char *date;		// Time/date of experiment
+	bool running;
+	bool finished;
+	uint64_t samples_collected;
 } task_t;
 
 task_t *init_task(char *trigger, uint32_t block_size, 

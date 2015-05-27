@@ -1,11 +1,10 @@
 mearec
 ======
 
-The `mearec` library is a set of applications and tools for recording data from
-the Multichannel Systems arrays in the Baccus Lab.
+The `mearec` library is a set of applications, libraries, and tools for 
+recording data from the Multichannel Systems arrays in the Baccus Lab.
 
 (C) 2015 Benjamin Naecker bnaecker@stanford.edu
-
 
 Components
 ==========

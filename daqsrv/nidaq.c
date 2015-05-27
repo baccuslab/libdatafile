@@ -34,6 +34,9 @@ task_t *init_task(char *trigger, uint32_t block_size,
 	task_t *task = calloc(1, sizeof(task_t));
 	if (task == NULL)
 		return NULL;
+	task->running = false;
+	task->finished = false;
+
 	task->trigger_length = strlen(trigger);
 	task->trigger = strdup(trigger);
 	task->length = length;
@@ -144,30 +147,4 @@ void free_task(task_t *task) {
 	free(task->trigger);
 	free(task);
 }
-
-/* int main(void) {
-	task_t *task = init_task("none", NIDAQ_BLOCK_SIZE, 10, 10);
-	if (task == NULL) {
-		printf("Failure to init task\n");
-		return -1;
-	}
-	int32 status = DAQmxStartTask(task->handle);
-	if (status < 0) {
-		char buf[NIDAQ_ERR_BUFFER_SIZE];
-		DAQmxGetExtendedErrorInfo(buf, NIDAQ_ERR_BUFFER_SIZE);
-		printf("error: %s\n", buf);
-		free_task(task);
-		return -1;
-	}
-
-	int16_t *data = get_next_data_block(task, NIDAQ_BLOCK_SIZE);
-	if (data == NULL) {
-		printf("Could not acquire samples\n");
-		free_task(task);
-		return -1;
-	}
-	printf("Acquired %d samples\n", NIDAQ_BLOCK_SIZE);
-	free_task(task);
-	return 0;
-} */
 
