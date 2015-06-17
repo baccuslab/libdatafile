@@ -49,9 +49,14 @@ ChannelInspector::ChannelInspector(QCustomPlot *parentPlot,
 ChannelInspector::~ChannelInspector() {
 }
 
+void ChannelInspector::closeEvent(QCloseEvent *event) {
+	emit aboutToClose(channel);
+	event->accept();
+}
+
 void ChannelInspector::replot() {
 	graph->setData(sourceGraph->data(), true);
-	graph->rescaleValueAxis();
+	graph->rescaleAxes();
 	plot->replot();
 }
 

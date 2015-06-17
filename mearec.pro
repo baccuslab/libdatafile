@@ -28,11 +28,9 @@ HEADERS += messaging/logserver.pb.h \
            daqclient/include/daqclient.h \
            h5recording/include/h5recording.h \
            mealog/include/mealogwindow.h \
-           mealog/include/channelplot.h \
            mealog/include/plotwindow.h \
            mealog/include/qcustomplot.h \
            mealog/include/settings.h \
-           mealog/include/windows.h \
            tools/include/bintools.h \
            tools/include/hdftools.h
 SOURCES += messaging/logserver.pb.cc \
@@ -40,11 +38,9 @@ SOURCES += messaging/logserver.pb.cc \
            h5recording/src/h5recording.cpp \
            mealog/src/main.cpp \
            mealog/src/mealogwindow.cpp \
-           mealog/src/channelplot.cpp \
            mealog/src/plotwindow.cpp \
            mealog/src/qcustomplot.cpp \
            mealog/src/settings.cpp \
-           mealog/src/windows.cpp \
            tools/bin2hdf/bin2hdf.c \
            tools/common/bintools.c \
            tools/hdf2bin/hdf2bin.c \

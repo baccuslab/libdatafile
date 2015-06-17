@@ -1000,7 +1000,24 @@ void MealogWindow::restartRecording(void) {
 
 void MealogWindow::recvData(qint64 nsamples) {
 	H5Rec::Samples samples(nsamples, daqClient->nchannels());
-	daqClient->recvData(nsamples, samples.memptr());
+
+	/* If more than one block is available, receive each one in turn.
+	 * Must explicitly receive each block, however, because data will
+	 * not be contiguous in resulting Armadillo matrix, which uses
+	 * column-major ordering.
+	 */
+	if (nsamples > daqClient->blockSize()) {
+		auto blockSize = daqClient->blockSize();
+		auto nblocks = nsamples / daqClient->blockSize();
+		H5Rec::Samples tmp(blockSize, daqClient->nchannels());
+		for (auto block = 0; block < nblocks; block++) {
+			daqClient->recvData(blockSize, tmp.memptr());
+			samples.rows(block * blockSize, ((block + 1) * blockSize) - 1) = tmp;
+		}
+	} else {
+		daqClient->recvData(nsamples, samples.memptr());
+	}
+
 	recording->setData(numSamplesAcquired, 
 			numSamplesAcquired + nsamples, samples);
 	numSamplesAcquired += nsamples;

@@ -101,8 +101,6 @@ def serve_file_data(task, client, f):
             pass
         tmp = array.array('h', 
                 f['data'][:, nsamples : nsamples + task.block_size].tobytes())
-        if sys.byteorder != 'big':
-            tmp.byteswap()
         try:
             client.send(tmp.tobytes())
         except BlockingIOError:
@@ -122,11 +120,10 @@ def serve_data(task, client):
     #        each in range(task.block_size)))
 
     # Group by channel
-    data_base = itertools.chain.from_iterable([list(range(task.block_size)) 
-            for _ in range(task.nchannels)])
+    data_base = itertools.chain.from_iterable(
+            [[chan] * task.block_size
+            for chan in range(task.nchannels)])
     data = array.array('h', data_base)
-    if sys.byteorder != 'big':
-        data.byteswap()
     data_bytes = data.tobytes()
     #hdr = int(DATA_CHUNK).to_bytes(4, 'big') + int(len(data) + 14).to_bytes(4, 'big')
     #data_hdr = int(NUM_CHANNELS).to_bytes(2, 'big') + int(task.block_size).to_bytes(4, 'big')

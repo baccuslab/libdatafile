@@ -14,7 +14,6 @@
 #include <QList>
 #include <QThread>
 #include <QSemaphore>
-#include <QMouseEvent>
 #include <QPoint>
 #include <QSet>
 #include <QStringList>
@@ -44,7 +43,6 @@ class PlotWindow : public QWidget {
 		void allSubplotsUpdated(QSemaphore *sem,
 				const int nthreads, QCustomPlot *p);
 
-
 	public slots:
 		void toggleVisible(void);
 		void clearAll(void);
@@ -52,12 +50,14 @@ class PlotWindow : public QWidget {
 		void createChannelInspector(QMouseEvent *event);
 		void handleChannelClick(QMouseEvent *event);
 		void updateChannelView(void);
+		void blockResize(void);
+		void unblockResize(void);
 
 	private:
 		void initThreadPool();
 		void initPlotGroup();
 		int findSubplotClicked(QPoint pos);
-		void removeChannelInspector(QObject *c);
+		void removeChannelInspector(int channel);
 
 		const unsigned int numThreads = QThread::idealThreadCount();
 		int nrows;

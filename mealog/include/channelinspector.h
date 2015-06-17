@@ -9,6 +9,7 @@
 #define _CHANNEL_INSPECTOR_H_
 
 #include <QGridLayout>
+#include <QCloseEvent>
 
 #include "settings.h"
 #include "qcustomplot.h"
@@ -22,10 +23,14 @@ class ChannelInspector : public QWidget {
 		int getChannel(void);
 		void updateSourceGraph(QCPGraph *);
 
+	signals:
+		void aboutToClose(int channel);
+
 	public slots:
 		void replot(void);
 
 	private:
+		void closeEvent(QCloseEvent *event);
 		Settings settings;
 		QGridLayout *layout;
 		QCustomPlot *plot;

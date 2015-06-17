@@ -104,11 +104,23 @@ void PlotWindow::initPlotGroup(void) {
 			this, &PlotWindow::createChannelInspector);
 	connect(plot, &QCustomPlot::mousePress,
 			this, &PlotWindow::handleChannelClick);
+	connect(plot, &QCustomPlot::beforeReplot,
+			this, &PlotWindow::blockResize);
+	connect(plot, &QCustomPlot::afterReplot,
+			this, &PlotWindow::unblockResize);
 
 	layout = new QGridLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->addWidget(plot);
 	setLayout(layout);
+}
+
+void PlotWindow::blockResize(void) {
+	setFixedSize(size());
+}
+
+void PlotWindow::unblockResize(void) {
+	setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
 }
 
 void PlotWindow::plotData(H5Rec::Samples &s) {
@@ -151,20 +163,35 @@ void PlotWindow::clearAll(void) {
 void PlotWindow::createChannelInspector(QMouseEvent *event) {
 	/* Find the graph that was clicked */
 	int channel = findSubplotClicked(event->pos());
+
+	/* Ignore clicks outside any graph and activate windows
+	 * that have already been opened
+	 */
 	if (channel == -1)
 		return;
+	for (auto &inspector : channelInspectors) {
+		if (channel == inspector->getChannel()) {
+			inspector->activateWindow();
+			return;
+		}
+	}
+
 	QPair<int, int> p = channelView.at(channel);
 	ChannelInspector *c = new ChannelInspector(plot,
 			subplotList.at(p.first * ncols + p.second), channel, this);
-	connect(c, &ChannelInspector::destroyed, 
+	connect(c, &ChannelInspector::aboutToClose, 
 			this, &PlotWindow::removeChannelInspector);
-	channelInspectors += c;
+	channelInspectors.insert(c);
 	c->show();
 }
 
-void PlotWindow::removeChannelInspector(QObject *obj) {
-	ChannelInspector *c = qobject_cast<ChannelInspector *>(obj);
-	channelInspectors -= c;
+void PlotWindow::removeChannelInspector(int channel) {
+	for (auto &inspector : channelInspectors) {
+		if (inspector->getChannel() == channel) {
+			channelInspectors.remove(inspector);
+			return;
+		}
+	}
 }
 
 void PlotWindow::handleChannelClick(QMouseEvent *event) {
