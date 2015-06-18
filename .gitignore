@@ -11,3 +11,5 @@ moc_*
 *__pycache__*
 hdf2bin
 bin2hdf
+tools/bin/*
+tools/lib/*
