@@ -76,6 +76,13 @@ class H5Recording {
 		void data(int startSample, int endSample, H5Rec::Samples &data);
 		void data(int startSample, int endSample, H5Rec::SamplesD &data);
 
+		/* Return samples from a single channel */
+		arma::vec data(int startSample, int endSample, int channel);
+		void data(int startSample, int endSample, int channel, 
+				arma::vec& data);
+		void data(int startSample, int endSample, int channel, 
+				arma::Col<short>& data);
+
 		/* Write data to the file */
 		void setData(int startSample, int endSample, H5Rec::Samples &data);
 

@@ -104,10 +104,6 @@ void PlotWindow::initPlotGroup(void) {
 			this, &PlotWindow::createChannelInspector);
 	connect(plot, &QCustomPlot::mousePress,
 			this, &PlotWindow::handleChannelClick);
-	connect(plot, &QCustomPlot::beforeReplot,
-			this, &PlotWindow::blockResize);
-	connect(plot, &QCustomPlot::afterReplot,
-			this, &PlotWindow::unblockResize);
 
 	layout = new QGridLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);

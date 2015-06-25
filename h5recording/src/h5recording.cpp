@@ -22,32 +22,43 @@ H5Recording::H5Recording(std::string filename) {
 	if (stat(filename_.c_str(), &buffer) == 0) {
 		if (!H5File::isHdf5(filename_)) {
 			std::cerr << "Invalid H5 file" << std::endl;
-			exit(EXIT_FAILURE);
+			throw std::invalid_argument("Invalid HDF5 file");
 		}
 		try {
 			readOnly = true;
 			file = H5File(filename_, H5F_ACC_RDONLY);
 		} catch (FileIException &e) {
 			std::cerr << "Could not open H5 file" << std::endl;
-			exit(EXIT_FAILURE);
+			throw std::runtime_error("Could not open HDF5 file");
 		}
 		/* Get the data itself */
-		dataset = file.openDataSet("data");
+		try {
+			dataset = file.openDataSet("data");
+		} catch (FileIException &e) {
+			std::cerr << "File must contain a dataset labeled 'data'";
+			throw std::invalid_argument("File must contain a 'data' dataset");
+		}
 		dataspace = dataset.getSpace();
 
 		/* Read attributes into data members */
-		readIsLive();
-		readLastValidSample();
-		readFileType();
-		readSampleRate();
-		readBlockSize();
-		readNumSamples();
-		readNumChannels();
-		readGain();
-		readOffset();
-		readDate();
-		readTime();
-		readRoom();
+		try {
+			readIsLive();
+			readLastValidSample();
+			readFileType();
+			readSampleRate();
+			readBlockSize();
+			readNumSamples();
+			readNumChannels();
+			readGain();
+			readOffset();
+			readDate();
+			readTime();
+			readRoom();
+		} catch ( ... ) {
+			std::cerr << "File does not contain appropriate attributes";
+			throw std::invalid_argument(
+					"H5 file does not contain appropriate attributes");
+		}
 
 		/* Compute length of experiment */
 		setLength(nsamples() / sampleRate());
@@ -181,7 +192,7 @@ H5Rec::Samples H5Recording::data(int startSample, int endSample) {
 	if (req_nsamples < 0) {
 		std::cerr << "Requested sample range is invalid: (" << 
 				startSample << ", " << endSample << ")" << std::endl;
-		throw;
+		throw std::logic_error("Requested sample range invalid");
 	}
 	H5Rec::Samples s(req_nsamples, nchannels_);
 	data(startSample, endSample, s);
@@ -193,7 +204,7 @@ void H5Recording::data(int startSample, int endSample, H5Rec::Samples &s) {
 	if (req_nsamples < 0) {
 		std::cerr << "Requested sample range is invalid: (" << 
 				startSample << ", " << endSample << ")" << std::endl;
-		throw;
+		throw std::logic_error("Requested sample range invalid");
 	}
 
 	/* Select hyperslab from data set itself */
@@ -206,7 +217,7 @@ void H5Recording::data(int startSample, int endSample, H5Rec::Samples &s) {
 		std::cerr << "Dataset selection invalid: " << std::endl;
 		std::cerr << "Offset: (" << startSample << ", 0)" << std::endl;
 		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
-		throw;
+		throw std::logic_error("Dataset selection invalid");
 	}
 
 	/* Define dataspace of memory region, which is contiguous
@@ -222,7 +233,7 @@ void H5Recording::data(int startSample, int endSample, H5Rec::Samples &s) {
 	if (!memspace.selectValid()) {
 		std::cerr << "Memory dataspace selection invalid: " << std::endl;
 		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
-		throw;
+		throw std::logic_error("Memory dataspace selection invalid");
 	}
 
 	/* Read data */
@@ -234,7 +245,7 @@ void H5Recording::data(int startSample, int endSample, H5Rec::SamplesD &s) {
 	if (req_nsamples < 0) {
 		std::cerr << "Requested sample range is invalid: (" << 
 				startSample << ", " << endSample << ")" << std::endl;
-		throw;
+		throw std::logic_error("Requested sample range invalid");
 	}
 
 	/* Select hyperslab from data set itself */
@@ -247,7 +258,7 @@ void H5Recording::data(int startSample, int endSample, H5Rec::SamplesD &s) {
 		std::cerr << "Dataset selection invalid: " << std::endl;
 		std::cerr << "Offset: (" << startSample << ", 0)" << std::endl;
 		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
-		throw;
+		throw std::logic_error("Dataset selction invalid");
 	}
 
 	/* Define dataspace of memory region, which is contiguous
@@ -263,7 +274,7 @@ void H5Recording::data(int startSample, int endSample, H5Rec::SamplesD &s) {
 	if (!memspace.selectValid()) {
 		std::cerr << "Memory dataspace selection invalid: " << std::endl;
 		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
-		throw;
+		throw std::logic_error("Memory dataspace selection invalid");
 	}
 
 	/* Read data */
@@ -271,6 +282,117 @@ void H5Recording::data(int startSample, int endSample, H5Rec::SamplesD &s) {
 
 	/* Scale and offset by ADC properties */
 	s = s * gain_ + offset_;
+}
+
+arma::vec H5Recording::data(int startSample, int endSample, int channel) {
+	int req_nsamples = endSample - startSample;
+	if (req_nsamples < 0) {
+		std::cerr << "Requested sample range is invalid: (" << 
+				startSample << ", " << endSample << ")" << std::endl;
+		throw std::logic_error("Requested sample range invalid");
+	}
+	if ( (channel < 0) || (channel >= nchannels()) ) {
+		std::cerr << "Requested channel is invalid: " << channel << std::endl;
+		throw std::logic_error("Requested channel invalid");
+	}
+	arma::vec s(req_nsamples);
+	data(startSample, endSample, channel, s);
+	return s;
+}
+
+void H5Recording::data(int startSample, int endSample, int channel, 
+		arma::vec& data) 
+{
+	int req_nsamples = endSample - startSample;
+	if (req_nsamples < 0) {
+		std::cerr << "Requested sample range is invalid: (" << 
+				startSample << ", " << endSample << ")" << std::endl;
+		throw std::logic_error("Requested sample range invalid");
+	}
+	if ( (channel < 0) || (channel >= nchannels()) ) {
+		std::cerr << "Requested channel is invalid: " << channel << std::endl;
+		throw std::logic_error("Requested channel invalid");
+	}
+
+	/* Select hyperslab from data set itself */
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(channel), 
+			static_cast<hsize_t>(startSample)};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {1, 
+			static_cast<hsize_t>(req_nsamples)};
+	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+	if (!dataspace.selectValid()) {
+		std::cerr << "Dataset selection invalid: " << std::endl;
+		std::cerr << "Offset: (" << startSample << ", 0)" << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw std::logic_error("Dataset selection invalid");
+	}
+
+	/* Define dataspace of memory region, which is contiguous
+	 * data chunk of Armadillo matrix and its hyperslab.
+	 */
+	hsize_t dims[H5Rec::DATASET_RANK] = {1,
+			static_cast<hsize_t>(req_nsamples)};
+	DataSpace memspace(H5Rec::DATASET_RANK, dims);
+	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {1,
+			static_cast<hsize_t>(req_nsamples)};
+	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
+	if (!memspace.selectValid()) {
+		std::cerr << "Memory dataspace selection invalid: " << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw std::logic_error("Memory dataspace selection invalid");
+	}
+
+	/* Read data */
+	dataset.read(data.memptr(), PredType::IEEE_F64LE, memspace, dataspace);
+	data = data * gain() + offset();
+}
+
+void H5Recording::data(int startSample, int endSample, int channel, 
+		arma::Col<short>& data)
+{
+	int req_nsamples = endSample - startSample;
+	if (req_nsamples < 0) {
+		std::cerr << "Requested sample range is invalid: (" << 
+				startSample << ", " << endSample << ")" << std::endl;
+		throw std::logic_error("Requested sample range invalid");
+	}
+	if ( (channel < 0) || (channel >= nchannels()) ) {
+		std::cerr << "Requested channel is invalid: " << channel << std::endl;
+		throw std::logic_error("Requested channel invalid");
+	}
+
+	/* Select hyperslab from data set itself */
+	hsize_t space_offset[H5Rec::DATASET_RANK] = {static_cast<hsize_t>(channel), 
+			static_cast<hsize_t>(startSample)};
+	hsize_t space_count[H5Rec::DATASET_RANK] = {1, 
+			static_cast<hsize_t>(req_nsamples)};
+	dataspace.selectHyperslab(H5S_SELECT_SET, space_count, space_offset);
+	if (!dataspace.selectValid()) {
+		std::cerr << "Dataset selection invalid: " << std::endl;
+		std::cerr << "Offset: (" << startSample << ", 0)" << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw std::logic_error("Dataset selection invalid");
+	}
+
+	/* Define dataspace of memory region, which is contiguous
+	 * data chunk of Armadillo matrix and its hyperslab.
+	 */
+	hsize_t dims[H5Rec::DATASET_RANK] = {1,
+			static_cast<hsize_t>(req_nsamples)};
+	DataSpace memspace(H5Rec::DATASET_RANK, dims);
+	hsize_t mem_offset[H5Rec::DATASET_RANK] = {0, 0};
+	hsize_t mem_count[H5Rec::DATASET_RANK] = {1,
+			static_cast<hsize_t>(req_nsamples)};
+	memspace.selectHyperslab(H5S_SELECT_SET, mem_count, mem_offset);
+	if (!memspace.selectValid()) {
+		std::cerr << "Memory dataspace selection invalid: " << std::endl;
+		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
+		throw std::logic_error("Memory dataspace selection invalid");
+	}
+
+	/* Read data */
+	dataset.read(data.memptr(), PredType::STD_I16LE, memspace, dataspace);
 }
 
 void H5Recording::setFilename(std::string filename) {
@@ -282,7 +404,7 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) 
 	if (req_nsamples <= 0) {
 		std::cerr << "Requested sample range is invalid: (" <<
 				startSample << ", " << endSample << ")" << std::endl;
-		throw;
+		throw std::logic_error("Requested sample range invalid");
 	}
 
 	/* Select hyperslab of dataspace where data will be written */
@@ -295,7 +417,7 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) 
 		std::cerr << "Dataset selection invalid: " << std::endl;
 		std::cerr << "Offset: (" << startSample << ", 0)" << std::endl;
 		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
-		throw;
+		throw std::logic_error("Dataset selection invalid");
 	}
 
 	/* Define dataspace of memory region, from which data is read */
@@ -309,7 +431,7 @@ void H5Recording::setData(int startSample, int endSample, H5Rec::Samples &data) 
 	if (!memspace.selectValid()) {
 		std::cerr << "Memory dataspace selection invalid: " << std::endl;
 		std::cerr << "Count: (" << req_nsamples << ", " << nchannels_ << ")" << std::endl;
-		throw;
+		throw std::logic_error("Memory dataspace selection invalid");
 	}
 
 	/* Write data */

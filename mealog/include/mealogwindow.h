@@ -38,6 +38,7 @@
 /* Mealog includes */
 #include "settings.h"
 #include "plotwindow.h"
+#include "oawindow.h"
 
 namespace Mealog {
 
@@ -91,6 +92,7 @@ class MealogWindow : public QMainWindow {
 	signals:
 		void newDataAvailable(void);
 		void recordingFinished(void);
+		void newDataPlotted(uint64_t, uint64_t);
 
 	private slots:
 		void createNewRecording(void);
@@ -112,6 +114,8 @@ class MealogWindow : public QMainWindow {
 		void recvData(qint64 nsamples);
 		void checkReadyForPlotting(void);
 		void plotNextPlaybackDataBlock(void);
+		void setOnlineAnalysisRunning(bool, int);
+		void sendDataToOAWindow(uint64_t, uint64_t);
 
 		/* Playback control slots */
 		void jumpForward(void);
@@ -138,6 +142,7 @@ class MealogWindow : public QMainWindow {
 		void initGui(void);
 		void initMenuBar(void);
 		void initPlotWindow(void);
+		void initOAWindow(void);
 		void initServer(void);
 		void initSignals(void);
 		void initPlayback(void);
@@ -205,6 +210,7 @@ class MealogWindow : public QMainWindow {
 		QMenu *windowsMenu;
 		QAction *showPlotWindow;
 		QAction *showControlsWindow;
+		QAction *showOAWindow;
 
 		/* New/load and path stuff */
 		QGroupBox *topGroup;
@@ -277,6 +283,7 @@ class MealogWindow : public QMainWindow {
 		QCheckBox *autoscaleBox;
 
 		/* Eventually online analysis stuff too */
+		OAWindow *oawindow;
 
 };	// End class
 

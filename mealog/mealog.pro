@@ -10,13 +10,18 @@ QT += network printsupport widgets
 QT_CONFIG -= no-pkg-config
 CONFIG += c++11 debug_and_release link_pkgconfig
 PKGCONFIG += protobuf
-INCLUDEPATH += . include ../ \
+INCLUDEPATH += . include ../ ../online-analysis/include \
 			/usr/local/include
 LIBS += -L../h5recording/lib -lh5recording \
 		-L../messaging/lib -lmessaging \
-		-L ../daqclient/lib -ldaqclient
+		-L../daqclient/lib -ldaqclient \
+		-L../online-analysis/lib -lonline-analysis \
+		-L/usr/local/lib -larmadillo
 QMAKE_CXXFLAGS += -std=c++11
-QMAKE_RPATHDIR += ../h5recording/lib ../messaging/lib ../daqclient/lib
+QMAKE_RPATHDIR += ../h5recording/lib \
+		../messaging/lib \
+		../daqclient/lib \
+		../online-analysis/lib
 
 # Input
 HEADERS += include/mealogwindow.h \
@@ -24,11 +29,13 @@ HEADERS += include/mealogwindow.h \
 			include/qcustomplot.h \
 			include/settings.h \
 			include/plotworker.h \
-			include/channelinspector.h
+			include/channelinspector.h \
+			include/oawindow.h
 SOURCES += src/main.cpp \
 			src/mealogwindow.cpp \
 			src/plotwindow.cpp \
 			src/qcustomplot.cpp \
 			src/settings.cpp \
 			src/plotworker.cpp \
-			src/channelinspector.cpp
+			src/channelinspector.cpp \
+			src/oawindow.cpp

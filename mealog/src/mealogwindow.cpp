@@ -29,6 +29,7 @@ MealogWindow::MealogWindow(QWidget *parent) : QMainWindow(parent) {
 	initGui();
 	initMenuBar();
 	initPlotWindow();
+	initOAWindow();
 	//initServer();
 	initSignals();
 }
@@ -283,7 +284,11 @@ void MealogWindow::initMenuBar(void) {
 	showControlsWindow->setChecked(true);
 	windowsMenu->addAction(showControlsWindow);
 
-	/* eventually same for online analysis and channel inspector */
+	showOAWindow = new QAction(tr("Online analysis"), windowsMenu);
+	showOAWindow->setShortcut(QKeySequence("Ctrl+2"));
+	showOAWindow->setCheckable(true);
+	showOAWindow->setChecked(false);
+	windowsMenu->addAction(showOAWindow);
 
 	/* Add menus to bar and bar to PlotWindow */
 	menubar->addMenu(fileMenu);
@@ -296,6 +301,12 @@ void MealogWindow::initPlotWindow(void) {
 	plotWindow = new PlotWindow(p.first, p.second, this);
 	plotWindow->show();
 	lastSamplePlotted = 0;
+}
+
+void MealogWindow::initOAWindow(void)
+{
+	oawindow = new OAWindow(this);
+	oawindow->move(Mealog::WINDOW_XPOS, Mealog::WINDOW_HEIGHT + 10);
 }
 
 void MealogWindow::createNewRecording(void) {
@@ -326,17 +337,6 @@ void MealogWindow::createNewRecording(void) {
 			return;
 		}
 	}
-	//struct stat buffer;
-	//if (stat(path.fileName().toStdString().c_str(), &buffer) == 0) {
-		//if (!isDefaultSaveFile() && !confirmFileOverwrite(path)) {
-			//statusBar->showMessage("Ready");
-			//return;
-		//}
-		//if (!deleteOldRecording(path)) {
-			//statusBar->showMessage("Ready");
-			//return;
-		//}
-	//}
 
 	/* Construct a recording object and set parameters */
 	recording = new H5Rec::H5Recording(path.fileName().toStdString());
@@ -406,11 +406,6 @@ void MealogWindow::setRecordingParameters(void) {
 	recording->setLength(totalTimeLine->text().toDouble()); // Samples set internally
 	recording->setLive(true);
 	recording->setLastValidSample(0);
-
-	/* Use defaults */
-	//recording->setFileType(recording->type());
-	//recording->setFileVersion(recording->version());
-	//recording->setSampleRate(recording->sampleRate());
 
 	double adcRange = Mealog::ADC_RANGES.at(adcRangeBox->currentIndex());
 	recording->setOffset(adcRange);
@@ -503,6 +498,7 @@ void MealogWindow::closeRecording(void) {
 	setNidaqInterfaceEnabled(true);
 	newRecordingButton->setEnabled(true);
 	newRecordingAction->setEnabled(true);
+	plotWindow->unblockResize();
 
 	/* Disconnect NI-DAQ client, if this is a recording */
 	if ((daqClient) && (daqClient->isConnected())) {
@@ -558,8 +554,11 @@ void MealogWindow::loadRecording() {
 		delete recording;
 	try {
 		recording = new H5Rec::H5Recording(filename.toStdString());
-	} catch (std::exception &e) {
-		qDebug() << "error creating h5recording";
+	} catch (std::invalid_argument &e) {
+		QMessageBox::critical(this, "Could not open recording",
+				"An error occurred opening the recording file:\n\n" + 
+				filename + "\n\nPlease verify it is a valid recording.");
+		return;
 	}
 	fileLine->setText(filename.section("/", -1));
 	QString path = filename.section("/", 0, -2);
@@ -742,6 +741,10 @@ void MealogWindow::initSignals(void) {
 			plotWindow, &PlotWindow::toggleVisible);
 	connect(showControlsWindow, &QAction::toggled,
 			this, &MealogWindow::setVisible);
+	connect(showOAWindow, &QAction::toggled,
+			oawindow, &OAWindow::toggleVisible);
+	connect(oawindow, &OAWindow::setRunning,
+			this, &MealogWindow::setOnlineAnalysisRunning);
 	connect(this, &MealogWindow::newDataAvailable,
 			this, &MealogWindow::checkReadyForPlotting);
 	connect(newRecordingAction, &QAction::triggered,
@@ -950,6 +953,7 @@ void MealogWindow::startRecording(void) {
 			this, &MealogWindow::pauseRecording);
 	connect(stopButton, &QPushButton::clicked,
 			this, &MealogWindow::closeRecordingWithCheck);
+	plotWindow->blockResize();
 	startButton->setShortcut(Qt::Key_Space);
 }
 
@@ -968,6 +972,7 @@ void MealogWindow::pauseRecording(void) {
 			this, &MealogWindow::pauseRecording);
 	connect(startButton, &QPushButton::clicked,
 			this, &MealogWindow::restartRecording);
+	plotWindow->unblockResize();
 	startButton->setShortcut(Qt::Key_Space);
 	uint16_t oldStatus = recordingStatus & ~Mealog::PLAYING;
 	recordingStatus = oldStatus | Mealog::PAUSED;
@@ -993,6 +998,7 @@ void MealogWindow::restartRecording(void) {
 			this, &MealogWindow::restartRecording);
 	connect(startButton, &QPushButton::clicked,
 			this, &MealogWindow::pauseRecording);
+	plotWindow->blockResize();
 	startButton->setShortcut(Qt::Key_Space);
 	uint16_t oldStatus = recordingStatus & ~Mealog::PAUSED;
 	recordingStatus = oldStatus | Mealog::PLAYING;
@@ -1041,6 +1047,7 @@ void MealogWindow::plotDataBlock(uint64_t start, uint64_t end) {
 	size_t nsamples = end - start;
 	H5Rec::Samples s = recording->data(start, end);
 	plotWindow->plotData(s);
+	emit newDataPlotted(start, end);
 	lastSamplePlotted += nsamples;
 	updateTime();
 	if ((recordingStatus & Mealog::PLAYBACK) && 
@@ -1150,5 +1157,21 @@ void MealogWindow::waitForRecordingFinish(void) {
 	plotWindow->forceReplot();
 	QCoreApplication::processEvents();
 	QThread::msleep(Mealog::RECORDING_FINISH_WAIT_TIME);
+}
+
+void MealogWindow::setOnlineAnalysisRunning(bool running, int channel)
+{
+	if (running)
+		connect(this, &MealogWindow::newDataPlotted, 
+				this, &MealogWindow::sendDataToOAWindow);
+	else
+		disconnect(this, &MealogWindow::newDataPlotted, 
+				this, &MealogWindow::sendDataToOAWindow);
+}
+
+void MealogWindow::sendDataToOAWindow(uint64_t start, uint64_t end)
+{
+	oawindow->runAnalysis(start, recording->sampleRate(), 
+			recording->data(start, end, oawindow->oaChannel()));
 }
 
