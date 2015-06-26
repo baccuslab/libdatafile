@@ -7,11 +7,12 @@
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
 
-#include <iostream>
-#include <algorithm>
 #include "oatemporalwn.h"
 
-void OATemporalWN::init(void)
+/* This must be the ONLY definition of this global variable */
+std::map<std::string, maker_function*> oamap;
+
+void OATemporalWN::init(Stimulus *stim)
 {
 	oa = arma::vec(OATEMPORALWN_NUM_POINTS, arma::fill::zeros);
 }
@@ -24,15 +25,13 @@ void OATemporalWN::run(const uint64_t start, const double rate,
 	out.set_size(OATEMPORALWN_NUM_POINTS);
 	arma::vec tmp(out.n_elem);
 	for (auto i = OATEMPORALWN_NUM_POINTS; i < data.n_elem; i++) {
-		//std::cout << "Looking at: " << i << " ( " << 
-			//startTime + (i - OATEMPORALWN_NUM_POINTS) * fs << "), data = " <<
-			//data(i) << std::endl;
 		stim->at(startTime + (i - OATEMPORALWN_NUM_POINTS) * fs,
 				rate, OATEMPORALWN_NUM_POINTS, tmp);
 		out += tmp * data(i);
 	}
 	oa += out;
 	oa /= oa.max();
+	out = oa;
 }
 
 void OATemporalWN::run(const uint64_t start, const double rate,
@@ -49,7 +48,7 @@ void OATemporalWN::run(const uint64_t start, const double rate,
 			"OATemporalWN provides only a 1-dimensional online analysis");
 }
 
-QString OATemporalWN::name(void)
+std::string OATemporalWN::name(void)
 {
 	return OATEMPORALWN_NAME;
 }
@@ -64,7 +63,7 @@ unsigned int OATemporalWN::npoints(void)
 	return OATEMPORALWN_NUM_POINTS;
 }
 
-QString OATemporalWN::description(void)
+std::string OATemporalWN::description(void)
 {
 	return OATEMPORALWN_DESCRIPTION;
 }
@@ -84,5 +83,25 @@ void OATemporalWN::get(arma::cube& out)
 {
 	throw std::invalid_argument(
 			"OATemporalWN provides only a 1-dimensional online analysis");
+}
+
+extern "C" 
+{
+	/* All online analyses must export this function. Change "OATemporalWN"
+	 * with the name of the new derived derived class.
+	 */
+	OAInterface *OATemporalWNMaker() { return new OATemporalWN; }
+
+	/* The Proxy class is a trick to register each class's maker
+	 * function with the global oaList, without explicitly notifying
+	 * the main application of this class's presence or the name of 
+	 * its constructor method.
+	 */
+	class OATemporalWNProxy 
+	{
+		public:
+			OATemporalWNProxy() { oamap["temporalwn"] = OATemporalWNMaker; }
+	};
+	OATemporalWNProxy oatemporalwnproxy;
 }
 

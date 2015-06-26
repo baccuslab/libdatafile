@@ -14,37 +14,33 @@
 
 const unsigned int OATEMPORALWN_NUM_DIM = 1;
 const unsigned int OATEMPORALWN_NUM_POINTS = 30;
-const QString OATEMPORALWN_NAME = "Temporal white noise correlation";
-const QString OATEMPORALWN_DESCRIPTION = "Computes a reverse-\
+const std::string OATEMPORALWN_NAME = "Temporal white noise correlation";
+const std::string OATEMPORALWN_DESCRIPTION = "Computes a reverse-\
 correlation between a one-dimensional temporal white noise \
 sequence and the selected channel data.";
 
-class OATemporalWN : public QObject, public OAInterface
+class OATemporalWN : public OAInterface
 {
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID OAINTERFACE_IID)
-	Q_INTERFACES(OAInterface)
-
 	public:
-		void init(void) Q_DECL_OVERRIDE;
+		void init(Stimulus *stim) override;
 		void run(const uint64_t start, const double rate,
 				const arma::vec& data, Stimulus* stim, 
-				arma::vec& out) Q_DECL_OVERRIDE;
+				arma::vec& out) override;
 		void run(const uint64_t start, const double rate,
 				const arma::vec& data, Stimulus* stim, 
-				arma::mat& out) Q_DECL_OVERRIDE;
+				arma::mat& out) override;
 		void run(const uint64_t start, const double rate,
 				const arma::vec& data, Stimulus* stim, 
-				arma::cube& out) Q_DECL_OVERRIDE;
+				arma::cube& out) override;
 
-		void get(arma::vec& out) Q_DECL_OVERRIDE;
-		void get(arma::mat& out) Q_DECL_OVERRIDE;
-		void get(arma::cube& out) Q_DECL_OVERRIDE;
+		void get(arma::vec& out) override;
+		void get(arma::mat& out) override;
+		void get(arma::cube& out) override;
 
-		QString name(void) Q_DECL_OVERRIDE;
-		unsigned int ndim(void) Q_DECL_OVERRIDE;
-		unsigned int npoints(void) Q_DECL_OVERRIDE;
-		QString description(void) Q_DECL_OVERRIDE;
+		std::string name(void) override;
+		unsigned int ndim(void) override;
+		unsigned int npoints(void) override;
+		std::string description(void) override;
 
 	private:
 		arma::vec oa;

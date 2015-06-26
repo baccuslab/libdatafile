@@ -16,8 +16,9 @@
 OAWindow::OAWindow(QWidget *parent) : QWidget(parent, Qt::Window)
 {
 	setWindowTitle("Online analysis");
-	setGeometry(0, 0, OAWINDOW_WIDTH, OAWINDOW_HEIGHT);
-	loadPlugins();
+	setGeometry(parent->x(), parent->frameGeometry().height() + 50, 
+			OAWINDOW_WIDTH, OAWINDOW_HEIGHT);
+	loadAnalyses();
 	if (analyses.empty()) {
 		initEmpty();
 		return;
@@ -26,7 +27,14 @@ OAWindow::OAWindow(QWidget *parent) : QWidget(parent, Qt::Window)
 	initGui();
 }
 
-OAWindow::~OAWindow(void) { }
+OAWindow::~OAWindow(void)
+{
+	oalib->unload();
+	if (!analyses.empty()) {
+		for (auto& each : analyses)
+			delete each;
+	}
+}
 
 void OAWindow::initEmpty(void)
 {
@@ -40,7 +48,7 @@ void OAWindow::initGui(void)
 {
 	layout = new QGridLayout(this);
 	analysisBox = new QComboBox(this);
-	analysisBox->addItems(pluginNames);
+	analysisBox->addItems(analysisNames);
 	connect(analysisBox, SIGNAL(currentIndexChanged(int)),
 			this, SLOT(setAnalysis(int)));
 	channelLabel = new QLabel("Channel:", this);
@@ -48,7 +56,8 @@ void OAWindow::initGui(void)
 	channelBox->setRange(0, 63);
 	channelBox->setValue(0);
 	instructions = new QLabel("Select analysis:", this);
-	analysisDescription = new QLabel(analysis->description(), this);
+	analysisDescription = new QLabel(
+			QString::fromStdString(analysis->description()), this);
 	analysisDescription->setWordWrap(true);
 	analysisDescription->setFrameStyle(QFrame::Box);
 	runButton = new QPushButton("Run", this);
@@ -85,32 +94,23 @@ void OAWindow::initPlot(void)
 	plot = new QCustomPlot(this);
 }
 
-void OAWindow::loadPlugins(void) 
+void OAWindow::loadAnalyses(void) 
 {
-	pluginDir = QDir(qApp->applicationDirPath());
+	libDir = QDir(qApp->applicationDirPath());
 #if defined(Q_OS_MAC)
-	if (pluginDir.dirName() == "MacOS") {
-		pluginDir.cdUp();
-		pluginDir.cdUp();
-		pluginDir.cdUp();
+	if (libDir.dirName() == "MacOS") {
+		libDir.cdUp();
+		libDir.cdUp();
+		libDir.cdUp();
 	}
 #endif
-	pluginDir.cd(PLUGIN_PATH);
-	for (auto& file : pluginDir.entryList(QDir::Files)) {
-		QPluginLoader loader(pluginDir.absoluteFilePath(file));
-		QObject *plugin = loader.instance();
-		if (plugin)
-			addPlugin(plugin);
-	}
-}
-
-void OAWindow::addPlugin(QObject *plugin)
-{
-	OAInterface *iface = qobject_cast<OAInterface *>(plugin);
-	if (iface) {
-		iface->init();
-		analyses << iface;
-		pluginNames << iface->name();
+	libDir.cd(OALIB_PATH);
+	oalib = new QLibrary(libDir.absoluteFilePath(OALIB_NAME), this);
+	if (!oalib->load())
+		return;
+	for (auto it = oamap.begin(); it != oamap.end(); it++) {
+		analyses << (it->second)(); // calls maker method
+		analysisNames << QString::fromStdString(analyses.last()->name());
 	}
 }
 
@@ -150,10 +150,9 @@ void OAWindow::runAnalysis(uint64_t start, double rate, arma::vec d)
 		plot->rescaleAxes();
 		plot->replot();
 	} else if (stimulus->ndim() == 2) {
-		/*
-		arma::mat stim, out;
-		stimulus->frames(firstFrame, lastFrame, stim);
-		analysis->run(d, stim, out);
+		arma::mat tmp, out;
+		analysis->run(start, rate, d, stimulus, tmp);
+		analysis->get(out);
 		QCPColorMap *m = qobject_cast<QCPColorMap *>(plot->plottable(0));
 		for (auto i = 0; i < out.n_rows; i++) {
 			for (auto j = 0; j < out.n_cols; j++)
@@ -161,17 +160,11 @@ void OAWindow::runAnalysis(uint64_t start, double rate, arma::vec d)
 		}
 		m->rescaleDataRange();
 		plot->replot();
-		*/
+
 	} else {
-		/*
-		arma::cube s, out;
-		stimulus->frames(firstFrame, lastFrame, s);
-		arma::cube stim(s.n_rows, s.n_cols, d.n_elem);
-		for (auto i = 0; i < s.n_slices; i++) {
-			for (auto j = 0; j < factor; j++)
-				stim.slice(factor * i + j) = s.slice(i);
-		}
-		analysis->run(d, stim, out);
+		arma::cube tmp, out;
+		analysis->run(start, rate, d, stimulus, tmp);
+		analysis->get(out);
 		QVector<double> x(out.n_slices), y(out.n_slices);
 		std::iota(x.begin(), x.end(), 0);
 		for (auto i = 0; i < out.n_slices; i++)
@@ -185,7 +178,6 @@ void OAWindow::runAnalysis(uint64_t start, double rate, arma::vec d)
 		}
 		plot->rescaleAxes();
 		plot->replot();
-		*/
 	}
 }
 
@@ -215,6 +207,8 @@ void OAWindow::chooseStimulusFile(void)
 	stimLine->setText(stimFile);
 	runButton->setEnabled(true);
 	setupPlot();
+	for (auto& each : analyses)
+		each->init(stimulus);
 }
 
 void OAWindow::setupPlot(void)
@@ -313,10 +307,13 @@ void OAWindow::setupPlot(void)
 void OAWindow::setAnalysis(int index)
 {
 	analysis = analyses[index];
-	if (!checkDimensionMatch())
-		return;
-	setupPlot();
-	analysisDescription->setText(analysis->description());
+	if (stimulus) {
+		if (!checkDimensionMatch())
+			return;
+		setupPlot();
+	}
+	analysisDescription->setText(
+			QString::fromStdString(analysis->description()));
 }
 
 bool OAWindow::checkDimensionMatch(void)
@@ -324,8 +321,9 @@ bool OAWindow::checkDimensionMatch(void)
 	if (analysis->ndim() != stimulus->ndim()) {
 		return (QMessageBox::warning(
 				this, "Dimension mismatch",
-				"The selected analysis and stimulus have different numbers of dimensions",
-				QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok);
+				"The selected analysis and stimulus have"\
+				" different numbers of dimensions. This may crash Mearec.", 
+				QMessageBox::Ignore | QMessageBox::Cancel) == QMessageBox::Ignore);
 	}
 	return true;
 }

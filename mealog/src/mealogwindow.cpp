@@ -306,7 +306,7 @@ void MealogWindow::initPlotWindow(void) {
 void MealogWindow::initOAWindow(void)
 {
 	oawindow = new OAWindow(this);
-	oawindow->move(Mealog::WINDOW_XPOS, Mealog::WINDOW_HEIGHT + 10);
+	//oawindow->move(Mealog::WINDOW_XPOS, Mealog::WINDOW_HEIGHT - 10);
 }
 
 void MealogWindow::createNewRecording(void) {

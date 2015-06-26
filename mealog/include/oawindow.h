@@ -14,7 +14,7 @@
 #include <QDir>
 #include <QList>
 #include <QStringList>
-#include <QPluginLoader>
+#include <QLibrary>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QGridLayout>
@@ -27,7 +27,8 @@
 #include "stimulus.h"
 #include "oainterface.h"
 
-const QString PLUGIN_PATH = "../online-analysis/oaplugin/lib/";
+const QString OALIB_PATH = "../online-analysis/lib/";
+const QString OALIB_NAME = "online-analysis";
 const unsigned int OAWINDOW_WIDTH = 600;
 const unsigned int OAWINDOW_HEIGHT = 400;
 
@@ -38,7 +39,7 @@ class OAWindow : public QWidget
 		OAWindow(QWidget *parent = 0);
 		~OAWindow(void);
 
-		void loadPlugins(void);
+		void loadAnalyses(void);
 		int oaChannel(void) { return channel; };
 
 	public slots:
@@ -54,13 +55,13 @@ class OAWindow : public QWidget
 		void initGui(void);
 		void initEmpty(void);
 		void initPlot(void);
-		void addPlugin(QObject *plugin);
 		void toggleAnalysis(void);
 		void setupPlot(void);
 		bool checkDimensionMatch(void); // return true if user is fine with it
 
-		QDir pluginDir;
-		QStringList pluginNames;
+		QLibrary *oalib;
+		QDir libDir;
+		QStringList analysisNames;
 		QList<OAInterface *> analyses;
 		OAInterface *analysis;
 
