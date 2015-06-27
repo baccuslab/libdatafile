@@ -31,6 +31,22 @@ typedef struct {
 	char *room;				// Room string
 } bin_hdr_t;
 
+/* These #define's give default values for the fields of the bin headers
+ * that are not *required* to be in the HDF5 file serving as the source.
+ * This is used when converting HDF5 files saved from the HiDens array,
+ * for example.
+ */
+#define DEFAULT_FILE_TYPE 1
+#define DEFAULT_FILE_VERSION 2
+#define DEFAULT_OFFSET 0.0
+#define DEFAULT_DATE_SIZE 0
+#define DEFAULT_DATE ""
+#define DEFAULT_TIME_SIZE 0
+#define DEFAULT_TIME ""
+#define DEFAULT_ROOM_SIZE 00
+#define DEFAULT_ROOM ""
+
+/* Exported functions */
 bin_hdr_t *read_bin_header(FILE *fp);
 void free_bin_header(bin_hdr_t *hdr);
 int write_bin_header(bin_hdr_t *hdr, FILE *fp);

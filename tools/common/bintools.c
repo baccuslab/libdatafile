@@ -106,14 +106,15 @@ bin_hdr_t *read_bin_header(FILE *fp) {
 	read_ptr = (float *) read_ptr + 1;
 
 	/* Read string arguments. 
-	 * Note that they require no byte-swapping. They are also
-	 * NULL-terminated already, and their sizes include that '\0' character.
+	 * Note that they require no byte-swapping, but they are NOT
+	 * '\0'-terminated so we calloc 1 extra byte so that we can 
+	 * call strlen to get the same value returned by the header itself.
 	 */
 	hdr->date_size = *(uint32_t *) read_ptr;
 	if (swap)
 		hdr->date_size = __builtin_bswap32(hdr->date_size);
 	read_ptr = (uint32_t *) read_ptr + 1;
-	if ((hdr->date = calloc(hdr->date_size, sizeof(char))) == NULL) {
+	if ((hdr->date = calloc(hdr->date_size + 1, sizeof(char))) == NULL) {
 		free(header_mem);
 		return NULL;
 	}
@@ -124,7 +125,7 @@ bin_hdr_t *read_bin_header(FILE *fp) {
 	if (swap)
 		hdr->time_size = __builtin_bswap32(hdr->time_size);
 	read_ptr = (uint32_t *) read_ptr + 1;
-	if ((hdr->time = calloc(hdr->time_size, sizeof(char))) == NULL) {
+	if ((hdr->time = calloc(hdr->time_size + 1, sizeof(char))) == NULL) {
 		free(header_mem);
 		return NULL;
 	}
@@ -135,7 +136,7 @@ bin_hdr_t *read_bin_header(FILE *fp) {
 	if (swap)
 		hdr->room_size = __builtin_bswap32(hdr->room_size);
 	read_ptr = (uint32_t *) read_ptr + 1;
-	if ((hdr->room = calloc(hdr->room_size, sizeof(char))) == NULL) {
+	if ((hdr->room = calloc(hdr->room_size + 1, sizeof(char))) == NULL) {
 		free(header_mem);
 		return NULL;
 	}
@@ -209,7 +210,7 @@ int write_bin_header(bin_hdr_t *hdr, FILE *fp) {
 
 int16_t *read_data_block(bin_hdr_t *hdr, FILE *fp, int block_num) {
 	/* Seek to location in the file */
-	off_t offset = (hdr->header_size + 
+	unsigned long offset = (hdr->header_size + 
 			hdr->nchannels * hdr->block_size * sizeof(int16_t) * block_num);
 	if (fseek(fp, offset, SEEK_SET) != 0)
 		return NULL;

@@ -10,8 +10,9 @@ INCLUDEPATH += . ../common /usr/local/include
 LIBS += -L/usr/local/lib -lhdf5 -L../lib -lmeatools
 QMAKE_RPATHDIR += ../lib
 
-CONFIG += debug_and_release
+CONFIG += debug_and_release c99
 QT -= gui core
+QMAKE_CFLAGS += -std=c99
 mac {
 	CONFIG -= app_bundle
 }

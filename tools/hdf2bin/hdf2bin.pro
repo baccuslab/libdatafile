@@ -11,7 +11,9 @@ LIBS += -L/usr/local/lib -lhdf5 -L../lib -lmeatools
 QMAKE_RPATHDIR += ../lib
 
 QT -= core gui
-CONFIG += debug_and_release
+CONFIG += debug_and_release c99
+QMAKE_CFLAGS += -std=c99
+
 mac {
 	CONFIG -= app_bundle
 }

@@ -14,7 +14,7 @@
 #include "hdftools.h"
 #include "bintools.h"
 
-const int RANK = 2;
+#define RANK 2
 
 /* Helper function prototypes */
 FILE **open_input_files(int, char **);
@@ -22,13 +22,16 @@ bin_hdr_t **read_bin_headers(int, FILE **);
 void free_bin_headers(int, bin_hdr_t **);
 void close_files(int, FILE **);
 int write_dataset_attrs(hid_t, bin_hdr_t *);
+int write_hdf_attr(hid_t, char *, hid_t, hid_t, void *);
+int write_hdf_string_attr(hid_t, char *, char *, hid_t);
 int write_recording_attrs(hid_t, bin_hdr_t *);
 int write_data_to_hdf(hid_t, hid_t, int, bin_hdr_t **, FILE **);
 
-
 int write_data_to_bin(hid_t, hid_t, unsigned int, bin_hdr_t **, FILE **);
 unsigned int *compute_num_bin_files(hid_t, unsigned int, unsigned int *);
-bin_hdr_t **create_bin_headers(hid_t, unsigned int, unsigned int *);
+bin_hdr_t **create_bin_headers(hid_t, unsigned int, unsigned int *, bool);
+int read_hdf_attr(hid_t, char *, hid_t, void *);
+int read_hdf_string_attr(hid_t, char *, uint32_t *, char **);
 int write_bin_headers(unsigned int, bin_hdr_t **, FILE **);
 char *create_outfile_name(char *, unsigned int);
 FILE **open_outfiles(char *, unsigned int);
@@ -151,7 +154,7 @@ int bin2hdf(int num_files, char **infiles, char *outfile) {
 	return 0;
 }
 
-int hdf2bin(char *infile, char *outfile, unsigned int file_size) {
+int hdf2bin(char *infile, char *outfile, unsigned int file_size, bool strict) {
 
 	/* Open the source HDF5 file */
 	hid_t file_id, dset_id, dspace_id;
@@ -182,7 +185,8 @@ int hdf2bin(char *infile, char *outfile, unsigned int file_size) {
 			file_size, &num_files);
 
 	/* Create a list of corresponding headers for the bin file(s) */
-	bin_hdr_t **hdr_list = create_bin_headers(dset_id, num_files, file_sizes);
+	bin_hdr_t **hdr_list = create_bin_headers(dset_id, 
+			num_files, file_sizes, strict);
 	if (hdr_list == NULL) {
 		printf("Could not create bin headers\n");
 		H5Fclose(file_id);
@@ -267,86 +271,77 @@ void close_files(int num_files, FILE **fp) {
 	free(fp);
 }
 
+int write_hdf_attr(hid_t dset_id, char *name, 
+		hid_t dtype, hid_t dspace_id, void *buffer) {
+	hid_t attr_id = H5Acreate(dset_id, name, dtype, 
+			dspace_id, H5P_DEFAULT, H5P_DEFAULT);
+	if (attr_id < 0)
+		return -1;
+	if (H5Awrite(attr_id, dtype, buffer) < 0)
+		return -1;
+	return H5Aclose(attr_id);
+}
+
+int write_hdf_string_attr(hid_t dset_id, char *name, 
+		char *value, hid_t space_id) {
+	hid_t string_type = H5Tcopy(H5T_C_S1);
+	if (string_type < 0)
+		return -1;
+	if (H5Tset_size(string_type, strlen(value)) < 0)
+		return -1;
+	hid_t attr_id = H5Acreate(dset_id, name, string_type, space_id,
+			H5P_DEFAULT, H5P_DEFAULT);
+	if (attr_id < 0)
+		return -1;
+	if (H5Awrite(attr_id, string_type, value) < 0)
+		return -1;
+	return H5Aclose(attr_id);
+}
+
 int write_dataset_attrs(hid_t dset_id, bin_hdr_t *hdr) {
-	herr_t status;
-	hid_t attr_id;
 	hsize_t dims[1] = {1};
-	hid_t space_id = H5Screate_simple(1, dims, NULL);
+	hid_t space_id = H5Screate_simple(1, dims, NULL); // Scalar
 
 	/* Type */
-	attr_id = H5Acreate(dset_id, "bin-file-type",
-			H5T_STD_I16LE, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	H5Awrite(attr_id, H5T_STD_I16LE, &(hdr->type));
-	status = H5Aclose(attr_id);
-	if (status)
-		return status;
+	if (write_hdf_attr(dset_id, "bin-file-type", H5T_STD_I16LE, 
+			space_id, &(hdr->type)) < 0)
+		return -1;
 
 	/* Version */
-	attr_id = H5Acreate(dset_id, "bin-file-version",
-			H5T_STD_I16LE, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	H5Awrite(attr_id, H5T_STD_I16LE, &(hdr->version));
-	status = H5Aclose(attr_id);
-	if (status)
-		return status;
+	if (write_hdf_attr(dset_id, "bin-file-version", H5T_STD_I16LE,
+				space_id, &(hdr->version)) < 0)
+		return -1;
 
 	/* Sample rate */
-	attr_id = H5Acreate(dset_id, "sample-rate", 
-			H5T_IEEE_F32LE, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	H5Awrite(attr_id, H5T_IEEE_F32LE, &(hdr->sample_rate));
-	status = H5Aclose(attr_id);
-	if (status)
-		return status;
+	if (write_hdf_attr(dset_id, "sample-rate", H5T_IEEE_F32LE,
+				space_id, &(hdr->sample_rate)) < 0)
+		return -1;
 
 	/* Block size */
-	attr_id = H5Acreate(dset_id, "block-size",
-			H5T_STD_U32LE, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	H5Awrite(attr_id, H5T_STD_U32LE, &(hdr->block_size));
-	status = H5Aclose(attr_id);
-	if (status)
-		return status;
+	if (write_hdf_attr(dset_id, "block-size", H5T_STD_U32LE,
+				space_id, &(hdr->block_size)) < 0)
+		return -1;
 
 	/* Gain */
-	attr_id = H5Acreate(dset_id, "gain",
-			H5T_IEEE_F32LE, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	H5Awrite(attr_id, H5T_IEEE_F32LE, &(hdr->gain));
-	status = H5Aclose(attr_id);
-	if (status)
-		return status;
+	if (write_hdf_attr(dset_id, "gain", H5T_IEEE_F32LE,
+				space_id, &(hdr->gain)) < 0)
+		return -1;
 
 	/* Offset */
-	attr_id = H5Acreate(dset_id, "offset",
-			H5T_IEEE_F32LE, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	H5Awrite(attr_id, H5T_IEEE_F32LE, &(hdr->offset));
-	status = H5Aclose(attr_id);
-	if (status)
-		return status;
+	if (write_hdf_attr(dset_id, "offset", H5T_IEEE_F32LE,
+				space_id, &(hdr->offset)) < 0)
+		return -1;
 
 	/* Date string */
-	hid_t string_type = H5Tcopy(H5T_C_S1);
-	H5Tset_size(string_type, hdr->date_size);
-	attr_id = H5Acreate(dset_id, "date",
-			string_type, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	H5Awrite(attr_id, string_type, hdr->date);
-	status = H5Aclose(attr_id);
-	if (status)
-		return status;
+	if (write_hdf_string_attr(dset_id, "date", hdr->date, space_id) < 0)
+		return -1;
 
 	/* Time string */
-	H5Tset_size(string_type, hdr->time_size);
-	attr_id = H5Acreate(dset_id, "time",
-			string_type, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	H5Awrite(attr_id, string_type, hdr->time);
-	status = H5Aclose(attr_id);
-	if (status)
-		return status;
+	if (write_hdf_string_attr(dset_id, "time", hdr->time, space_id) < 0)
+		return -1;
 
 	/* Room string */
-	H5Tset_size(string_type, hdr->room_size);
-	attr_id = H5Acreate(dset_id, "room",
-			string_type, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	H5Awrite(attr_id, string_type, hdr->room);
-	status = H5Aclose(attr_id);
-	return status;
+	return write_hdf_string_attr(dset_id, "room", hdr->room, space_id);
 }
 
 int write_recording_attrs(hid_t file_id, bin_hdr_t *hdr) {
@@ -395,17 +390,25 @@ int write_data_to_hdf(hid_t dset_id, hid_t dspace_id,
 	hsize_t count[RANK] = {hdr_list[0]->nchannels, 
 			hdr_list[0]->block_size};
 
+	int *block_offsets = calloc(num_files, sizeof(int));
+	int *nblocks = calloc(num_files, sizeof(int));
+	block_offsets[0] = 0;
+	for (int fi = 0; fi < num_files; fi++) {
+		nblocks[fi] = hdr_list[fi]->nsamples / hdr_list[fi]->block_size;
+		if (fi >= 1)
+			block_offsets[fi] = nblocks[fi - 1];
+	}
+
 	/* Write the data by file and block */
 	for (int fi = 0; fi < num_files; fi++) {
 
-		int nblocks = hdr_list[fi]->nsamples / hdr_list[fi]->block_size;
-		for (int bi = 0; bi < nblocks; bi++) {
+		for (int bi = 0; bi < nblocks[fi]; bi++) {
 
 			/* Read data from the bin file */
 			int16_t *data = read_data_block(hdr_list[fi], fp_list[fi], bi);
 
 			/* Offset the start of the H5 dataset and select the target hyperslab */
-			start[1] = (fi * nblocks * hdr_list[fi]->block_size + 
+			start[1] = (fi * block_offsets[fi] * hdr_list[fi]->block_size + 
 					bi * hdr_list[fi]->block_size);
 			status = H5Sselect_hyperslab(dspace_id, H5S_SELECT_SET,
 					start, NULL, count, NULL);
@@ -451,8 +454,39 @@ unsigned int *compute_num_bin_files(hid_t dset_id, unsigned int file_size,
 	return ret;
 }
 
+int read_hdf_attr(hid_t dset_id, char *name, hid_t dtype, void *buf) {
+	hid_t attr_id = H5Aopen(dset_id, name, H5P_DEFAULT);
+	if (attr_id < 0)
+		return -1;
+	if (H5Aread(attr_id, dtype, buf) < 0) {
+		H5Aclose(attr_id);
+		return -1;
+	}
+	return H5Aclose(attr_id);
+}
+
+int read_hdf_string_attr(hid_t dset_id, char *name, uint32_t *sz, char **str) {
+	hid_t string_type = H5Tcopy(H5T_C_S1);
+	hid_t attr_id = H5Aopen(dset_id, name, H5P_DEFAULT);
+	if (attr_id < 0)
+		return -1;
+	hsize_t size = H5Aget_storage_size(attr_id);
+	H5Tset_size(string_type, size);
+	*sz = size;
+	*str = calloc(size, 1);
+	if (!str) {
+		H5Aclose(attr_id);
+		return -1;
+	}
+	if (H5Aread(attr_id, string_type, *str) < 0) {
+		H5Aclose(attr_id);
+		return -1;
+	}
+	return H5Aclose(attr_id);
+}
+
 bin_hdr_t **create_bin_headers(hid_t dset_id, unsigned int num_files, 
-		unsigned int *file_sizes) {
+		unsigned int *file_sizes, bool strict) {
 	bin_hdr_t **hdr_list = calloc(num_files, sizeof(bin_hdr_t *));
 	if (hdr_list == NULL)
 		return NULL;
@@ -465,7 +499,6 @@ bin_hdr_t **create_bin_headers(hid_t dset_id, unsigned int num_files,
 			return NULL;
 		}
 	}
-	hid_t attr_id;
 
 	for (unsigned int i = 0; i < num_files; i++) {
 
@@ -474,45 +507,37 @@ bin_hdr_t **create_bin_headers(hid_t dset_id, unsigned int num_files,
 		hdr->nsamples = file_sizes[i];
 
 		/* Type */
-		if ((attr_id = H5Aopen(dset_id, "bin-file-type", H5P_DEFAULT)) < 0) {
-			free(hdr);
-			return NULL;
-		}
-		if (H5Aread(attr_id, H5T_STD_I16LE, &(hdr->type)) < 0) {
-			free(hdr);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aclose(attr_id) < 0) {
-			free(hdr);
-			return NULL;
+		if ( (strict) || H5Aexists(dset_id, "bin-file-type") ) {
+			if (read_hdf_attr(dset_id, "bin-file-type", 
+						H5T_STD_I16LE, &(hdr->type)) < 0) {
+				free_bin_headers(num_files, hdr_list);
+				return NULL;
+			}
+		} else {
+			hdr->type = DEFAULT_FILE_TYPE;
 		}
 
 		/* Version */
-		if ((attr_id = H5Aopen(dset_id, "bin-file-version", H5P_DEFAULT)) < 0) {
-			free(hdr);
-			return NULL;
-		}
-		if (H5Aread(attr_id, H5T_STD_I16LE, &(hdr->version)) < 0) {
-			free(hdr);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aclose(attr_id) < 0) {
-			free(hdr);
-			return NULL;
+		if ( (strict) || H5Aexists(dset_id, "bin-file-version") ) {
+			if (read_hdf_attr(dset_id, "bin-file-version", 
+						H5T_STD_I16LE, &(hdr->version)) < 0) {
+				free_bin_headers(num_files, hdr_list);
+				return NULL;
+			}
+		} else {
+			hdr->version = DEFAULT_FILE_VERSION;
 		}
 
 		/* Number of samples and channels */
 		hsize_t dims[RANK] = {0, 0};
 		hid_t dspace_id = H5Dget_space(dset_id);
 		if (dspace_id < 0) {
-			free(hdr);
+			free_bin_headers(num_files, hdr_list);
 			return NULL;
 		}
 		if (H5Sget_simple_extent_dims(dspace_id, dims, NULL) < 0) {
 			H5Dclose(dspace_id);
-			free(hdr);
+			free_bin_headers(num_files, hdr_list);
 			return NULL;
 		}
 		hdr->nchannels = dims[0];
@@ -521,159 +546,78 @@ bin_hdr_t **create_bin_headers(hid_t dset_id, unsigned int num_files,
 		/* Channel indices */
 		hdr->channels = calloc(hdr->nchannels, sizeof(int16_t));
 		if (hdr->channels == NULL) {
-			free(hdr);
+			free_bin_headers(num_files, hdr_list);
 			return NULL;
 		}
 		for (uint32_t i = 0; i < hdr->nchannels; i++)
 			hdr->channels[i] = i;
 
 		/* Sample rate */
-		if ((attr_id = H5Aopen(dset_id, "sample-rate", H5P_DEFAULT)) < 0) {
-			free(hdr);
-			return NULL;
-		}
-		if (H5Aread(attr_id, H5T_IEEE_F32LE, &(hdr->sample_rate)) < 0) {
-			free(hdr);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aclose(attr_id) < 0) {
-			free(hdr);
+		if (read_hdf_attr(dset_id, "sample-rate", 
+					H5T_IEEE_F32LE, &(hdr->sample_rate)) < 0) {
+			free_bin_headers(num_files, hdr_list);
 			return NULL;
 		}
 
 		/* Block size */
-		if ((attr_id = H5Aopen(dset_id, "block-size", H5P_DEFAULT)) < 0) {
-			free(hdr);
-			return NULL;
-		}
-		if (H5Aread(attr_id, H5T_STD_U32LE, &(hdr->block_size)) < 0) {
-			free(hdr);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aclose(attr_id) < 0) {
-			free(hdr);
+		if (read_hdf_attr(dset_id, "block-size", 
+					H5T_STD_U32LE, &(hdr->block_size)) < 0) {
+			free_bin_headers(num_files, hdr_list);
 			return NULL;
 		}
 
 		/* Gain */
-		if ((attr_id = H5Aopen(dset_id, "gain", H5P_DEFAULT)) < 0) {
-			free(hdr);
-			return NULL;
-		}
-		if (H5Aread(attr_id, H5T_IEEE_F32LE, &(hdr->gain)) < 0) {
-			free(hdr);
-			return NULL;
-		}
-		if (H5Aclose(attr_id) < 0) {
-			free(hdr);
+		if (read_hdf_attr(dset_id, "gain", 
+					H5T_IEEE_F32LE, &(hdr->gain)) < 0) {
+			free_bin_headers(num_files, hdr_list);
 			return NULL;
 		}
 
 		/* Offset */
-		if ((attr_id = H5Aopen(dset_id, "offset", H5P_DEFAULT)) < 0) {
-			free(hdr);
-			return NULL;
-		}
-		if (H5Aread(attr_id, H5T_IEEE_F32LE, &(hdr->offset)) < 0) {
-			free(hdr);
-			return NULL;
-		}
-		if (H5Aclose(attr_id) < 0) {
-			free(hdr);
-			return NULL;
+		if ( (strict) || H5Aexists(dset_id, "offset") ) {
+			if (read_hdf_attr(dset_id, "offset", 
+						H5T_IEEE_F32LE, &(hdr->offset)) < 0) {
+				free_bin_headers(num_files, hdr_list);
+				return NULL;
+			}
+		} else {
+			hdr->offset = DEFAULT_OFFSET;
 		}
 
 		/* Date string */
-		hid_t string_type = H5Tcopy(H5T_C_S1);
-		if ((attr_id = H5Aopen(dset_id, "date", H5P_DEFAULT)) < 0) {
-			free(hdr);
-			return NULL;
-		}
-		hsize_t sz = H5Aget_storage_size(attr_id);
-		H5Tset_size(string_type, sz);
-		hdr->date_size = sz;
-		hdr->date = calloc(sz + 1, 1);
-		if (hdr->date == NULL) {
-			free(hdr);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aread(attr_id, string_type, hdr->date) < 0) {
-			free(hdr);
-			free(hdr->date);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aclose(attr_id) < 0) {
-			free(hdr);
-			free(hdr->date);
-			H5Aclose(attr_id);
-			return NULL;
+		if ( (strict) || H5Aexists(dset_id, "date") ) {
+			if (read_hdf_string_attr(dset_id, "date", 
+						&(hdr->date_size), &(hdr->date)) < 0) {
+				free_bin_headers(num_files, hdr_list);
+				return NULL;
+			}
+		} else {
+			hdr->date_size = DEFAULT_DATE_SIZE;
+			hdr->date = DEFAULT_DATE;
 		}
 
 		/* Time string */
-		if ((attr_id = H5Aopen(dset_id, "time", H5P_DEFAULT)) < 0) {
-			free(hdr);
-			free(hdr->date);
-			return NULL;
-		}
-		sz = H5Aget_storage_size(attr_id);
-		H5Tset_size(string_type, sz);
-		hdr->time_size = sz;
-		hdr->time = calloc(sz + 1, 1);
-		if (hdr->time == NULL) {
-			free(hdr);
-			free(hdr->date);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aread(attr_id, string_type, hdr->time) < 0) {
-			free(hdr);
-			free(hdr->date);
-			free(hdr->time);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aclose(attr_id) < 0) {
-			free(hdr);
-			free(hdr->date);
-			free(hdr->time);
-			return NULL;
+		if ( (strict) || H5Aexists(dset_id, "time") ) {
+			if (read_hdf_string_attr(dset_id, "time", 
+						&(hdr->time_size), &(hdr->time)) < 0) {
+				free_bin_headers(num_files, hdr_list);
+				return NULL;
+			}
+		} else {
+			hdr->time_size = DEFAULT_TIME_SIZE;
+			hdr->time = DEFAULT_TIME;
 		}
 
 		/* Room string */
-		if ((attr_id = H5Aopen(dset_id, "room", H5P_DEFAULT)) < 0) {
-			free(hdr);
-			free(hdr->date);
-			return NULL;
-		}
-		sz = H5Aget_storage_size(attr_id);
-		H5Tset_size(string_type, sz);
-		hdr->room_size = sz;
-		hdr->room = calloc(sz + 1, 1);
-		if (hdr->room == NULL) {
-			free(hdr);
-			free(hdr->date);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aread(attr_id, string_type, hdr->room) < 0) {
-			free(hdr);
-			free(hdr->date);
-			free(hdr->time);
-			free(hdr->room);
-			H5Aclose(attr_id);
-			return NULL;
-		}
-		if (H5Aclose(attr_id) < 0) {
-			free(hdr);
-			free(hdr->date);
-			free(hdr->time);
-			free(hdr->room);
-			H5Aclose(attr_id);
-			return NULL;
+		if ( (strict) || H5Aexists(dset_id, "room") ) {
+			if (read_hdf_string_attr(dset_id, "room", 
+						&(hdr->room_size), &(hdr->room)) < 0) {
+				free_bin_headers(num_files, hdr_list);
+				return NULL;
+			}
+		} else {
+			hdr->room_size = DEFAULT_ROOM_SIZE;
+			hdr->room = DEFAULT_ROOM;
 		}
 
 		/* Finally, compute total header size in bytes */
@@ -689,8 +633,8 @@ bin_hdr_t **create_bin_headers(hid_t dset_id, unsigned int num_files,
 	return hdr_list;
 }
 
-int write_bin_headers(unsigned int num_files, bin_hdr_t 
-		**hdr_list, FILE **fp_list) {
+int write_bin_headers(unsigned int num_files, bin_hdr_t **hdr_list, 
+		FILE **fp_list) {
 	int ret = 0;
 	for (unsigned int i = 0; i < num_files; i++) {
 		if ((ret = write_bin_header(hdr_list[i], fp_list[i])) != 0)

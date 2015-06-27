@@ -10,7 +10,8 @@ SUBDIRS = common \
 			hdf2bin
 
 QT -= gui core
-CONFIG += debug_and_release ordered
+CONFIG += debug_and_release ordered c99
+QMAKE_CFLAGS += -std=c99
 
 # Input
 HEADERS += common/bintools.h common/hdftools.h

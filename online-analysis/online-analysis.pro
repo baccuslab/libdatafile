@@ -17,5 +17,10 @@ mac {
 }
 
 # Input
-HEADERS += include/stimulus.h
-SOURCES += src/stimulus.cpp
+HEADERS += include/stimulus.h \
+	include/oainterface.h \
+	include/oatemporalwn.h \
+	include/oalineswn.h
+SOURCES += src/stimulus.cpp \
+	src/oatemporalwn.cpp \
+	src/oalineswn.cpp

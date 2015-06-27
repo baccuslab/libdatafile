@@ -21,7 +21,9 @@ const char AUTHOR[] = "Benjamin Naecker";
 const char AUTHOR_EMAIL[] = "bnaecker@stanford.edu";
 const char YEAR[] = "2015";
 const char USAGE[] = "\n\
- Usage: hdf2bin [-v | --version] [-h | --help] [ -o " UL_PRE "outfile" UL_POST\
+ Usage: hdf2bin \t[-v | --version] [-h | --help]\n"\
+ " \t\t\t[-n | --no-strict]\n"\
+ " \t\t\t[ -o " UL_PRE "outfile" UL_POST\
  " ] [ -s | --file-size " UL_PRE "size" UL_POST " ] " UL_PRE "infile" UL_POST "\n\
  Convert HDF5 recording files to traditional binary format.\n\n\
  Parameters:\n\
@@ -30,7 +32,13 @@ const char USAGE[] = "\n\
    \t\tDefault is 1000 seconds.\n\n\
    " UL_PRE "infile" UL_POST "\tThe source file to convert.\n\n\
    " UL_PRE "outfile" UL_POST "\tThe basename of the output files. If not given,\n\
-   \t\tit uses the same basename as the input file.\n";
+   \t\tit uses the same basename as the input file.\n\n\
+   " UL_PRE "no-strict" UL_POST "\tBy default, all information that is normally\n\
+   \t\trequired in a traditional bin-file header must be present in the given HDF5\n\
+   \t\tsource file. This flag relaxes this requirement, allowing files that only\n\
+   \t\tspecify a minimal set of these parameters, which means that HDF5 files recorded\n\
+   \t\twith other array systems, such as the HiDens, can be translated to the bin\n\
+   \t\tformat, and thus used with other software such as spike-sorters.\n";
 const unsigned int VERSION_MAJOR = 0;
 const unsigned int VERSION_MINOR = 8;
 const unsigned int DEFAULT_FILE_SIZE = 1000;
@@ -76,35 +84,35 @@ int main(int argc, const char *argv[]) {
 	static struct option opts[] = {
 		{ "version", 	no_argument, 		NULL, 'v' },
 		{ "help", 		no_argument, 		NULL, 'h' },
+		{ "no-strict", 	no_argument, 		NULL, 'n' },
 		{ "output", 	required_argument, 	NULL, 'o' },
 		{ "file-size", 	required_argument, 	NULL, 's' },
 		{ NULL, 		0, 					NULL, 0 }
 	};
 	char *outfile_name = NULL;
 	char *size_str = NULL;
+	bool strict = true;
 	int opt;
-	while ( (opt = getopt_long(argc, argv, "hvo:s:", opts, NULL)) != -1) {
+	while ( (opt = getopt_long(argc, argv, "hvno:s:", opts, NULL)) != -1) {
 		switch (opt) {
 			case 'h':
 				print_usage_and_exit();
 			case 'v':
 				print_version_and_exit();
 			case 'o':
-				outfile_name = optarg;
+				outfile_name = strdup(optarg);
 				break;
 			case 's':
 				size_str = optarg;
 				break;
+			case 'n':
+				strict = false;
+				break;
 		}
 	}
 	unsigned int file_size = check_file_size_arg(size_str);
-	unsigned int offset = 1;
-	if (outfile_name && size_str)
-		offset = optind;
-	else if (outfile_name || size_str)
-		offset = 3;
-	argv += offset;
-	argc -= offset;
+	argv += optind;
+	argc -= optind;
 	if (argc == 0)
 		print_usage_and_exit();
 
@@ -117,7 +125,7 @@ int main(int argc, const char *argv[]) {
 		outfile_name = make_outfile_basename(infile_name);
 
 	/* Copy data from input HDF5 file to output file(s) */
-	int ret = hdf2bin(infile_name, outfile_name, file_size);
+	int ret = hdf2bin(infile_name, outfile_name, file_size, strict);
 	free(infile_name);
 	free(outfile_name);
 	return ret;

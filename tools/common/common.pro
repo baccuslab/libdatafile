@@ -8,7 +8,8 @@ DESTDIR += ../lib
 OBJECTS_DIR += ../build
 INCLUDEPATH += . /usr/local/include
 LIBS += -L/usr/local/lib -lhdf5
-CONFIG += debug_and_release
+CONFIG += debug_and_release c99
+QMAKE_CFLAGS += -std=c99
 
 mac {
 	QMAKE_SONAME_PREFIX += @rpath

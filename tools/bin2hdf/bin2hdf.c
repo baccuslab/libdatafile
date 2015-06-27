@@ -93,7 +93,7 @@ int main(int argc, const char *argv[]) {
 			case 'v':
 				print_version_and_exit();
 			case 'o':
-				outfile_name = optarg;
+				outfile_name = strdup(optarg);
 				break;
 		}
 	}
