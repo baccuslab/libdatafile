@@ -4,24 +4,31 @@
 
 TEMPLATE = app
 TARGET = mealog
+VERSION = 0.1.0
 OBJECTS_DIR = build
 MOC_DIR = build
 QT += network printsupport widgets
 QT_CONFIG -= no-pkg-config
 CONFIG += c++11 debug_and_release link_pkgconfig
 PKGCONFIG += protobuf
-INCLUDEPATH += . include ../ ../online-analysis/include \
-			/usr/local/include
-LIBS += -L../h5recording/lib -lh5recording \
-		-L../messaging/lib -lmessaging \
-		-L../daqclient/lib -ldaqclient \
-		-L../online-analysis/lib -lonline-analysis \
-		-L/usr/local/lib -larmadillo
 QMAKE_CXXFLAGS += -std=c++11
 QMAKE_RPATHDIR += ../h5recording/lib \
 		../messaging/lib \
 		../daqclient/lib \
 		../online-analysis/lib
+INCLUDEPATH += . include ../ ../online-analysis/include
+LIBS += -L../h5recording/lib -lh5recording \
+		-L../messaging/lib -lmessaging \
+		-L../daqclient/lib -ldaqclient \
+		-L../online-analysis/lib -lonline-analysis
+linux {
+	INCLUDEPATH += /usr/include/hdf5/serial /usr/include
+	LIBS += -L/usr/lib/x86_64-linux-gnu -lhdf5_serial -larmadillo
+}
+macx {
+	INCLUDEPATH += /usr/local/include
+	LIBS += -L/usr/local/lib -lhdf5 -larmadillo
+}
 
 # Input
 HEADERS += include/mealogwindow.h \

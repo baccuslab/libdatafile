@@ -4,14 +4,19 @@
 
 TEMPLATE = lib
 TARGET = meatools
+VERSION = 0.1.0
 DESTDIR += ../lib
 OBJECTS_DIR += ../build
-INCLUDEPATH += . /usr/local/include
-LIBS += -L/usr/local/lib -lhdf5
 CONFIG += debug_and_release c99
 QMAKE_CFLAGS += -std=c99
 
+linux {
+	INCLUDEPATH += /usr/include/hdf5/serial
+	LIBS += -L/usr/lib/x86_64-linux-gnu/ -lhdf5_serial
+}
 mac {
+	INCLUDEPATH += /usr/local/include
+	LIBS += -L/usr/local/lib -lhdf5
 	QMAKE_SONAME_PREFIX += @rpath
 }
 

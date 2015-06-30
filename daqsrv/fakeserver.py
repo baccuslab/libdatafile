@@ -100,9 +100,9 @@ def serve_file_data(task, client, f):
         except BlockingIOError:
             pass
         tmp = array.array('h', 
-                f['data'][:, nsamples : nsamples + task.block_size].tobytes())
+                f['data'][:, nsamples : nsamples + task.block_size].tostring())
         try:
-            client.send(tmp.tobytes())
+            client.send(tmp.tostring())
         except BlockingIOError:
             print("Client would block, closing task")
             return

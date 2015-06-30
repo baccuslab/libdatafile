@@ -4,6 +4,8 @@
 
 TEMPLATE = lib
 TARGET = messaging
+VERSION = 0.1.0
+
 DESTDIR = lib
 OBJECTS_DIR = build
 QT -= core gui
@@ -11,7 +13,7 @@ QT_CONFIG -= no-pkg-config
 CONFIG += c++11 debug_and_release link_pkgconfig
 PKGCONFIG += protobuf
 INCLUDEPATH += .
-QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++
+QMAKE_CXXFLAGS += -std=c++11
 
 mac {
 	QMAKE_SONAME_PREFIX += @rpath

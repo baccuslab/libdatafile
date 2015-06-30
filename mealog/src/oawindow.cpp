@@ -55,6 +55,8 @@ void OAWindow::initGui(void)
 	channelBox = new QSpinBox(this);
 	channelBox->setRange(0, 63);
 	channelBox->setValue(0);
+	connect(channelBox, SIGNAL(valueChanged(int)),
+			this, SLOT(updateOAChannel(int)));
 	instructions = new QLabel("Select analysis:", this);
 	analysisDescription = new QLabel(
 			QString::fromStdString(analysis->description()), this);
@@ -327,3 +329,9 @@ bool OAWindow::checkDimensionMatch(void)
 	}
 	return true;
 }
+
+void OAWindow::updateOAChannel(int c)
+{
+	channel = c;
+}
+

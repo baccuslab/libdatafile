@@ -4,17 +4,25 @@
 
 TEMPLATE = lib
 TARGET = h5recording
+VERSION = 0.1.0
+
 DESTDIR = lib
 OBJECTS_DIR = build
 QT -= core gui
 CONFIG += c++11 debug_and_release
-INCLUDEPATH += . include /usr/local/include
-LIBS += -L/usr/local/lib -lhdf5 -lhdf5_cpp -larmadillo
 QMAKE_CXXFLAGS += -std=c++11
 
+INCLUDEPATH += . include
+unix {
+	INCLUDEPATH += /usr/include /usr/include/hdf5/serial
+	LIBS += -L/usr/lib/x86_64-linux-gnu/ -lhdf5_serial
+}
 mac {
+	INCLUDEPATH += /usr/local/include
+	LIBS += -L/usr/local/lib -lhdf5
 	QMAKE_SONAME_PREFIX += @rpath
 }
+LIBS += -lhdf5_cpp -larmadillo
 
 # Input
 HEADERS += include/h5recording.h

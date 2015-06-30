@@ -4,10 +4,12 @@
 
 TEMPLATE = lib
 TARGET = daqclient
+VERSION = 0.1.0
 DESTDIR = lib
 OBJECTS_DIR = build
 INCLUDEPATH += . include ../
 QT += network
+QT -= gui
 CONFIG += c++11 debug_and_release
 
 mac {

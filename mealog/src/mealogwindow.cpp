@@ -1159,7 +1159,7 @@ void MealogWindow::waitForRecordingFinish(void) {
 	QThread::msleep(Mealog::RECORDING_FINISH_WAIT_TIME);
 }
 
-void MealogWindow::setOnlineAnalysisRunning(bool running, int channel)
+void MealogWindow::setOnlineAnalysisRunning(bool running)
 {
 	if (running)
 		connect(this, &MealogWindow::newDataPlotted, 

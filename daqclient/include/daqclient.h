@@ -83,7 +83,7 @@ class DaqClient : public QObject {
 
 		/* Parameters */
 		float length_;
-		uint64_t nsamples_;
+		quint64 nsamples_;
 		float adcRange_;
 		float adcResolution_;
 		uint32_t blockSize_ = BLOCK_SIZE;

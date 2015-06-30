@@ -114,7 +114,7 @@ class MealogWindow : public QMainWindow {
 		void recvData(qint64 nsamples);
 		void checkReadyForPlotting(void);
 		void plotNextPlaybackDataBlock(void);
-		void setOnlineAnalysisRunning(bool, int);
+		void setOnlineAnalysisRunning(bool);
 		void sendDataToOAWindow(uint64_t, uint64_t);
 
 		/* Playback control slots */

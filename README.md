@@ -30,7 +30,7 @@ Ubuntu 14.10.
 
 - C++11 or greater
 - [Qt5] (http://doc.qt.io/qt-5/index.html)
-- [HDF5 with C++ bindings] (http://hdfgroup.org/HDF5/)
+- [HDF5 (>= 1.8.12 with C++ bindings] (http://hdfgroup.org/HDF5/)
 - [Armadillo C++ linear algebra library] (http://arma.sourceforge.net)
 - [Google Protocol Buffers] (https://developers.google.com/protocol-buffers)
 

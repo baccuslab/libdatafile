@@ -4,18 +4,24 @@
 
 TEMPLATE = app
 TARGET = hdf2bin
+VERSION = 0.1.0
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
-INCLUDEPATH += . ../common /usr/local/include
-LIBS += -L/usr/local/lib -lhdf5 -L../lib -lmeatools
-QMAKE_RPATHDIR += ../lib
-
 QT -= core gui
 CONFIG += debug_and_release c99
 QMAKE_CFLAGS += -std=c99
 
+QMAKE_RPATHDIR += ../lib
+INCLUDEPATH += . ../common
+LIBS += -L../lib -lmeatools
+linux {
+	INCLUDEPATH += /usr/include/hdf5/serial
+	LIBS += -L/usr/lib/x86_64-linux-gnu -lhdf5_serial
+}
 mac {
 	CONFIG -= app_bundle
+	INCLUDEPATH += /usr/local/include
+	LIBS += -L/usr/local/lib -lhdf5
 }
 
 # Input

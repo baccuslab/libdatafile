@@ -47,6 +47,7 @@ class OAWindow : public QWidget
 		void runAnalysis(uint64_t start, double rate, arma::vec data);
 		void chooseStimulusFile(void);
 		void setAnalysis(int);
+		void updateOAChannel(int);
 
 	signals:
 		void setRunning(bool, int);

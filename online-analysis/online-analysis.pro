@@ -4,15 +4,22 @@
 
 TEMPLATE = lib
 TARGET = online-analysis
+VERSION = 0.1.0
 DESTDIR = lib
 OBJECTS_DIR = build
 QT -= core gui
 CONFIG += c++11 debug_and_release
-INCLUDEPATH += . include /usr/local/include
-LIBS += -L/usr/local/lib -lhdf5 -lhdf5_cpp -larmadillo -llapack
 QMAKE_CXXFLAGS += -std=c++11 -Wno-sign-compare
+INCLUDEPATH += . include
+LIBS += -lhdf5_cpp -larmadillo -llapack
 
+linux {
+	INCLUDEPATH += /usr/include/hdf5/serial /usr/include
+	LIBS += -L/usr/lib/x86_64-linux-gnu -lhdf5_serial
+}
 mac {
+	INCLUDEPATH += /usr/local/include
+	LIBS += -L/usr/local/lib -lhdf5
 	QMAKE_SONAME_PREFIX += @rpath
 }
 
