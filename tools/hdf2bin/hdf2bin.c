@@ -57,7 +57,7 @@ void print_version_and_exit(void) {
 char *make_outfile_basename(const char *infile_name) {
 	char *period = strrchr(infile_name, '.');
 	if (period == NULL)
-		return infile_name;
+		return strdup(infile_name);
 	size_t length = period - infile_name + 1;
 	char *outfile_name = calloc(length, sizeof(char));
 	if (outfile_name == NULL)

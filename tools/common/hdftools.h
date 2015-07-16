@@ -13,6 +13,8 @@
 
 const char BIN_FILE_EXTENSION[] = ".bin";
 const char H5_FILE_EXTENSION[] = ".h5";
+const char ISO_FORMAT[] = "%Y-%m-%dT%H:%M:%S";
+const size_t ISO_FORMAT_LEN = 19;
 
 /* Convert traditional binary file(s) to new HDF5 format */
 int bin2hdf(int num_infiles, char **binfiles, char *hdf_file);

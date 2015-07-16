@@ -11,15 +11,9 @@ QT -= core gui
 CONFIG += c++11 debug_and_release
 QMAKE_CXXFLAGS += -std=c++11 -Wno-sign-compare
 INCLUDEPATH += . include
-LIBS += -lhdf5_cpp -larmadillo -llapack
+LIBS += -lhdf5_cpp -lhdf5 -larmadillo -llapack
 
-linux {
-	INCLUDEPATH += /usr/include/hdf5/serial /usr/include
-	LIBS += -L/usr/lib/x86_64-linux-gnu -lhdf5_serial
-}
 mac {
-	INCLUDEPATH += /usr/local/include
-	LIBS += -L/usr/local/lib -lhdf5
 	QMAKE_SONAME_PREFIX += @rpath
 }
 

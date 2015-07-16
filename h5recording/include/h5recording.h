@@ -13,7 +13,7 @@
 #include <vector>
 
 /* Third-party includes */
-#include <H5Cpp.h>
+#include "H5Cpp.h"
 #include <armadillo>
 
 using namespace H5;
@@ -61,7 +61,6 @@ class H5Recording {
 		float gain(void);				// Returns the NI-DAQ ADC gain
 		float offset(void);				// Returns the NI-DAQ ADC offset
 		std::string date(void);			// Returns date of the recording
-		std::string time(void);			// Returns time of the recording
 		std::string room(void);			// Returns room in which recording occurred
 
 		/* These functions return the requested chunks of data,
@@ -109,8 +108,7 @@ class H5Recording {
 		void setGain(float gain);
 		void setOffset(float offset);
 		void setBlockSize(size_t blockSize);
-		void setDate(std::string date);
-		void setTime(std::string time);
+		void setDate(void);
 		void setRoom(std::string room);
 
 		/* These functions implement the actual reading of HDF5 file
@@ -136,7 +134,6 @@ class H5Recording {
 		void readGain(void);
 		void readOffset(void);
 		void readDate(void);
-		void readTime(void);
 		void readRoom(void);
 
 	private:
@@ -159,8 +156,7 @@ class H5Recording {
 		float sampleRate_;			// Data sample rate
 		float gain_;				// NI-DAQ ADC gain
 		float offset_;				// NI-DAQ ADC offset
-		std::string time_;			// Time of recording start
-		std::string date_;			// Date of recording
+		std::string date_;			// Date of recording, ISO-8601 format
 		std::string room_; 			// Location of recording
 
 }; // End class

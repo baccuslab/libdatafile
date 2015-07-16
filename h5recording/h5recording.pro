@@ -12,17 +12,11 @@ QT -= core gui
 CONFIG += c++11 debug_and_release
 QMAKE_CXXFLAGS += -std=c++11
 
-INCLUDEPATH += . include
-unix {
-	INCLUDEPATH += /usr/include /usr/include/hdf5/serial
-	LIBS += -L/usr/lib/x86_64-linux-gnu/ -lhdf5_serial
-}
+INCLUDEPATH += . include /usr/local/include /usr/include
+LIBS += -L/usr/local/lib -L/usr/lib -lhdf5_cpp -lhdf5 -larmadillo
 mac {
-	INCLUDEPATH += /usr/local/include
-	LIBS += -L/usr/local/lib -lhdf5
 	QMAKE_SONAME_PREFIX += @rpath
 }
-LIBS += -lhdf5_cpp -larmadillo
 
 # Input
 HEADERS += include/h5recording.h

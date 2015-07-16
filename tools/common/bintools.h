@@ -38,6 +38,7 @@ typedef struct {
  */
 #define DEFAULT_FILE_TYPE 1
 #define DEFAULT_FILE_VERSION 2
+#define DEFAULT_BLOCK_SIZE 20000
 #define DEFAULT_OFFSET 0.0
 #define DEFAULT_DATE_SIZE 0
 #define DEFAULT_DATE ""
@@ -45,6 +46,8 @@ typedef struct {
 #define DEFAULT_TIME ""
 #define DEFAULT_ROOM_SIZE 00
 #define DEFAULT_ROOM ""
+#define DATE_FORMAT "%a, %b %d, %Y"
+#define TIME_FORMAT "%l:%M:%S %p"
 
 /* Exported functions */
 bin_hdr_t *read_bin_header(FILE *fp);

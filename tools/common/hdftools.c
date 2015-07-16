@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+#include <time.h>
 
 #include "hdf5.h"
 #include "hdftools.h"
@@ -26,15 +27,17 @@ int write_hdf_attr(hid_t, char *, hid_t, hid_t, void *);
 int write_hdf_string_attr(hid_t, char *, char *, hid_t);
 int write_recording_attrs(hid_t, bin_hdr_t *);
 int write_data_to_hdf(hid_t, hid_t, int, bin_hdr_t **, FILE **);
+char *convert_date_to_iso(const char*, const char*);
 
 int write_data_to_bin(hid_t, hid_t, unsigned int, bin_hdr_t **, FILE **);
-unsigned int *compute_num_bin_files(hid_t, unsigned int, unsigned int *);
+unsigned int *compute_num_bin_files(hid_t, hid_t, unsigned int, unsigned int *);
 bin_hdr_t **create_bin_headers(hid_t, unsigned int, unsigned int *, bool);
 int read_hdf_attr(hid_t, char *, hid_t, void *);
 int read_hdf_string_attr(hid_t, char *, uint32_t *, char **);
 int write_bin_headers(unsigned int, bin_hdr_t **, FILE **);
 char *create_outfile_name(char *, unsigned int);
 FILE **open_outfiles(char *, unsigned int);
+int convert_iso_to_date_and_time(const char*, char**, char **);
 
 int bin2hdf(int num_files, char **infiles, char *outfile) {
 
@@ -181,7 +184,7 @@ int hdf2bin(char *infile, char *outfile, unsigned int file_size, bool strict) {
 
 	/* Determine number of bin files needed for all data */
 	unsigned int num_files = 0;
-	unsigned int *file_sizes = compute_num_bin_files(dset_id, 
+	unsigned int *file_sizes = compute_num_bin_files(file_id, dset_id, 
 			file_size, &num_files);
 
 	/* Create a list of corresponding headers for the bin file(s) */
@@ -287,7 +290,7 @@ int write_hdf_string_attr(hid_t dset_id, char *name,
 	hid_t string_type = H5Tcopy(H5T_C_S1);
 	if (string_type < 0)
 		return -1;
-	if (H5Tset_size(string_type, strlen(value)) < 0)
+	if (H5Tset_size(string_type, strlen(value) + 1) < 0)
 		return -1;
 	hid_t attr_id = H5Acreate(dset_id, name, string_type, space_id,
 			H5P_DEFAULT, H5P_DEFAULT);
@@ -333,15 +336,73 @@ int write_dataset_attrs(hid_t dset_id, bin_hdr_t *hdr) {
 		return -1;
 
 	/* Date string */
-	if (write_hdf_string_attr(dset_id, "date", hdr->date, space_id) < 0)
+	char *date_str = convert_date_to_iso(hdr->date, hdr->time);
+	if (!date_str)
 		return -1;
-
-	/* Time string */
-	if (write_hdf_string_attr(dset_id, "time", hdr->time, space_id) < 0)
+	if (write_hdf_string_attr(dset_id, "date", date_str, space_id) < 0)
 		return -1;
+	free(date_str);
 
 	/* Room string */
 	return write_hdf_string_attr(dset_id, "room", hdr->room, space_id);
+}
+
+char *convert_date_to_iso(const char *date_str, const char *time_str) {
+	char *buf = calloc(ISO_FORMAT_LEN + 1, sizeof(char));
+	if (!buf)
+		return NULL;
+	struct tm *time_struct = calloc(1, sizeof(struct tm));
+	if (!time_struct) {
+		free(buf);
+		return NULL;
+	}
+	if ( !strptime(date_str, DATE_FORMAT, time_struct) ||
+	 	 !strptime(time_str, TIME_FORMAT, time_struct) ) {
+		free(time_struct);
+		free(buf);
+		return NULL;
+	}
+	if (strftime(buf, ISO_FORMAT_LEN + 1, ISO_FORMAT, time_struct) == 0) {
+		free(time_struct);
+		free(buf);
+		return NULL;
+	}
+	free(time_struct);
+	return buf;
+}
+
+int convert_iso_to_date_and_time(const char* iso, char **date_str, 
+		char **time_str) {
+	struct tm *time_struct = calloc(1, sizeof(struct tm));
+	if (!time_struct)
+		return -1;
+	if (strptime(iso, ISO_FORMAT, time_struct) == NULL) {
+		free(time_struct);
+		return -1;
+	}
+
+	size_t bufsz = 32;
+	*date_str = calloc(bufsz, sizeof(char));
+	if (!date_str) {
+		free(time_struct);
+		return -1;
+	}
+	*time_str = calloc(bufsz, sizeof(char));
+	if (!time_str) {
+		free(time_struct);
+		free(date_str);
+		return -1;
+	}
+
+	if ( (strftime(*date_str, bufsz, DATE_FORMAT, time_struct) == 0) ||
+		 (strftime(*time_str, bufsz, TIME_FORMAT, time_struct) == 0) ) {
+		free(time_struct);
+		free(*date_str);
+		free(*time_str);
+		return -1;
+	}
+	free(time_struct);
+	return 1;
 }
 
 int write_recording_attrs(hid_t file_id, bin_hdr_t *hdr) {
@@ -430,12 +491,22 @@ int write_data_to_hdf(hid_t dset_id, hid_t dspace_id,
 	return 0;
 }
 
-unsigned int *compute_num_bin_files(hid_t dset_id, unsigned int file_size, 
-		unsigned int *num_files) {
-	/* Get the size of the dataset */
-	hid_t dspace_id = H5Dget_space(dset_id);
+unsigned int *compute_num_bin_files(hid_t file_id, hid_t dset_id, 
+		unsigned int file_size, unsigned int *num_files) {
+	/* Get the size of the dataset. This is the last valid sample of
+	 * the recording, or the full size of the dataset, if that attribute
+	 * does not exist.
+	 */
 	hsize_t dims[RANK] = {0, 0};
+	hid_t dspace_id = H5Dget_space(dset_id);
 	H5Sget_simple_extent_dims(dspace_id, dims, NULL);
+	if (H5Aexists(file_id, "last-valid-sample")) {
+		hid_t sample_attr = H5Aopen(file_id, "last-valid-sample", H5P_DEFAULT);
+		uint32_t sz = 0;
+		H5Aread(sample_attr, H5T_STD_U32LE, &sz);
+		dims[1] = sz;
+		H5Aclose(sample_attr);
+	}
 
 	/* Get sample rate and determine necessary number of files */
 	float fs = 0;
@@ -560,10 +631,14 @@ bin_hdr_t **create_bin_headers(hid_t dset_id, unsigned int num_files,
 		}
 
 		/* Block size */
-		if (read_hdf_attr(dset_id, "block-size", 
-					H5T_STD_U32LE, &(hdr->block_size)) < 0) {
-			free_bin_headers(num_files, hdr_list);
-			return NULL;
+		if ( (strict) || H5Aexists(dset_id, "block-size") ) {
+			if (read_hdf_attr(dset_id, "block-size", 
+						H5T_STD_U32LE, &(hdr->block_size)) < 0) {
+				free_bin_headers(num_files, hdr_list);
+				return NULL;
+			}
+		} else {
+			hdr->block_size = DEFAULT_FILE_VERSION;
 		}
 
 		/* Gain */
@@ -586,24 +661,23 @@ bin_hdr_t **create_bin_headers(hid_t dset_id, unsigned int num_files,
 
 		/* Date string */
 		if ( (strict) || H5Aexists(dset_id, "date") ) {
+			char *date_str;
+			size_t date_size;
 			if (read_hdf_string_attr(dset_id, "date", 
-						&(hdr->date_size), &(hdr->date)) < 0) {
+						&date_size, &date_str) < 0) {
 				free_bin_headers(num_files, hdr_list);
 				return NULL;
 			}
+			if (convert_iso_to_date_and_time(date_str, 
+						&(hdr->date), &(hdr->time)) < 0) {
+				free_bin_headers(num_files, hdr_list);
+				return NULL;
+			}
+			hdr->date_size = strlen(hdr->date);
+			hdr->time_size = strlen(hdr->time);
 		} else {
 			hdr->date_size = DEFAULT_DATE_SIZE;
 			hdr->date = DEFAULT_DATE;
-		}
-
-		/* Time string */
-		if ( (strict) || H5Aexists(dset_id, "time") ) {
-			if (read_hdf_string_attr(dset_id, "time", 
-						&(hdr->time_size), &(hdr->time)) < 0) {
-				free_bin_headers(num_files, hdr_list);
-				return NULL;
-			}
-		} else {
 			hdr->time_size = DEFAULT_TIME_SIZE;
 			hdr->time = DEFAULT_TIME;
 		}
@@ -643,6 +717,16 @@ int write_bin_headers(unsigned int num_files, bin_hdr_t **hdr_list,
 	return 0;
 }
 
+int is_hidens(hid_t dset_id) {
+	if (!H5Aexists(dset_id, "array"))
+		return 0;
+	char *array;
+	size_t sz;
+	if (read_hdf_string_attr(dset_id, "array", &sz, &array) < 0)
+		return -1;
+	return strcmp(array, "hidens") == 0;
+}
+
 int write_data_to_bin(hid_t dset_id, hid_t dspace_id, 
 		unsigned int num_files, bin_hdr_t **hdr_list, FILE **fp_list) {
 
@@ -662,6 +746,15 @@ int write_data_to_bin(hid_t dset_id, hid_t dspace_id,
 	hsize_t start[RANK] = {0, 0};
 	hsize_t count[RANK] = {hdr_list[0]->nchannels, 
 			hdr_list[0]->block_size};
+
+	/* Detect the array on which the data was recording, giving the bit-
+	 * width of the source.
+	 */
+	hid_t hdf_data_type;
+	if (is_hidens(dset_id))
+		hdf_data_type = H5T_STD_U8LE;
+	else
+		hdf_data_type = H5T_STD_I16LE;
 
 	/* Allocate buffer to hold data from HDF5 file */
 	int write_size = hdr_list[0]->nchannels * hdr_list[0]->block_size;
@@ -713,7 +806,7 @@ int write_data_to_bin(hid_t dset_id, hid_t dspace_id,
 			}
 
 			/* Read the data from the file */
-			status = H5Dread(dset_id, H5T_STD_I16LE, block_id, dspace_id, 
+			status = H5Dread(dset_id, hdf_data_type, block_id, dspace_id, 
 					H5P_DEFAULT, data_buffer);
 			if (status) {
 				free(data_buffer);

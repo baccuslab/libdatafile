@@ -12,23 +12,18 @@ QT_CONFIG -= no-pkg-config
 CONFIG += c++11 debug_and_release link_pkgconfig
 PKGCONFIG += protobuf
 QMAKE_CXXFLAGS += -std=c++11
-QMAKE_RPATHDIR += ../h5recording/lib \
-		../messaging/lib \
-		../daqclient/lib \
-		../online-analysis/lib
-INCLUDEPATH += . include ../ ../online-analysis/include
+QMAKE_RPATHDIR += $$(PWD)/../h5recording/lib \
+		$$(PWD)/../messaging/lib \
+		$$(PWD)/../daqclient/lib \
+		$$(PWD)/../online-analysis/lib
+INCLUDEPATH += . include ../ ../online-analysis/include \
+		/usr/local/include /usr/include
 LIBS += -L../h5recording/lib -lh5recording \
 		-L../messaging/lib -lmessaging \
 		-L../daqclient/lib -ldaqclient \
-		-L../online-analysis/lib -lonline-analysis
-linux {
-	INCLUDEPATH += /usr/include/hdf5/serial /usr/include
-	LIBS += -L/usr/lib/x86_64-linux-gnu -lhdf5_serial -larmadillo
-}
-macx {
-	INCLUDEPATH += /usr/local/include
-	LIBS += -L/usr/local/lib -lhdf5 -larmadillo
-}
+		-L../online-analysis/lib -lonline-analysis \
+		-L/usr/local/lib -L/usr/lib \
+		-lhdf5_cpp -lhdf5 -larmadillo
 
 # Input
 HEADERS += include/mealogwindow.h \

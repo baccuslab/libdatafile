@@ -13,8 +13,7 @@
 #include <QDebug>
 #include <QHostAddress>
 #include <QMessageBox>
-#include <QTime>
-#include <QDate>
+#include <QDateTime>
 #include <QDataStream>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -411,11 +410,8 @@ void MealogWindow::setRecordingParameters(void) {
 	recording->setOffset(adcRange);
 	recording->setGain((adcRange * 2) / (1 << 16));
 
-	/* Date and time */
-	QString tm(QTime::currentTime().toString("h:mm:ss AP"));
-	QString dt(QDate::currentDate().toString("ddd, MMM dd, yyyy"));
-	recording->setTime(tm.toStdString());
-	recording->setDate(dt.toStdString());
+	/* Date of recording */
+	recording->setDate();
 }
 
 void MealogWindow::sendDaqsrvInitMessage(void) {
@@ -1024,6 +1020,9 @@ void MealogWindow::recvData(qint64 nsamples) {
 		daqClient->recvData(nsamples, samples.memptr());
 	}
 
+	/* Sign-invert new data, so spikes are upwards deflections */
+	if (recordingStatus &= Mealog::RECORDING)
+		samples *= -1;
 	recording->setData(numSamplesAcquired, 
 			numSamplesAcquired + nsamples, samples);
 	numSamplesAcquired += nsamples;

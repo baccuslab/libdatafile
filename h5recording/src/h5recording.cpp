@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <iostream>
 #include <stdlib.h>
+#include <ctime>
 
 #include "h5recording.h"
 
@@ -52,7 +53,6 @@ H5Recording::H5Recording(std::string filename) {
 			readGain();
 			readOffset();
 			readDate();
-			readTime();
 			readRoom();
 		} catch ( ... ) {
 			std::cerr << "File does not contain appropriate attributes";
@@ -98,6 +98,7 @@ H5Recording::H5Recording(std::string filename) {
 		setBlockSize(H5Rec::BLOCK_SIZE);
 		setSampleRate(H5Rec::SAMPLE_RATE);
 		setRoom(H5Rec::DEFAULT_ROOM_STRING);
+		setDate();
 	}
 }
 
@@ -176,10 +177,6 @@ float H5Recording::offset(void) {
 
 std::string H5Recording::date(void) {
 	return date_;
-}
-
-std::string H5Recording::time(void) {
-	return time_;
 }
 
 std::string H5Recording::room(void) {
@@ -504,7 +501,6 @@ void H5Recording::writeAllAttributes(void) {
 	writeDataAttr("gain", PredType::IEEE_F32LE, &gain_);
 	writeDataAttr("offset", PredType::IEEE_F32LE, &offset_);
 	writeDataStringAttr("date", date_);
-	writeDataStringAttr("time", time_);
 	writeDataStringAttr("room", room_);
 }
 
@@ -556,14 +552,14 @@ void H5Recording::setBlockSize(size_t blockSize) {
 	blockSize_ = blockSize;
 }
 
-void H5Recording::setDate(std::string date) {
+void H5Recording::setDate(void) {
+	size_t isoLength = 19;
+	const char fmt[] = "%Y-%m-%dT%H:%M:%S";
+	std::string date(isoLength + 1, '\0');
+	std::time_t t = std::time(nullptr);
+	std::strftime(&date[0], isoLength, fmt, std::localtime(&t));
 	writeDataStringAttr("date", date);
 	date_ = date;
-}
-
-void H5Recording::setTime(std::string time) {
-	writeDataStringAttr("time", time);
-	time_ = time;
 }
 
 void H5Recording::setRoom(std::string room) {
@@ -658,10 +654,6 @@ void H5Recording::readOffset(void) {
 
 void H5Recording::readDate(void) {
 	readDataStringAttr("date", date_);
-}
-
-void H5Recording::readTime(void) {
-	readDataStringAttr("time", time_);
 }
 
 void H5Recording::readRoom(void) {

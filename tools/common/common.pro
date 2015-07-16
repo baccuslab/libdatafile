@@ -8,6 +8,7 @@ VERSION = 0.1.0
 DESTDIR += ../lib
 OBJECTS_DIR += ../build
 CONFIG += debug_and_release c99
+QT -= gui core
 QMAKE_CFLAGS += -std=c99
 
 linux {
