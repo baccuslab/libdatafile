@@ -20,4 +20,4 @@ mac {
 
 # Input
 HEADERS += include/h5recording.h
-SOURCES += src/h5recording.cpp
+SOURCES += src/h5recording.cc

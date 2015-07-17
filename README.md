@@ -1,25 +1,41 @@
-mearec
+MeaRec
 ======
 
-The `mearec` library is a set of applications, libraries, and tools for 
-recording data from the Multichannel Systems arrays in the Baccus Lab.
+The `MeaRec` library is a set of tools, libraries, and a GUI application
+for recording multi-electrode array data from either Multichannel Systems
+arrays, or the HiDens system from the Hierlemann group at ETH Basel.
 
 (C) 2015 Benjamin Naecker bnaecker@stanford.edu
 
 Components
 ==========
 
-- `mealog` - Record data or play back old data recordings.
+- `mealog`
+	- The main application component of the `MeaRec` suite. A GUI application
+	for creating new recordings or playing back old recordings, and visualizing
+	the resulting data.
 - `daqsrv` - A small server application that interfaces with our National
 Instruments data acquisition device, and serves data over the network.
-- `daqclient` - A client interface to the `daqsrv` remote NI-DAQ server.
-- `h5recording` - A class for reading and recording data to HDF5 files.
-- `messaging`/`mealogclient` - The Mealog application provides information 
-about the status of its recording though simple message-based network protocol. 
-The messaging protocol and a C++ client library are defined here. (This is 
-not yet fully implemented)
-- `tools` - Miscellaneous tools, such as converting HDF5 recordings to traditional
-bin files and vice-versa.
+- `dataclient` 
+	- A client library for talking with and receiving data from the data
+	source servers
+		- `McsClient` A client to the `daqsrv` program collecting data
+		from the MCS array system
+		- `HidensClient` A client to the HiDens data server
+- `h5recording` 
+	- A class for reading and recording data to HDF5 files.
+	- `HidensRecording` and `McsRecording` subclasses
+- `online-analysis`
+	- Classes and functionality for implementing online analysis of
+	data recordings
+- `messaging` 
+	- The Mealog application provides information about the status of its 
+	recording though simple message-based network protocol. The messaging 
+	protocol and a C++ client library are defined here. (This is not yet 
+	fully implemented)
+- `tools` - Miscellaneous tools
+	- `hdf2bin`/`bin2hdf` - Convert between HDF5 recordings and AIB binary format
+	- `fifo2hdf` - Convert from Igor FIFO files to HDF5 recordings (not yet implemented)
 
 
 Dependencies
@@ -59,9 +75,9 @@ easy online computations if desired.
 This presents a bit of a weird situation, because HDF5 uses row-major data 
 ordering, while Armadillo uses column-major. This means data is stored on
 disk as a dataset with shape (numChannels, numSamples), but in memory as
-(numSamples, numChannels). This doesn't mean data is transposed, because of
-the different ordering formats of the two libraries. Thus it's not a source
-of inefficiency, just possible programming confusion.
+(numSamples, numChannels). This allows each library to have access to the data
+in its most efficient stride pattern, without transposing any data. It is 
+not inefficient or wrong, but may lead to programming or debugging confusion.
 
 Attributions
 ============
@@ -71,5 +87,6 @@ one very notable exception.
 
 `QCustomPlot` is the library used for creating plots of data. This code is
 copyrighted by Emanuel Eichhammer, whose contact info can be found 
-[here](http://www.qcustomplot.com/index.php/contact).
+[here](http://www.qcustomplot.com/index.php/contact). The work here is 
+greatly indebted to this wonderful library.
 

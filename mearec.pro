@@ -12,7 +12,7 @@ INCLUDEPATH += . \
 SUBDIRS += h5recording \
 			messaging \
 			tools \
-			daqclient \
+			dataclient \
 			mealog
 QT_CONFIG -= no-pkg-config
 CONFIG += ordered c++11 debug_and_release link_pkgconfig
@@ -33,15 +33,17 @@ HEADERS += messaging/logserver.pb.h \
            mealog/include/settings.h \
            tools/common/bintools.h \
            tools/common/hdftools.h
+
 SOURCES += messaging/logserver.pb.cc \
-           daqclient/src/daqclient.cpp \
-           h5recording/src/h5recording.cpp \
-           mealog/src/main.cpp \
-           mealog/src/mealogwindow.cpp \
-           mealog/src/plotwindow.cpp \
-           mealog/src/qcustomplot.cpp \
-           mealog/src/settings.cpp \
+           dataclient/src/daqclient.cc \
+           h5recording/src/h5recording.cc \
+           mealog/src/main.cc \
+           mealog/src/mealogwindow.cc \
+           mealog/src/plotwindow.cc \
+           mealog/src/qcustomplot.cc \
+           mealog/src/settings.cc \
            tools/bin2hdf/bin2hdf.c \
            tools/common/bintools.c \
            tools/hdf2bin/hdf2bin.c \
            tools/common/hdftools.c
+

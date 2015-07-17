@@ -31,7 +31,7 @@
 #include <QPointer>
 
 /* Project library includes */
-#include "daqclient/include/daqclient.h"
+#include "dataclient/include/daqclient.h"
 #include "h5recording/include/h5recording.h"
 #include "messaging/logserver.pb.h"
 

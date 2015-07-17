@@ -14,13 +14,13 @@ PKGCONFIG += protobuf
 QMAKE_CXXFLAGS += -std=c++11
 QMAKE_RPATHDIR += $$(PWD)/../h5recording/lib \
 		$$(PWD)/../messaging/lib \
-		$$(PWD)/../daqclient/lib \
+		$$(PWD)/../dataclient/lib \
 		$$(PWD)/../online-analysis/lib
 INCLUDEPATH += . include ../ ../online-analysis/include \
 		/usr/local/include /usr/include
 LIBS += -L../h5recording/lib -lh5recording \
 		-L../messaging/lib -lmessaging \
-		-L../daqclient/lib -ldaqclient \
+		-L../dataclient/lib -ldataclient \
 		-L../online-analysis/lib -lonline-analysis \
 		-L/usr/local/lib -L/usr/lib \
 		-lhdf5_cpp -lhdf5 -larmadillo
@@ -33,11 +33,13 @@ HEADERS += include/mealogwindow.h \
 			include/plotworker.h \
 			include/channelinspector.h \
 			include/oawindow.h
-SOURCES += src/main.cpp \
-			src/mealogwindow.cpp \
-			src/plotwindow.cpp \
-			src/qcustomplot.cpp \
-			src/settings.cpp \
-			src/plotworker.cpp \
-			src/channelinspector.cpp \
-			src/oawindow.cpp
+
+SOURCES += src/main.cc \
+			src/mealogwindow.cc \
+			src/plotwindow.cc \
+			src/qcustomplot.cc \
+			src/settings.cc \
+			src/plotworker.cc \
+			src/channelinspector.cc \
+			src/oawindow.cc
+

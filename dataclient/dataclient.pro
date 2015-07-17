@@ -3,7 +3,7 @@
 ######################################################################
 
 TEMPLATE = lib
-TARGET = daqclient
+TARGET = dataclient
 VERSION = 0.1.0
 DESTDIR = lib
 OBJECTS_DIR = build
@@ -17,7 +17,9 @@ mac {
 }
 
 # Input
-HEADERS += include/daqclient.h
-SOURCES += src/daqclient.cpp \
+HEADERS += include/daqclient.h \
+			include/hdclient.h
+SOURCES += src/daqclient.cc \
+			src/hdclient.cc \
 			../daqsrv/messages.h \
-			../daqsrv/nidaq.h
+			../daqsrv/nidaq.h 
