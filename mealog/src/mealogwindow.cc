@@ -341,7 +341,7 @@ void MealogWindow::createNewRecording(void) {
 	recording = new H5Rec::H5Recording(path.fileName().toStdString());
 	setRecordingParameters();
 	recording->flush();
-	if (daqClient)
+	if (mcsClient)
 		sendDaqsrvInitMessage();
 
 	/* Disable parameter selections */
@@ -352,7 +352,7 @@ void MealogWindow::createNewRecording(void) {
 	closeRecordingButton->setEnabled(true);
 
 	/* Enable the "Start" button, if connection to the Daqsrv */
-	if ((daqClient) && (daqClient->isConnected()))
+	if ((mcsClient) && (mcsClient->connected()))
 		startButton->setEnabled(true);
 
 	/* Finalize initialisation */
@@ -415,11 +415,10 @@ void MealogWindow::setRecordingParameters(void) {
 }
 
 void MealogWindow::sendDaqsrvInitMessage(void) {
-	daqClient->setLength(recording->length());
-	daqClient->setAdcRange(recording->offset());
-	daqClient->setBlockSize(DaqClient::BLOCK_SIZE);
-	daqClient->setTrigger(triggerBox->currentText());
-	daqClient->initExperiment();
+	mcsClient->setLength(recording->length());
+	mcsClient->setAdcRange(recording->offset());
+	mcsClient->setTrigger(triggerBox->currentText());
+	mcsClient->initExperiment();
 }
 
 bool MealogWindow::confirmFileOverwrite(const QFile &path) {
@@ -497,19 +496,19 @@ void MealogWindow::closeRecording(void) {
 	plotWindow->unblockResize();
 
 	/* Disconnect NI-DAQ client, if this is a recording */
-	if ((daqClient) && (daqClient->isConnected())) {
-		disconnect(daqClient, &DaqClient::DaqClient::disconnected,
+	if ((mcsClient) && (mcsClient->connected())) {
+		disconnect(mcsClient, &mcsclient::McsClient::disconnected,
 				this, &MealogWindow::handleServerDisconnection);
-		disconnect(daqClient, &DaqClient::DaqClient::error,
+		disconnect(mcsClient, &mcsclient::McsClient::error,
 				this, &MealogWindow::handleServerError);
 		disconnect(connectToNidaqButton, &QPushButton::clicked,
 				this, &MealogWindow::disconnectFromDaqsrv);
-		daqClient->disconnectFromDaqsrv();
-		daqClient->deleteLater();
+		mcsClient->disconnect();
+		mcsClient->deleteLater();
 		connect(connectToNidaqButton, &QPushButton::clicked,
-				this, &MealogWindow::connectToDaqsrv);
+				this, &MealogWindow::connectToDataServer);
 		connect(connectToNidaqButton, &QPushButton::clicked,
-				this, &MealogWindow::connectToDaqsrv);
+				this, &MealogWindow::connectToDataServer);
 	}
 	nidaqStatus->setText("Not connected");
 	connectToNidaqButton->setText("Connect");
@@ -730,7 +729,7 @@ void MealogWindow::initSignals(void) {
 	connect(choosePathButton, &QPushButton::clicked,
 			this, &MealogWindow::chooseSaveDir);
 	connect(connectToNidaqButton, &QPushButton::clicked,
-			this, &MealogWindow::connectToDaqsrv);
+			this, &MealogWindow::connectToDataServer);
 	connect(startButton, &QPushButton::clicked,
 			this, &MealogWindow::startRecording);
 	connect(showPlotWindow, &QAction::triggered,
@@ -818,15 +817,15 @@ void MealogWindow::chooseSaveDir(void) {
 	//statusBar->showMessage("Ready");
 //}
 
-void MealogWindow::connectToDaqsrv(void) {
+void MealogWindow::connectToDataServer(void) {
 	statusBar->showMessage("Connecting to NI-DAQ server");
 	nidaqStatus->setText("Connecting ...");
-	daqClient = new DaqClient::DaqClient(nidaqHost->text());
-	connect(daqClient, &DaqClient::DaqClient::connectionMade,
+	mcsClient = new mcsclient::McsClient(nidaqHost->text());
+	connect(mcsClient, &mcsclient::McsClient::connectionMade,
 			this, &MealogWindow::handleDaqsrvConnection);
 	disconnect(connectToNidaqButton, &QPushButton::clicked,
-			this, &MealogWindow::connectToDaqsrv);
-	daqClient->connectToDaqsrv();
+			this, &MealogWindow::connectToDataServer);
+	mcsClient->connect();
 	setNidaqInterfaceEnabled(false);
 }
 
@@ -842,7 +841,7 @@ void MealogWindow::handleServerError(void) {
 	connectToNidaqButton->setText("Connect");
 	nidaqStatus->setText("Connection to server interrupted");
 	if (recordingStatus & Mealog::STARTED) {
-		disconnect(daqClient, &DaqClient::DaqClient::dataAvailable,
+		disconnect(mcsClient, &mcsclient::McsClient::dataAvailable,
 				this, &MealogWindow::recvData);
 		closeRecording();
 		QMessageBox::critical(this, "Connection interrupted",
@@ -859,12 +858,12 @@ void MealogWindow::handleServerError(void) {
 	//disconnect(connectToNidaqButton, &QPushButton::clicked,
 			//this, &MealogWindow::disconnectFromDaqsrv);
 	//connect(connectToNidaqButton, &QPushButton::clicked,
-			//this, &MealogWindow::connectToDaqsrv);
-	//disconnect(daqClient, &DaqClient::DaqClient::disconnected,
+			//this, &MealogWindow::connectToDataServer);
+	//disconnect(mcsClient, &DaqClient::DaqClient::disconnected,
 			//this, &MealogWindow::handleServerDisconnection);
-	//disconnect(daqClient, &DaqClient::DaqClient::error,
+	//disconnect(mcsClient, &DaqClient::DaqClient::error,
 			//this, &MealogWindow::handleServerError);
-	//delete daqClient;
+	//delete mcsClient;
 }
 
 void MealogWindow::disconnectFromDaqsrv(void) {
@@ -879,12 +878,12 @@ void MealogWindow::disconnectFromDaqsrv(void) {
 	disconnect(connectToNidaqButton, &QPushButton::clicked,
 			this, &MealogWindow::disconnectFromDaqsrv);
 	connect(connectToNidaqButton, &QPushButton::clicked,
-			this, &MealogWindow::connectToDaqsrv);
-	disconnect(daqClient, &DaqClient::DaqClient::disconnected,
+			this, &MealogWindow::connectToDataServer);
+	disconnect(mcsClient, &mcsclient::McsClient::disconnected,
 			this, &MealogWindow::handleServerDisconnection);
-	disconnect(daqClient, &DaqClient::DaqClient::error,
+	disconnect(mcsClient, &mcsclient::McsClient::error,
 			this, &MealogWindow::handleServerError);
-	daqClient->disconnectFromDaqsrv();
+	mcsClient->disconnect();
 	closeRecording();
 }
 
@@ -896,9 +895,9 @@ void MealogWindow::handleDaqsrvConnection(bool made) {
 		nidaqHost->setEnabled(false);
 		connect(connectToNidaqButton, &QPushButton::clicked,
 				this, &MealogWindow::disconnectFromDaqsrv);
-		connect(daqClient, &DaqClient::DaqClient::disconnected,
+		connect(mcsClient, &mcsclient::McsClient::disconnected,
 				this, &MealogWindow::handleServerDisconnection);
-		connect(daqClient, &DaqClient::DaqClient::error,
+		connect(mcsClient, &mcsclient::McsClient::error,
 				this, &MealogWindow::handleServerError);
 		if (recordingStatus & Mealog::INITIALIZED) {
 			sendDaqsrvInitMessage();
@@ -909,9 +908,9 @@ void MealogWindow::handleDaqsrvConnection(bool made) {
 		disconnect(connectToNidaqButton, &QPushButton::clicked,
 				this, &MealogWindow::disconnectFromDaqsrv);
 		connect(connectToNidaqButton, &QPushButton::clicked,
-				this, &MealogWindow::connectToDaqsrv);
+				this, &MealogWindow::connectToDataServer);
 		nidaqStatus->setText("Error connecting to NI-DAQ, correct IP?");
-		delete daqClient;
+		delete mcsClient;
 		setNidaqInterfaceEnabled(true);
 		statusBar->showMessage("Ready");
 	}
@@ -919,9 +918,9 @@ void MealogWindow::handleDaqsrvConnection(bool made) {
 
 void MealogWindow::startRecording(void) {
 	if (recordingStatus & Mealog::RECORDING) {
-		connect(daqClient, &DaqClient::DaqClient::dataAvailable,
+		connect(mcsClient, &mcsclient::McsClient::dataAvailable,
 				this, &MealogWindow::recvData);
-		daqClient->startRecording();
+		mcsClient->startRecording();
 		statusBar->showMessage(QString("Recording data to %1").arg(
 					getFullFilename()));
 		recordingStatus = (
@@ -1001,23 +1000,23 @@ void MealogWindow::restartRecording(void) {
 }
 
 void MealogWindow::recvData(qint64 nsamples) {
-	H5Rec::Samples samples(nsamples, daqClient->nchannels());
+	H5Rec::Samples samples(nsamples, mcsClient->nchannels());
 
 	/* If more than one block is available, receive each one in turn.
 	 * Must explicitly receive each block, however, because data will
 	 * not be contiguous in resulting Armadillo matrix, which uses
 	 * column-major ordering.
 	 */
-	if (nsamples > daqClient->blockSize()) {
-		auto blockSize = daqClient->blockSize();
-		auto nblocks = nsamples / daqClient->blockSize();
-		H5Rec::Samples tmp(blockSize, daqClient->nchannels());
+	if (nsamples > mcsClient->blockSize()) {
+		auto blockSize = mcsClient->blockSize();
+		auto nblocks = nsamples / mcsClient->blockSize();
+		H5Rec::Samples tmp(blockSize, mcsClient->nchannels());
 		for (auto block = 0; block < nblocks; block++) {
-			daqClient->recvData(blockSize, tmp.memptr());
+			mcsClient->recvData(blockSize, tmp.memptr());
 			samples.rows(block * blockSize, ((block + 1) * blockSize) - 1) = tmp;
 		}
 	} else {
-		daqClient->recvData(nsamples, samples.memptr());
+		mcsClient->recvData(nsamples, samples.memptr());
 	}
 
 	/* Sign-invert new data, so spikes are upwards deflections */

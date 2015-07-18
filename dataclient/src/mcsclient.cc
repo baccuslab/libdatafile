@@ -1,122 +1,42 @@
-/* daqclient.cpp
- * Implementation of the DaqClient class, which interfaces with the daqsrv
+/* mcsclient.cpp
+ * Implementation of the McsClient class, which interfaces with the daqsrv
  * data acquisition server to stream data from an MCS array.
  *
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
 
 #include <string>
-#include "daqclient.h"
+#include "mcsclient.h"
 #include "daqsrv/messages.h"
 
-DaqClient::DaqClient::DaqClient(QString hostname, quint16 port) {
-	socket = new QTcpSocket(this);
-	stream = new QDataStream(socket);
-	stream->setFloatingPointPrecision(QDataStream::SinglePrecision);
-	hostname_ = hostname;
-	port_ = port;
-	host_ = QHostAddress(hostname);
-	isConnected_ = false;
+mcsclient::McsClient::McsClient(const QString& hostname, 
+		const quint16 port, QObject* parent) 
+	: dataclient::DataClient(hostname, port, parent)
+{
+	nchannels_ = mcsclient::NUM_CHANNELS;
+	sampleRate_ = mcsclient::SAMPLE_RATE;
+	blockSize_ = mcsclient::BLOCK_SIZE;
 }
 
-DaqClient::DaqClient::~DaqClient() {
+mcsclient::McsClient::~McsClient() 
+{
 	if (socket->isValid()) {
 		socket->disconnectFromHost();
 		socket->close();
 	}
 }
 
-float DaqClient::DaqClient::length() {
-	return this->length_;
-}
-
-uint64_t DaqClient::DaqClient::nsamples() {
-	return this->nsamples_;
-}
-
-float DaqClient::DaqClient::adcRange() {
-	return this->adcRange_;
-}
-
-uint32_t DaqClient::DaqClient::nchannels() {
-	return this->nchannels_;
-}
-
-uint32_t DaqClient::DaqClient::blockSize() {
-	return this->blockSize_;
-}
-
-QString DaqClient::DaqClient::trigger() {
-	return this->trigger_;
-}
-
-QString DaqClient::DaqClient::date() {
-	return this->date_;
-}
-
-void DaqClient::DaqClient::setLength(float length) {
-	this->length_ = length;
-	this->nsamples_ = length * SAMPLE_RATE;
+void mcsclient::McsClient::setLength(float length) 
+{
+	dataclient::DataClient::setLength(length);
 	sizeOfDataMessage_ = (
 			blockSize_ * nchannels_ * sizeof(int16_t) + 
 			2 * sizeof(uint32_t) + sizeof(int16_t)
 		);
 }
 
-void DaqClient::DaqClient::setAdcRange(float adcRange) {
-	this->adcRange_ = adcRange;
-}
-
-void DaqClient::DaqClient::setBlockSize(uint32_t blockSize) {
-	this->blockSize_ = blockSize;
-}
-
-void DaqClient::DaqClient::setTrigger(QString trigger) {
-	this->trigger_ = trigger;
-}
-
-bool DaqClient::DaqClient::connectToDaqsrv(void) {
-	connect(socket, &QAbstractSocket::connected, 
-			this, &DaqClient::connectionSuccessful);
-	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
-			this, SLOT(connectionUnsuccessful()));
-	socket->connectToHost(host_, port_);
-	return true;
-}
-
-void DaqClient::DaqClient::handleDisconnection(void) {
-	if (socket->error() == QAbstractSocket::UnknownSocketError)
-		emit disconnected();
-}
-
-void DaqClient::DaqClient::handleSocketError(void) {
-	emit error();
-}
-
-void DaqClient::DaqClient::connectionSuccessful(void) {
-	emit connectionMade(true);
-	disconnect(socket, &QAbstractSocket::connected, 
-			this, &DaqClient::connectionSuccessful);
-	disconnect(socket, SIGNAL(error(QAbstractSocket::SocketError)), 
-			this, SLOT(connectionUnsuccessful()));
-	connect(socket, &QAbstractSocket::disconnected,
-			this, &DaqClient::handleDisconnection);
-	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
-			this, SLOT(handleSocketError()));
-	connect(socket, &QAbstractSocket::readyRead,
-			this, &DaqClient::checkDataAvailable);
-	isConnected_ = true;
-}
-
-void DaqClient::DaqClient::connectionUnsuccessful(void) {
-	disconnect(socket, &QAbstractSocket::connected, 
-			this, &DaqClient::connectionSuccessful);
-	disconnect(socket, SIGNAL(error(QAbstractSocket::SocketError)), 
-			this, SLOT(connectionUnsuccessful()));
-	emit connectionMade(false);
-}
-
-void DaqClient::DaqClient::checkDataAvailable(void) {
+void mcsclient::McsClient::checkDataAvailable(void) 
+{
 	qint64 nbytes = socket->bytesAvailable();
 	qint64 bytesPerBlock = blockSize_ * nchannels_ * sizeof(int16_t);
 	qint64 blocksAvailable = nbytes / bytesPerBlock;
@@ -125,11 +45,8 @@ void DaqClient::DaqClient::checkDataAvailable(void) {
 		emit dataAvailable(samplesAvailable);
 }
 
-void DaqClient::DaqClient::disconnectFromDaqsrv(void) {
-	socket->disconnectFromHost();
-}
-
-void DaqClient::DaqClient::initExperiment(void) {
+void mcsclient::McsClient::initExperiment(void) 
+{
 
 	/* Compute sizes for message */
 	uint32_t triggerLength = trigger_.length();
@@ -146,55 +63,61 @@ void DaqClient::DaqClient::initExperiment(void) {
 	socket->flush();
 }
 
-void DaqClient::DaqClient::requestExptParams(void) {
+void mcsclient::McsClient::requestExptParams(void) 
+{
 	(*stream) << EXPT_PARAMS_REQ;
 }
 
-void DaqClient::DaqClient::sendClose(void) {
+void mcsclient::McsClient::sendClose(void) 
+{
 	(*stream) << CLOSE;
 }
 
-void DaqClient::DaqClient::sendError(void) {
+void mcsclient::McsClient::sendError(void) 
+{
 	(*stream) << ERROR_MSG;
 }
 
-void DaqClient::DaqClient::recvExptParams(void) {
-	uint32_t type, msgSize, nchannels, triggerSize, dateSize;
-	(*stream) >> type >> msgSize >> nchannels >> nsamples_ >>
-			this->length_ >> this->adcRange_ >> this->adcResolution_ >>
-			this->blockSize_ >> triggerSize;
+void mcsclient::McsClient::recvExptParams(void) 
+{
+	uint32_t type, msgSize, nchannels, 
+			 triggerSize, dateSize, nsamples, blockSize;
+	(*stream) >> type >> msgSize >> nchannels >> nsamples >>
+			length_ >> adcRange_ >> adcResolution_ >>
+			blockSize >> triggerSize;
 	QByteArray t = socket->read(triggerSize);
-	this->trigger_ = QString::fromStdString(t.toStdString());
+	nsamples_ = nsamples;
+	trigger_ = QString::fromStdString(t.toStdString());
 	(*stream) >> dateSize;
 	QByteArray d = socket->read(dateSize);
-	this->date_ = QString::fromStdString(d.toStdString());
+	date_ = QString::fromStdString(d.toStdString());
 }
 
-QString DaqClient::DaqClient::recvError(void) {
+QString mcsclient::McsClient::recvError(void) 
+{
 	uint32_t errSize;
 	(*stream) >> errSize;
 	QByteArray data = socket->read(errSize);
 	return QString::fromStdString(data.toStdString());
 }
 
-void DaqClient::DaqClient::startRecording(void) {
+void mcsclient::McsClient::startRecording(void) 
+{
 	uint32_t type = START_EXPT;
 	uint32_t msg_size = 8;
 	(*stream) << type << msg_size;
 	socket->flush();
 }
 
-QByteArray DaqClient::DaqClient::recvData(qint64 nsamples) {
+QByteArray mcsclient::McsClient::recvData(size_t nsamples) 
+{
 	qint64 nbytes = nsamples * nchannels_ * sizeof(int16_t);
 	return socket->read(nbytes);
 }
 
-void DaqClient::DaqClient::recvData(qint64 nsamples, int16_t *buffer) {
+void mcsclient::McsClient::recvData(size_t nsamples, void* buffer) 
+{
 	qint64 nbytes = nsamples * nchannels_ * sizeof(int16_t);
 	socket->read((char *) buffer, nbytes);
-}
-
-bool DaqClient::DaqClient::isConnected(void) {
-	return isConnected_;
 }
 

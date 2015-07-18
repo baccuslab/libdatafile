@@ -25,7 +25,8 @@ QMAKE_CXXFLAGS_RELEASE += -O3
 
 # Input
 HEADERS += messaging/logserver.pb.h \
-           daqclient/include/daqclient.h \
+           dataclient/include/dataclient.h \
+		   dataclient/include/mcsclient.h \
            h5recording/include/h5recording.h \
            mealog/include/mealogwindow.h \
            mealog/include/plotwindow.h \
@@ -35,7 +36,8 @@ HEADERS += messaging/logserver.pb.h \
            tools/common/hdftools.h
 
 SOURCES += messaging/logserver.pb.cc \
-           dataclient/src/daqclient.cc \
+		   dataclient/src/dataclient.cc \
+           dataclient/src/mcsclient.cc \
            h5recording/src/h5recording.cc \
            mealog/src/main.cc \
            mealog/src/mealogwindow.cc \

@@ -17,9 +17,11 @@ mac {
 }
 
 # Input
-HEADERS += include/daqclient.h \
-			include/hdclient.h
-SOURCES += src/daqclient.cc \
+HEADERS += include/mcsclient.h \
+			include/hdclient.h \
+			include/dataclient.h
+SOURCES += src/mcsclient.cc \
 			src/hdclient.cc \
+			src/dataclient.cc \
 			../daqsrv/messages.h \
 			../daqsrv/nidaq.h 

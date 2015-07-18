@@ -31,7 +31,8 @@
 #include <QPointer>
 
 /* Project library includes */
-#include "dataclient/include/daqclient.h"
+#include "dataclient/include/dataclient.h"
+#include "dataclient/include/mcsclient.h"
 #include "h5recording/include/h5recording.h"
 #include "messaging/logserver.pb.h"
 
@@ -80,6 +81,11 @@ enum PLAYBACK_STATUS:uint16_t {
 	PLAYING = 1 << 7,
 	PAUSED = 1 << 8
 };
+
+enum DATA_SERVER:uint16_t {
+	MCS = 1 << 9,
+	HIDENS = 1 << 10
+};
 }; // End namespace
 
 class MealogWindow : public QMainWindow {
@@ -103,7 +109,7 @@ class MealogWindow : public QMainWindow {
 		//void acceptClients(void);
 		//void respondToClient(void);
 		void chooseSaveDir(void);
-		void connectToDaqsrv(void);
+		void connectToDataServer(void);
 		void disconnectFromDaqsrv(void);
 		void handleDaqsrvConnection(bool made);
 		void handleServerDisconnection(void);
@@ -181,7 +187,7 @@ class MealogWindow : public QMainWindow {
 		/* Internals for getting data from NI-DAQ server and 
 		 * writing it to disk.
 		 */
-		QPointer<DaqClient::DaqClient> daqClient = nullptr;
+		QPointer<mcsclient::McsClient> mcsClient = nullptr;
 		H5Rec::H5Recording *recording = nullptr;
 		uint8_t recordingStatus = Mealog::UNINITIALIZED | Mealog::NOT_STARTED;
 		uint64_t numSamplesAcquired = 0;
