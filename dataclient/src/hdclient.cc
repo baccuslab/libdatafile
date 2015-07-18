@@ -7,17 +7,11 @@
 
 #include "include/hdclient.h"
 
-hdclient::HidensClient::HidensClient(const QHostAddress& addr,
-		const quint16& port, QObject* parent) : QObject(parent) 
+hdclient::HidensClient::HidensClient(const QString& hostname,
+		const quint16& port, QObject* parent) 
+	: dataclient::DataClient(hostname, port, parent)
 {
-	addr_ = addr;
-	port_ = port;
-}
-
-hdclient::HidensClient::HidensClient(const QString& addr,
-		const quint16& port, QObject* parent) : QObject(parent)
-{
-	addr_ = QHostAddress(addr);
+	hostname_ = hostname;
 	port_ = port;
 }
 
@@ -26,28 +20,27 @@ hdclient::HidensClient::~HidensClient()
 	disconnect();
 }
 
-void hdclient::HidensClient::connect()
-{
-	QObject::connect(&sock_, &QAbstractSocket::connected,
-			this, &hdclient::HidensClient::connectionSuccessful);
-	QObject::connect(&sock_, SIGNAL(error(QAbstractSocket::SocketError)),
-			this, SLOT(connectionUnsuccessful()));
-	sock_.connectToHost(addr_, port_);
-}
-
-void hdclient::HidensClient::disconnect()
-{
-	sock_.disconnectFromHost();
-}
-
-void hdclient::HidensClient::connectionSuccessful()
-{
-	connected_ = true;
-	QObject::disconnect(&sock_, SIGNAL(error(QAbstractSocket::SocketError)),
-			this, SLOT(connectionUnsuccessful()));
-}
-
-void hdclient::HidensClient::connectionUnsuccessful()
+void hdclient::HidensClient::initExperiment()
 {
 }
 
+void hdclient::HidensClient::startRecording()
+{
+}
+
+void hdclient::HidensClient::recvData(size_t nsamples, void* buffer)
+{
+}
+
+QByteArray hdclient::HidensClient::recvData(size_t nsamples)
+{
+	return QByteArray();
+}
+
+void hdclient::HidensClient::checkDataAvailable()
+{
+}
+
+void hdclient::HidensClient::sendConfiguration(const QString& file)
+{
+}

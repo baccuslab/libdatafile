@@ -23,6 +23,7 @@ const quint16 PORT = 12345;	// Port of NIDAQ server application
 const quint32 BLOCK_SIZE = NIDAQ_BLOCK_SIZE;
 const qint16 NUM_CHANNELS = NIDAQ_NUM_CHANNELS;
 const quint32 SAMPLE_RATE = NIDAQ_SAMPLE_RATE;
+const QString DEFAULT_MCS_HOST("127.0.0.1");
 
 class McsClient : public dataclient::DataClient {
 	Q_OBJECT

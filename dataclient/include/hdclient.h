@@ -14,6 +14,8 @@
 #include <QTcpSocket>
 #include <QList>
 
+#include "dataclient.h"
+
 namespace hdclient {
 
 const QString HIDENS_ADDRESS = "11.0.0.1";
@@ -29,7 +31,7 @@ typedef struct {
 	int channel;
 } Electrode;
 
-class HidensClient : public QObject {
+class HidensClient : public dataclient::DataClient {
 	Q_OBJECT
 
 	public:
@@ -42,15 +44,16 @@ class HidensClient : public QObject {
 		HidensClient(const HidensClient& other) = delete;
 		~HidensClient();
 
-		void connect();
-		void disconnect();
-		bool connected();
-		const QHostAddress& address();
+		virtual void initExperiment();
+		virtual void startRecording();
+		virtual void recvData(size_t nsamples, void* buffer);
+		virtual QByteArray recvData(size_t nsamples);
+
 		QString fpgaIP();
 		size_t plug();
 		void setPlug(size_t plug = 0);
 
-		size_t nchannels();
+		void sendConfiguration(const QString& file);
 		size_t nConnectedChannels();
 		QList<int> connectedChannels();
 		QList<size_t> xpos();
@@ -59,9 +62,6 @@ class HidensClient : public QObject {
 		QList<size_t> y();
 		QList<QChar> labels();
 
-		float adcRange();
-		float gain();
-		size_t sampleRate();
 		size_t version();
 		size_t chipid();
 		QString timestamp();
@@ -77,21 +77,13 @@ class HidensClient : public QObject {
 		void streamData(const size_t ms);
 		void liveData(const size_t ms);
 
-
-	public slots:
-		void connectionSuccessful();
-		void connectionUnsuccessful();
+	private slots:
+		virtual void checkDataAvailable();
 
 	private:
-		QHostAddress addr_;
-		QTcpSocket sock_;
-		quint16 port_;
-
-		bool connected_;
 		size_t plug_;
 
 		QList<Electrode> configuration_;
-		size_t nchannels_ = 0;
 		size_t nConnectedChannels_ = 0;
 		QList<size_t> xpos_ = {};
 

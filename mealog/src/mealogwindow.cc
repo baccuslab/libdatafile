@@ -23,7 +23,15 @@
 
 #include "mealogwindow.h"
 
-MealogWindow::MealogWindow(QWidget *parent) : QMainWindow(parent) {
+MealogWindow::MealogWindow(const QString& a, QWidget *parent) 
+	: QMainWindow(parent) {
+	if (a.toLower() == "hidens") {
+		array = "hidens";
+		dataSource = Mealog::HIDENS;
+	} else {
+		array = "mcs";
+		dataSource = Mealog::MCS;
+	}
 	initSettings();
 	initGui();
 	initMenuBar();
@@ -121,32 +129,37 @@ void MealogWindow::initGui(void) {
 	mainLayout->addWidget(playbackGroup, 0, 0, 1, 2);
 
 	/* Initialize NI-DAQ group */
-	nidaqGroup = new QGroupBox("NI-DAQ", this);
-	nidaqLayout = new QGridLayout(nidaqGroup);
-	connectToNidaqButton = new QPushButton("Connect", nidaqGroup);
-	connectToNidaqButton->setToolTip("Connect to NI-DAQ server to initialize the recording");
-	nidaqHostLabel = new QLabel("Host:", nidaqGroup);
-	nidaqHostLabel->setAlignment(Qt::AlignRight);
-	nidaqHost = new QLineEdit(Mealog::DEFAULT_NIDAQ_HOST, nidaqGroup);
-	nidaqHost->setToolTip("IP address of the computer running the NI-DAQ server");
-	nidaqValidator = new QRegExpValidator(
+	serverGroup = new QGroupBox("Data server", this);
+	serverLayout = new QGridLayout(serverGroup);
+	connectToServerButton = new QPushButton("Connect", serverGroup);
+	connectToServerButton->setToolTip("Connect to data server to initialize the recording");
+	serverHostLabel = new QLabel("Host:", serverGroup);
+	serverHostLabel->setAlignment(Qt::AlignRight);
+	serverHost = new QLineEdit(mcsclient::DEFAULT_MCS_HOST, serverGroup);
+	serverHost->setToolTip("IP address of the computer running the data server");
+	serverValidator = new QRegExpValidator(
 			QRegExp("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}"\
-				"([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])"), nidaqGroup);
-	nidaqHost->setValidator(nidaqValidator);
-	nidaqStatusLabel = new QLabel("Status:", nidaqGroup);
-	nidaqStatusLabel->setAlignment(Qt::AlignRight);
-	nidaqStatus = new QLineEdit("Not connected", nidaqGroup);
-	nidaqStatus->setReadOnly(true);
-	nidaqStatus->setToolTip("Status of connection with NIDAQ");
-	nidaqLayout->addWidget(nidaqHostLabel, 0, 0);
-	nidaqLayout->addWidget(nidaqHost, 0, 1, 1, 2);
-	nidaqLayout->addWidget(connectToNidaqButton, 0, 3);
-	nidaqLayout->addWidget(nidaqStatusLabel, 1, 0);
-	nidaqLayout->addWidget(nidaqStatus, 1, 1, 1, 3);
-	nidaqGroup->setLayout(nidaqLayout);
-	mainLayout->addWidget(nidaqGroup, 1, 0, 1, 2);
+				"([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])"), serverGroup);
+	serverHost->setValidator(serverValidator);
+	serverStatusLabel = new QLabel("Status:", serverGroup);
+	serverStatusLabel->setAlignment(Qt::AlignRight);
+	serverStatus = new QLineEdit("Not connected", serverGroup);
+	serverStatus->setReadOnly(true);
+	serverStatus->setToolTip("Status of connection with data server");
+	serverLayout->addWidget(serverHostLabel, 0, 0);
+	serverLayout->addWidget(serverHost, 0, 1, 1, 2);
+	serverLayout->addWidget(connectToServerButton, 0, 3);
+	serverLayout->addWidget(serverStatusLabel, 1, 0);
+	serverLayout->addWidget(serverStatus, 1, 1, 1, 3);
+	serverGroup->setLayout(serverLayout);
+	mainLayout->addWidget(serverGroup, 1, 0, 1, 2);
 
 	/* Initialize group with parameters of the recording */
+	
+	/* XXX: Parameters are different depending on array type.
+	 * Keep ADC range for NIDAQ, swap with a configuration 
+	 * setting for the HiDens system
+	 */
 	recordingGroup = new QGroupBox("Recording parameters", this);
 	recordingLayout = new QGridLayout(recordingGroup);
 	adcRangeLabel = new QLabel("ADC range:", recordingGroup);
@@ -341,8 +354,8 @@ void MealogWindow::createNewRecording(void) {
 	recording = new H5Rec::H5Recording(path.fileName().toStdString());
 	setRecordingParameters();
 	recording->flush();
-	if (mcsClient)
-		sendDaqsrvInitMessage();
+	if (dataClient)
+		initDataServer();
 
 	/* Disable parameter selections */
 	setParameterSelectionsEnabled(false);
@@ -351,8 +364,8 @@ void MealogWindow::createNewRecording(void) {
 	closeRecordingAction->setEnabled(true);
 	closeRecordingButton->setEnabled(true);
 
-	/* Enable the "Start" button, if connection to the Daqsrv */
-	if ((mcsClient) && (mcsClient->connected()))
+	/* Enable the "Start" button, if connection to the data server */
+	if ((dataClient) && (dataClient->connected()))
 		startButton->setEnabled(true);
 
 	/* Finalize initialisation */
@@ -406,6 +419,8 @@ void MealogWindow::setRecordingParameters(void) {
 	recording->setLive(true);
 	recording->setLastValidSample(0);
 
+	/* Switch on array type and set configuration for HiDens */
+
 	double adcRange = Mealog::ADC_RANGES.at(adcRangeBox->currentIndex());
 	recording->setOffset(adcRange);
 	recording->setGain((adcRange * 2) / (1 << 16));
@@ -414,11 +429,15 @@ void MealogWindow::setRecordingParameters(void) {
 	recording->setDate();
 }
 
-void MealogWindow::sendDaqsrvInitMessage(void) {
-	mcsClient->setLength(recording->length());
-	mcsClient->setAdcRange(recording->offset());
-	mcsClient->setTrigger(triggerBox->currentText());
-	mcsClient->initExperiment();
+void MealogWindow::initDataServer(void) {
+	dataClient->setLength(recording->length());
+	dataClient->setAdcRange(recording->offset());
+	dataClient->setTrigger(triggerBox->currentText());
+	/*
+	if (array == "hidens")
+		dataClient->setConfiguration(hdConfigBox->currentText());
+	*/
+	dataClient->initExperiment();
 }
 
 bool MealogWindow::confirmFileOverwrite(const QFile &path) {
@@ -490,28 +509,28 @@ void MealogWindow::closeRecording(void) {
 	setPlaybackMovementButtonsEnabled(false);
 	closeRecordingAction->setEnabled(false);
 	closeRecordingButton->setEnabled(false);
-	setNidaqInterfaceEnabled(true);
+	setServerInterfaceEnabled(true);
 	newRecordingButton->setEnabled(true);
 	newRecordingAction->setEnabled(true);
 	plotWindow->unblockResize();
 
-	/* Disconnect NI-DAQ client, if this is a recording */
-	if ((mcsClient) && (mcsClient->connected())) {
-		disconnect(mcsClient, &mcsclient::McsClient::disconnected,
+	/* Disconnect data client, if this is a recording */
+	if ((dataClient) && (dataClient->connected())) {
+		disconnect(dataClient, &dataclient::DataClient::disconnected,
 				this, &MealogWindow::handleServerDisconnection);
-		disconnect(mcsClient, &mcsclient::McsClient::error,
+		disconnect(dataClient, &dataclient::DataClient::error,
 				this, &MealogWindow::handleServerError);
-		disconnect(connectToNidaqButton, &QPushButton::clicked,
-				this, &MealogWindow::disconnectFromDaqsrv);
-		mcsClient->disconnect();
-		mcsClient->deleteLater();
-		connect(connectToNidaqButton, &QPushButton::clicked,
+		disconnect(connectToServerButton, &QPushButton::clicked,
+				this, &MealogWindow::disconnectFromDataServer);
+		dataClient->disconnect();
+		dataClient->deleteLater();
+		connect(connectToServerButton, &QPushButton::clicked,
 				this, &MealogWindow::connectToDataServer);
-		connect(connectToNidaqButton, &QPushButton::clicked,
+		connect(connectToServerButton, &QPushButton::clicked,
 				this, &MealogWindow::connectToDataServer);
 	}
-	nidaqStatus->setText("Not connected");
-	connectToNidaqButton->setText("Connect");
+	serverStatus->setText("Not connected");
+	connectToServerButton->setText("Connect");
 }
 
 int MealogWindow::confirmCloseRecording(void) {
@@ -565,7 +584,7 @@ void MealogWindow::loadRecording() {
 		);
 	initPlayback();
 	settings.setSaveDir(path);
-	setNidaqInterfaceEnabled(false);
+	setServerInterfaceEnabled(false);
 	setParameterSelectionsEnabled(false);
 	closeRecordingAction->setEnabled(true);
 	closeRecordingButton->setEnabled(true);
@@ -587,11 +606,11 @@ void MealogWindow::initPlayback() {
 	startButton->setEnabled(true);
 }
 
-void MealogWindow::setNidaqInterfaceEnabled(bool enabled) {
-	connectToNidaqButton->setEnabled(enabled);
-	nidaqHost->setEnabled(enabled);
+void MealogWindow::setServerInterfaceEnabled(bool enabled) {
+	connectToServerButton->setEnabled(enabled);
+	serverHost->setEnabled(enabled);
 	if (!enabled)
-		nidaqStatus->setText("Disabled");
+		serverStatus->setText("Disabled");
 }
 
 //void MealogWindow::initServer(void) {
@@ -689,7 +708,7 @@ void MealogWindow::setNidaqInterfaceEnabled(bool enabled) {
 
 //void MealogWindow::cleanupRecording(void) {
 	//connectButton->setText("Connect");
-	//nidaqStatus->setText("Connection to NI-DAQ server ended");
+	//serverStatus->setText("Connection to NI-DAQ server ended");
 	//isRecording = false;
 	//statusBar->showMessage("Recording finished", 10000);
 	//startButton->setEnabled(false);
@@ -728,7 +747,7 @@ void MealogWindow::initSignals(void) {
 			//this, SLOT(acceptClients()));
 	connect(choosePathButton, &QPushButton::clicked,
 			this, &MealogWindow::chooseSaveDir);
-	connect(connectToNidaqButton, &QPushButton::clicked,
+	connect(connectToServerButton, &QPushButton::clicked,
 			this, &MealogWindow::connectToDataServer);
 	connect(startButton, &QPushButton::clicked,
 			this, &MealogWindow::startRecording);
@@ -818,116 +837,121 @@ void MealogWindow::chooseSaveDir(void) {
 //}
 
 void MealogWindow::connectToDataServer(void) {
-	statusBar->showMessage("Connecting to NI-DAQ server");
-	nidaqStatus->setText("Connecting ...");
-	mcsClient = new mcsclient::McsClient(nidaqHost->text());
-	connect(mcsClient, &mcsclient::McsClient::connectionMade,
-			this, &MealogWindow::handleDaqsrvConnection);
-	disconnect(connectToNidaqButton, &QPushButton::clicked,
+	statusBar->showMessage("Connecting to data server");
+	serverStatus->setText("Connecting ...");
+	if (array == "hidens") 
+		dataClient = new hdclient::HidensClient(serverHost->text());
+	else
+		dataClient = new mcsclient::McsClient(serverHost->text());
+	connect(dataClient, &dataclient::DataClient::connectionMade,
+			this, &MealogWindow::handleDataServerConnection);
+	disconnect(connectToServerButton, &QPushButton::clicked,
 			this, &MealogWindow::connectToDataServer);
-	mcsClient->connect();
-	setNidaqInterfaceEnabled(false);
+	dataClient->connect();
+	setServerInterfaceEnabled(false);
 }
 
 void MealogWindow::handleServerDisconnection(void) {
 	setParameterSelectionsEnabled(true);
 	setPlaybackButtonsEnabled(false);
 	setPlaybackMovementButtonsEnabled(false);
-	disconnectFromDaqsrv();
+	disconnectFromDataServer();
 	closeRecording();
 }
 
 void MealogWindow::handleServerError(void) {
-	connectToNidaqButton->setText("Connect");
-	nidaqStatus->setText("Connection to server interrupted");
+	connectToServerButton->setText("Connect");
+	serverStatus->setText("Connection to server interrupted");
 	if (recordingStatus & Mealog::STARTED) {
-		disconnect(mcsClient, &mcsclient::McsClient::dataAvailable,
+		disconnect(dataClient, &dataclient::DataClient::dataAvailable,
 				this, &MealogWindow::recvData);
 		closeRecording();
 		QMessageBox::critical(this, "Connection interrupted",
-				"Connection to NI-DAQ server application interrupted."\
+				"Connection to data server application interrupted."\
 				" Recording has been stopped, with all previous data "\
 				"written to disk.");
 	}
-	//setNidaqInterfaceEnabled(true);
+	//setServerInterfaceEnabled(true);
 	//setPlaybackButtonsEnabled(false);
 	//setPlaybackMovementButtonsEnabled(false);
 	//setParameterSelectionsEnabled(true);
 	//startButton->setText("Start");
 	//statusBar->showMessage("Ready");
-	//disconnect(connectToNidaqButton, &QPushButton::clicked,
-			//this, &MealogWindow::disconnectFromDaqsrv);
-	//connect(connectToNidaqButton, &QPushButton::clicked,
+	//disconnect(connectToServerButton, &QPushButton::clicked,
+			//this, &MealogWindow::disconnectFromDataServer);
+	//connect(connectToServerButton, &QPushButton::clicked,
 			//this, &MealogWindow::connectToDataServer);
-	//disconnect(mcsClient, &DaqClient::DaqClient::disconnected,
+	//disconnect(dataClient, &DaqClient::DaqClient::disconnected,
 			//this, &MealogWindow::handleServerDisconnection);
-	//disconnect(mcsClient, &DaqClient::DaqClient::error,
+	//disconnect(dataClient, &DaqClient::DaqClient::error,
 			//this, &MealogWindow::handleServerError);
-	//delete mcsClient;
+	//delete dataClient;
 }
 
-void MealogWindow::disconnectFromDaqsrv(void) {
+void MealogWindow::disconnectFromDataServer(void) {
 	if (recordingStatus & Mealog::STARTED) {
 		if (confirmCloseRecording() == QMessageBox::Cancel)
 			return;
 	}
-	connectToNidaqButton->setText("Connect");
-	nidaqStatus->setText("Not connected");
-	setNidaqInterfaceEnabled(true);
+	connectToServerButton->setText("Connect");
+	serverStatus->setText("Not connected");
+	setServerInterfaceEnabled(true);
 	statusBar->showMessage("Ready");
-	disconnect(connectToNidaqButton, &QPushButton::clicked,
-			this, &MealogWindow::disconnectFromDaqsrv);
-	connect(connectToNidaqButton, &QPushButton::clicked,
+	disconnect(connectToServerButton, &QPushButton::clicked,
+			this, &MealogWindow::disconnectFromDataServer);
+	connect(connectToServerButton, &QPushButton::clicked,
 			this, &MealogWindow::connectToDataServer);
-	disconnect(mcsClient, &mcsclient::McsClient::disconnected,
+	disconnect(dataClient, &dataclient::DataClient::disconnected,
 			this, &MealogWindow::handleServerDisconnection);
-	disconnect(mcsClient, &mcsclient::McsClient::error,
+	disconnect(dataClient, &dataclient::DataClient::error,
 			this, &MealogWindow::handleServerError);
-	mcsClient->disconnect();
+	dataClient->disconnect();
 	closeRecording();
 }
 
-void MealogWindow::handleDaqsrvConnection(bool made) {
+void MealogWindow::handleDataServerConnection(bool made) {
 	if (made) {
-		nidaqStatus->setText("Connected to NI-DAQ");
-		connectToNidaqButton->setText("Disconnect");
-		connectToNidaqButton->setEnabled(true);
-		nidaqHost->setEnabled(false);
-		connect(connectToNidaqButton, &QPushButton::clicked,
-				this, &MealogWindow::disconnectFromDaqsrv);
-		connect(mcsClient, &mcsclient::McsClient::disconnected,
+		QString tmp = (array == "hidens") ? "HiDens" : "MCS";
+		serverStatus->setText(QString("Connected to %1 data server").arg(tmp));
+		connectToServerButton->setText("Disconnect");
+		connectToServerButton->setEnabled(true);
+		serverHost->setEnabled(false);
+		connect(connectToServerButton, &QPushButton::clicked,
+				this, &MealogWindow::disconnectFromDataServer);
+		connect(dataClient, &dataclient::DataClient::disconnected,
 				this, &MealogWindow::handleServerDisconnection);
-		connect(mcsClient, &mcsclient::McsClient::error,
+		connect(dataClient, &dataclient::DataClient::error,
 				this, &MealogWindow::handleServerError);
 		if (recordingStatus & Mealog::INITIALIZED) {
-			sendDaqsrvInitMessage();
+			initDataServer();
 			startButton->setEnabled(true);
 		}
 		statusBar->showMessage("Ready");
 	} else {
-		disconnect(connectToNidaqButton, &QPushButton::clicked,
-				this, &MealogWindow::disconnectFromDaqsrv);
-		connect(connectToNidaqButton, &QPushButton::clicked,
+		disconnect(connectToServerButton, &QPushButton::clicked,
+				this, &MealogWindow::disconnectFromDataServer);
+		connect(connectToServerButton, &QPushButton::clicked,
 				this, &MealogWindow::connectToDataServer);
-		nidaqStatus->setText("Error connecting to NI-DAQ, correct IP?");
-		delete mcsClient;
-		setNidaqInterfaceEnabled(true);
+		serverStatus->setText("Error connecting to data server, correct IP?");
+		delete dataClient;
+		setServerInterfaceEnabled(true);
 		statusBar->showMessage("Ready");
 	}
 }
 
 void MealogWindow::startRecording(void) {
 	if (recordingStatus & Mealog::RECORDING) {
-		connect(mcsClient, &mcsclient::McsClient::dataAvailable,
+		connect(dataClient, &dataclient::DataClient::dataAvailable,
 				this, &MealogWindow::recvData);
-		mcsClient->startRecording();
+		dataClient->startRecording();
 		statusBar->showMessage(QString("Recording data to %1").arg(
 					getFullFilename()));
 		recordingStatus = (
 				Mealog::INITIALIZED | 
 				Mealog::STARTED | 
 				Mealog::RECORDING |
-				Mealog::PLAYING
+				Mealog::PLAYING | 
+				dataSource
 			);
 	} else {
 		playbackTimer->start();
@@ -937,7 +961,8 @@ void MealogWindow::startRecording(void) {
 				Mealog::INITIALIZED | 
 				Mealog::STARTED | 
 				Mealog::PLAYBACK | 
-				Mealog::PLAYING
+				Mealog::PLAYING | 
+				dataSource
 			);
 	}
 	setPlaybackButtonsEnabled(true);
@@ -1000,23 +1025,23 @@ void MealogWindow::restartRecording(void) {
 }
 
 void MealogWindow::recvData(qint64 nsamples) {
-	H5Rec::Samples samples(nsamples, mcsClient->nchannels());
+	H5Rec::Samples samples(nsamples, dataClient->nchannels());
 
 	/* If more than one block is available, receive each one in turn.
 	 * Must explicitly receive each block, however, because data will
 	 * not be contiguous in resulting Armadillo matrix, which uses
 	 * column-major ordering.
 	 */
-	if (nsamples > mcsClient->blockSize()) {
-		auto blockSize = mcsClient->blockSize();
-		auto nblocks = nsamples / mcsClient->blockSize();
-		H5Rec::Samples tmp(blockSize, mcsClient->nchannels());
+	if (nsamples > dataClient->blockSize()) {
+		auto blockSize = dataClient->blockSize();
+		auto nblocks = nsamples / dataClient->blockSize();
+		H5Rec::Samples tmp(blockSize, dataClient->nchannels());
 		for (auto block = 0; block < nblocks; block++) {
-			mcsClient->recvData(blockSize, tmp.memptr());
+			dataClient->recvData(blockSize, tmp.memptr());
 			samples.rows(block * blockSize, ((block + 1) * blockSize) - 1) = tmp;
 		}
 	} else {
-		mcsClient->recvData(nsamples, samples.memptr());
+		dataClient->recvData(nsamples, samples.memptr());
 	}
 
 	/* Sign-invert new data, so spikes are upwards deflections */

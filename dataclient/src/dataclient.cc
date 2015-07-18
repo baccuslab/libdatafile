@@ -114,5 +114,6 @@ void dataclient::DataClient::setTrigger(const QString& trig)
 size_t dataclient::DataClient::nchannels() { return nchannels_; }
 void dataclient::DataClient::setAdcRange(float range) { adcRange_ = range; }
 float dataclient::DataClient::adcRange() { return adcRange_; }
+float dataclient::DataClient::gain() { return gain_; }
 QString dataclient::DataClient::date() { return date_; }
 

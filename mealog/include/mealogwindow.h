@@ -33,6 +33,7 @@
 /* Project library includes */
 #include "dataclient/include/dataclient.h"
 #include "dataclient/include/mcsclient.h"
+#include "dataclient/include/hdclient.h"
 #include "h5recording/include/h5recording.h"
 #include "messaging/logserver.pb.h"
 
@@ -56,7 +57,6 @@ const unsigned int RECORDING_FINISH_WAIT_TIME = 1000; // ms
 const QList<double> ADC_RANGES = { 1, 2, 5, 10 };
 const double DEFAULT_ADC_RANGE = 5;
 const QStringList TRIGGERS = {"Photodiode", "None"};
-const QString DEFAULT_NIDAQ_HOST = "127.0.0.1";
 const QString IPC_HOST = "127.0.0.1";
 const quint16 IPC_PORT = 44444;
 
@@ -92,7 +92,7 @@ class MealogWindow : public QMainWindow {
 	Q_OBJECT
 
 	public:
-		MealogWindow(QWidget *parent = 0);
+		MealogWindow(const QString& array, QWidget *parent = 0);
 		~MealogWindow();
 
 	signals:
@@ -110,8 +110,8 @@ class MealogWindow : public QMainWindow {
 		//void respondToClient(void);
 		void chooseSaveDir(void);
 		void connectToDataServer(void);
-		void disconnectFromDaqsrv(void);
-		void handleDaqsrvConnection(bool made);
+		void disconnectFromDataServer(void);
+		void handleDataServerConnection(bool made);
 		void handleServerDisconnection(void);
 		void handleServerError(void);
 		void startRecording(void);
@@ -157,7 +157,7 @@ class MealogWindow : public QMainWindow {
 		void plotDataBlock(uint64_t startSample, uint64_t endSample);
 		void setPlaybackButtonsEnabled(bool enabled);
 		void setPlaybackMovementButtonsEnabled(bool enabled);
-		void sendDaqsrvInitMessage(void);
+		void initDataServer(void);
 		//bool checkMeaviewRunning(void);
 		bool confirmFileOverwrite(const QFile &path);
 		int confirmCloseRecording(void);
@@ -168,7 +168,7 @@ class MealogWindow : public QMainWindow {
 		bool deleteOldRecording(QFile &path);
 		void setRecordingParameters(void);
 		void setParameterSelectionsEnabled(bool enabled);
-		void setNidaqInterfaceEnabled(bool enabled);
+		void setServerInterfaceEnabled(bool enabled);
 		void updateTime(void);
 		void waitForRecordingFinish(void);
 
@@ -187,11 +187,13 @@ class MealogWindow : public QMainWindow {
 		/* Internals for getting data from NI-DAQ server and 
 		 * writing it to disk.
 		 */
-		QPointer<mcsclient::McsClient> mcsClient = nullptr;
+		QPointer<dataclient::DataClient> dataClient = nullptr;
 		H5Rec::H5Recording *recording = nullptr;
 		uint8_t recordingStatus = Mealog::UNINITIALIZED | Mealog::NOT_STARTED;
 		uint64_t numSamplesAcquired = 0;
 		uint64_t lastSamplePlotted = 0;
+		QString array;
+		uint16_t dataSource;
 
 		/* Playback stuff */
 		QPointer<QTimer> playbackTimer;
@@ -245,15 +247,15 @@ class MealogWindow : public QMainWindow {
 		QPushButton *jumpToBeginningButton;
 		QPushButton *jumpToEndButton;
 
-		/* NIDAQ stuff */
-		QGroupBox *nidaqGroup;
-		QGridLayout *nidaqLayout;
-		QPushButton *connectToNidaqButton;
-		QLabel *nidaqHostLabel;
-		QLineEdit *nidaqHost;
-		QRegExpValidator *nidaqValidator;
-		QLabel *nidaqStatusLabel;
-		QLineEdit *nidaqStatus;
+		/* Data server stuff */
+		QGroupBox *serverGroup;
+		QGridLayout *serverLayout;
+		QPushButton *connectToServerButton;
+		QLabel *serverHostLabel;
+		QLineEdit *serverHost;
+		QRegExpValidator *serverValidator;
+		QLabel *serverStatusLabel;
+		QLineEdit *serverStatus;
 
 		/*
 		QGroupBox *ctrlGroup;

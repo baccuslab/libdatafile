@@ -41,6 +41,7 @@ class DataClient : public QObject {
 		virtual size_t nsamples();		// Return number of samples in experiment
 		virtual void setAdcRange(float);
 		virtual float adcRange();		// Return range of appropriate ADC stages
+		virtual float gain();
 		virtual size_t blockSize();		// Return data chunk block size (samples)
 		virtual size_t nchannels();		// Return number of channels in experiment
 		virtual void setTrigger(const QString&); // Set trigger for experiment
