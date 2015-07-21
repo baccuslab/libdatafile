@@ -18,8 +18,8 @@
 
 namespace hdclient {
 
-const QString HIDENS_ADDRESS = "11.0.0.1";
-const QHostAddress HIDENS_SERVER_ADDR(HIDENS_ADDRESS);
+const QString DEFAULT_HIDENS_HOST = "11.0.0.1";
+const QHostAddress HIDENS_SERVER_ADDR(DEFAULT_HIDENS_HOST);
 const quint16 HIDENS_SERVER_PORT = 11112;
 
 typedef struct {
@@ -27,7 +27,7 @@ typedef struct {
 	size_t ypos;
 	size_t x;
 	size_t y;
-	char label;
+	QChar label;
 	int channel;
 } Electrode;
 
@@ -35,25 +35,24 @@ class HidensClient : public dataclient::DataClient {
 	Q_OBJECT
 
 	public:
-		HidensClient(const QString& addr = HIDENS_ADDRESS, 
+		HidensClient(const QString& addr = DEFAULT_HIDENS_HOST, 
 				const quint16& port = HIDENS_SERVER_PORT,
-				QObject* parent = 0);
-		HidensClient(const QHostAddress& addr = HIDENS_SERVER_ADDR,
-				const quint16& port = HIDENS_SERVER_PORT, 
 				QObject* parent = 0);
 		HidensClient(const HidensClient& other) = delete;
 		~HidensClient();
 
-		virtual void initExperiment();
-		virtual void startRecording();
-		virtual void recvData(size_t nsamples, void* buffer);
-		virtual QByteArray recvData(size_t nsamples);
+		virtual void initExperiment() Q_DECL_OVERRIDE;
+		virtual void startRecording() Q_DECL_OVERRIDE;
+		virtual void recvData(size_t nsamples, void* buffer) Q_DECL_OVERRIDE;
+		virtual QByteArray recvData(size_t nsamples) Q_DECL_OVERRIDE;
 
 		QString fpgaIP();
 		size_t plug();
 		void setPlug(size_t plug = 0);
 
 		void sendConfiguration(const QString& file);
+		QList<Electrode> configuration();
+		QList<Electrode> allElectrodes();
 		size_t nConnectedChannels();
 		QList<int> connectedChannels();
 		QList<size_t> xpos();
@@ -78,15 +77,38 @@ class HidensClient : public dataclient::DataClient {
 		void liveData(const size_t ms);
 
 	private slots:
-		virtual void checkDataAvailable();
+		virtual void checkDataAvailable() Q_DECL_OVERRIDE;
 
 	private:
+		void askServer(const QString& cmd);
+		QByteArray recvServer();
+		int recvInt();
+		QString recvStr();
+		float recvFloat();
+		QList<int> recvNumList(const QRegExp& re);
+
+		/* Functions appended by "get" indicate requesting data 
+		 * directly from the HiDens server, rather than returning
+		 * it from a cached value 
+		 */
+		void getConfiguration();
+		void getConnectedChannels();
+		void getDataChannels();
+		void getAllElectrodePositions();
+		float getSampleRate();
+		int getHidensVersion();
+		QString getTimestamp();
+
+		bool saving_;
 		size_t plug_;
-
-		QList<Electrode> configuration_;
+		QList<Electrode> allElectrodePositions_ = {};
+		QList<Electrode> configuration_ = {};
 		size_t nConnectedChannels_ = 0;
-		QList<size_t> xpos_ = {};
-
+		QList<int> connectedChannels_ = {};
+		QList<int> dataChannels_ = {};
+		int hidensVersion_;
+		QString timestamp_;
+		int bytesAvailable_;
 };
 };
 

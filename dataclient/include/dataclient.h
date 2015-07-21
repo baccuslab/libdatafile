@@ -55,11 +55,11 @@ class DataClient : public QObject {
 
 	signals:
 		void connectionMade(bool made);
-		virtual void dataAvailable(size_t nsamples);
+		void dataAvailable(size_t nsamples);
 		void disconnected();
 		void error(void);
 
-	private slots:
+	protected slots:
 		virtual void checkDataAvailable() = 0;
 		void connectionSuccessful();
 		void connectionUnsuccessful();

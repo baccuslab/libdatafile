@@ -4,6 +4,7 @@
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
 
+#include <cstdlib>
 #include <QApplication>
 #include <QString>
 #include <QStringList>
@@ -24,8 +25,10 @@ int main(int argc, char *argv[]) {
 			"Choose an array type from which to record data",
 			QStringList({"HiDens", "Multichannel systems"}),
 			0, false, &ok);
-	if (!ok)
+	if (!ok) {
 		app.quit();
+		exit(0);
+	}
 
 	MealogWindow win(array);
 	win.show();

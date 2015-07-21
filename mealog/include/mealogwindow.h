@@ -122,6 +122,7 @@ class MealogWindow : public QMainWindow {
 		void plotNextPlaybackDataBlock(void);
 		void setOnlineAnalysisRunning(bool);
 		void sendDataToOAWindow(uint64_t, uint64_t);
+		void chooseHidensConfiguration();
 
 		/* Playback control slots */
 		void jumpForward(void);
@@ -194,6 +195,7 @@ class MealogWindow : public QMainWindow {
 		uint64_t lastSamplePlotted = 0;
 		QString array;
 		uint16_t dataSource;
+		QString defaultHost;
 
 		/* Playback stuff */
 		QPointer<QTimer> playbackTimer;
@@ -271,6 +273,9 @@ class MealogWindow : public QMainWindow {
 		QGridLayout *recordingLayout;
 		QLabel *adcRangeLabel;
 		QComboBox *adcRangeBox;
+		QLabel *configLabel;
+		QLineEdit *configLine;
+		QPushButton *chooseConfigButton;
 		QComboBox *triggerBox;
 		QLabel *triggerLabel;
 

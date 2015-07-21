@@ -28,9 +28,11 @@ MealogWindow::MealogWindow(const QString& a, QWidget *parent)
 	if (a.toLower() == "hidens") {
 		array = "hidens";
 		dataSource = Mealog::HIDENS;
+		defaultHost = mcsclient::DEFAULT_MCS_HOST;
 	} else {
 		array = "mcs";
 		dataSource = Mealog::MCS;
+		defaultHost = hdclient::DEFAULT_HIDENS_HOST;
 	}
 	initSettings();
 	initGui();
@@ -135,7 +137,7 @@ void MealogWindow::initGui(void) {
 	connectToServerButton->setToolTip("Connect to data server to initialize the recording");
 	serverHostLabel = new QLabel("Host:", serverGroup);
 	serverHostLabel->setAlignment(Qt::AlignRight);
-	serverHost = new QLineEdit(mcsclient::DEFAULT_MCS_HOST, serverGroup);
+	serverHost = new QLineEdit(defaultHost, serverGroup);
 	serverHost->setToolTip("IP address of the computer running the data server");
 	serverValidator = new QRegExpValidator(
 			QRegExp("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}"\
@@ -162,21 +164,35 @@ void MealogWindow::initGui(void) {
 	 */
 	recordingGroup = new QGroupBox("Recording parameters", this);
 	recordingLayout = new QGridLayout(recordingGroup);
-	adcRangeLabel = new QLabel("ADC range:", recordingGroup);
-	adcRangeBox = new QComboBox(recordingGroup);
-	for (auto &each : Mealog::ADC_RANGES)
-		adcRangeBox->addItem(QString::number(each), QVariant(each));
-	adcRangeBox->setToolTip("Set the voltage range of the NI-DAQ card");
-	adcRangeBox->setCurrentIndex(
-			Mealog::ADC_RANGES.indexOf(Mealog::DEFAULT_ADC_RANGE));
 	triggerBox = new QComboBox(recordingGroup);
 	triggerBox->addItems(Mealog::TRIGGERS);
 	triggerLabel = new QLabel("Trigger:", recordingGroup);
 	triggerBox->setToolTip("Set the triggering mechanism for starting the experiment");
-	recordingLayout->addWidget(adcRangeLabel, 0, 0);
-	recordingLayout->addWidget(adcRangeBox, 0, 1);
-	recordingLayout->addWidget(triggerLabel, 1, 0);
-	recordingLayout->addWidget(triggerBox, 1, 1);
+	if (array == "hidens") {
+		configLabel = new QLabel("Configuration:", recordingGroup);
+		chooseConfigButton = new QPushButton("Choose", recordingGroup);
+		connect(chooseConfigButton, &QPushButton::clicked,
+				this, &MealogWindow::chooseHidensConfiguration);
+		configLine = new QLineEdit("", recordingGroup);
+		configLine->setReadOnly(true);
+		recordingLayout->addWidget(configLabel, 0, 0);
+		recordingLayout->addWidget(chooseConfigButton, 0, 1);
+		recordingLayout->addWidget(configLine, 1, 0, 1, 2);
+		recordingLayout->addWidget(triggerLabel, 2, 0);
+		recordingLayout->addWidget(triggerBox, 2, 1);
+	} else {
+		adcRangeLabel = new QLabel("ADC range:", recordingGroup);
+		adcRangeBox = new QComboBox(recordingGroup);
+		for (auto &each : Mealog::ADC_RANGES)
+			adcRangeBox->addItem(QString::number(each), QVariant(each));
+		adcRangeBox->setToolTip("Set the voltage range of the NI-DAQ card");
+		adcRangeBox->setCurrentIndex(
+				Mealog::ADC_RANGES.indexOf(Mealog::DEFAULT_ADC_RANGE));
+		recordingLayout->addWidget(adcRangeLabel, 0, 0);
+		recordingLayout->addWidget(adcRangeBox, 0, 1);
+		recordingLayout->addWidget(triggerLabel, 1, 0);
+		recordingLayout->addWidget(triggerBox, 1, 1);
+	}
 	recordingGroup->setLayout(recordingLayout);
 	mainLayout->addWidget(recordingGroup, 1, 2);
 
@@ -814,6 +830,12 @@ void MealogWindow::chooseSaveDir(void) {
 		return;
 	}
 	settings.setSaveDir(dir);
+}
+
+void MealogWindow::chooseHidensConfiguration()
+{
+	QMessageBox::warning(this, "Not implemented",
+			"Choosing HiDens configurations is not yet supported.");
 }
 
 //bool MealogWindow::checkMeaviewRunning(void) {

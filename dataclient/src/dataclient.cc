@@ -34,7 +34,7 @@ void dataclient::DataClient::connect()
 	QObject::connect(socket, &QAbstractSocket::connected,
 			this, &dataclient::DataClient::connectionSuccessful);
 	QObject::connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
-			this, SLOT(connectionUnsucessful()));
+			this, SLOT(connectionUnsuccessful()));
 	socket->connectToHost(host_, port_);
 }
 
@@ -54,7 +54,7 @@ void dataclient::DataClient::connectionSuccessful()
 	QObject::disconnect(socket, &QAbstractSocket::connected,
 			this, &dataclient::DataClient::connectionSuccessful);
 	QObject::disconnect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
-			this, SLOT(connectionUnsucessful()));
+			this, SLOT(connectionUnsuccessful()));
 	QObject::connect(socket, &QAbstractSocket::disconnected,
 			this, &dataclient::DataClient::handleDisconnection);
 	QObject::connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
