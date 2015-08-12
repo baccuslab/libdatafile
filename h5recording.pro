@@ -13,10 +13,15 @@ CONFIG += c++11 debug_and_release
 QMAKE_CXXFLAGS += -std=c++11
 
 INCLUDEPATH += . include /usr/local/include /usr/include
-LIBS += -L/usr/local/lib -L/usr/lib -lhdf5_cpp -lhdf5 -larmadillo
+win32 {
+	LIBS += -LC:/msys64/mingw64/lib
+} else {
+	LIBS +=  -L/usr/lib -L/usr/local/lib
+}
 mac {
 	QMAKE_SONAME_PREFIX += @rpath
 }
+LIBS += -lhdf5_cpp -lhdf5 -larmadillo
 
 # Input
 HEADERS += include/h5recording.h
