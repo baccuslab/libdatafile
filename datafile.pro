@@ -3,7 +3,7 @@
 ######################################################################
 
 TEMPLATE = lib
-TARGET = h5recording
+TARGET = datafile
 VERSION = 0.1.0
 
 DESTDIR = lib
@@ -24,5 +24,7 @@ mac {
 LIBS += -lhdf5_cpp -lhdf5 -larmadillo
 
 # Input
-HEADERS += include/h5recording.h
-SOURCES += src/h5recording.cc
+HEADERS += include/datafile.h \
+			include/hidensfile.h
+SOURCES += src/datafile.cc \
+			src/hidensfile.cc
