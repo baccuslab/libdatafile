@@ -13,13 +13,10 @@ namespace hidensfile {
 
 HidensFile::HidensFile(std::string filename,
 		std::string array, int nchannels)
-		: datafile::DataFile(filename, array)
+		: datafile::DataFile(filename, array, nchannels)
 {
-	if (readOnly) {
+	if (readOnly)
 		readConfiguration();
-	} else {
-		setNumChannels(nchannels);
-	}
 }
 
 arma::Col<uint32_t> HidensFile::xpos() const { return xpos_; }

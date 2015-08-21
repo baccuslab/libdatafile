@@ -43,7 +43,9 @@ class DataFile {
 		/* Construct a new DataFile object. The file is created if it does
 		 * not exist, otherwise it is opened read-only.
 		 */
-		DataFile(std::string filename, std::string array = DEFAULT_ARRAY);
+		DataFile(const std::string& filename, 
+				const std::string& array = DEFAULT_ARRAY,
+				const hsize_t nchannels = NUM_CHANNELS);
 		virtual ~DataFile();
 
 		std::string filename() const;	// Returns the full pathname of the file
@@ -74,17 +76,17 @@ class DataFile {
 		template<class T>
 		void data(const arma::uvec& channels, int start, int end, T& data) const;
 
-		/* Write data to the file. See datafile.tc for implementation */
+		/* Write data to the file. This method will extend the 
+		 * dataset, if needed.
+		 * See datafile-templates.cc for implementation
+		 */
 		template<class T>
 		void setData(int startSample, int endSample, const T& data);
 
 		/* Setters for data attributes */
 		void setFilename(std::string filename);
 		void setArray(std::string array);
-		void setLength(double length);	
 		void setSampleRate(float sampleRate);
-		void setNumChannels(uint32_t nchannels);
-		void setNumSamples(uint32_t nsamples);
 		void setGain(float gain);
 		void setOffset(float offset);
 		void setDate(void);
@@ -112,8 +114,6 @@ class DataFile {
 		/* Read the corresponding values from the file */
 		void readArray();
 		void readSampleRate();
-		void readNumSamples();
-		void readNumChannels();
 		void readGain();
 		void readOffset();
 		void readDate();
@@ -128,8 +128,6 @@ class DataFile {
 
 		std::string filename_;		// Full path name of HDF5 file
 		std::string array_;			// Array type
-		double length_;				// Length of recording in seconds
-		uint32_t nsamples_;			// Length of recording in samples
 		uint32_t nchannels_;		// Number of channels
 		float sampleRate_;			// Data sample rate
 		float gain_;				// Gain of A/D conversion
@@ -140,7 +138,7 @@ class DataFile {
 }; // End class
 }; // End namespace
 
-#include "datafile.tc" // Implementation of templated functions defined above
+#include "datafile-templates.cc" // Implementation of templated functions defined above
 
 #endif
 

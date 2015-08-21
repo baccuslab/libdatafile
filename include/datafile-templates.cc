@@ -50,7 +50,7 @@ void datafile::DataFile::data(int startChannel, int endChannel, int startSample,
 		what << "Dataset selection invalid:" << std::endl
 				<< "Offset: (" << startSample << ", 0)" << std::endl
 				<< "Count: (" << requestedSamples << ", "
-				<< nchannels_ << ")" << std::endl;
+				<< nchannels() << ")" << std::endl;
 		throw std::logic_error(what.str());
 	}
 
@@ -70,7 +70,7 @@ void datafile::DataFile::data(int startChannel, int endChannel, int startSample,
 		std::stringstream what;
 		what << "Memory dataspace selection invalid:" << std::endl
 				<< "Count: (" << requestedSamples << ", "
-				<< nchannels_ << ")" << std::endl;
+				<< nchannels() << ")" << std::endl;
 		throw std::logic_error(what.str());
 	}
 
@@ -160,10 +160,20 @@ void datafile::DataFile::setData(int startSample, int endSample, const T& data)
 				std::to_string(endSample) + ")");
 	}
 
+	/* Extend the dataset if needed */
+	if (endSample > nsamples()) {
+		hsize_t dims[DATASET_RANK] = {0, 0};
+		dataspace = dataset.getSpace();
+		dataspace.getSimpleExtentDims(dims);
+		dims[1] += BLOCK_SIZE;
+		dataset.extend(dims);
+		dataspace = dataset.getSpace();
+	}
+
 	/* Select hyperslab from data set itself */
 	hsize_t spaceOffset[datafile::DATASET_RANK] = {0,
 			static_cast<hsize_t>(startSample)};
-	hsize_t spaceCount[datafile::DATASET_RANK] = {nchannels_,
+	hsize_t spaceCount[datafile::DATASET_RANK] = {nchannels(),
 			static_cast<hsize_t>(requestedSamples)};
 	dataspace.selectHyperslab(H5S_SELECT_SET, spaceCount, spaceOffset);
 	if (!dataspace.selectValid()) {
@@ -171,23 +181,23 @@ void datafile::DataFile::setData(int startSample, int endSample, const T& data)
 		what << "Dataset selection invalid:" << std::endl
 				<< "Offset: (" << startSample << ", 0)" << std::endl
 				<< "Count: (" << requestedSamples << ", "
-				<< nchannels_ << ")" << std::endl;
+				<< nchannels() << ")" << std::endl;
 		throw std::logic_error(what.str());
 	}
 
 	/* Define the source data space in memory */
-	hsize_t dims[datafile::DATASET_RANK] = {nchannels_,
+	hsize_t dims[datafile::DATASET_RANK] = {nchannels(),
 			static_cast<hsize_t>(requestedSamples)};
 	H5::DataSpace memspace(datafile::DATASET_RANK, dims);
 	hsize_t offset[datafile::DATASET_RANK] = {0, 0};
-	hsize_t count[datafile::DATASET_RANK] = {nchannels_,
+	hsize_t count[datafile::DATASET_RANK] = {nchannels(),
 			static_cast<hsize_t>(requestedSamples)};
 	memspace.selectHyperslab(H5S_SELECT_SET, count, offset);
 	if (!memspace.selectValid()) {
 		std::stringstream what;
 		what << "Memory dataspace selection invalid:" << std::endl
 				<< "Count: (" << requestedSamples << ", "
-				<< nchannels_ << ")" << std::endl;
+				<< nchannels() << ")" << std::endl;
 		throw std::logic_error(what.str());
 	}
 
@@ -199,7 +209,7 @@ void datafile::DataFile::setData(int startSample, int endSample, const T& data)
 	} else if (hash == typeid(arma::vec).hash_code()) {
 		datatype = H5::PredType::IEEE_F64LE;
 	} else if (hash == typeid(arma::Mat<short>).hash_code()) {
-		datatype = H5::PredType::IEEE_F64LE;
+		datatype = H5::PredType::STD_I16LE;
 	} else if (hash == typeid(arma::Col<short>).hash_code()) {
 		datatype = H5::PredType::STD_I16LE;
 	} else if (hash == typeid(arma::Mat<uint8_t>).hash_code()) {

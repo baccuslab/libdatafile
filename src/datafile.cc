@@ -11,7 +11,9 @@
 
 namespace datafile {
 
-DataFile::DataFile(std::string filename, std::string array) 
+DataFile::DataFile(const std::string& filename, 
+		const std::string& array,
+		const hsize_t nchannels)
 		: filename_(filename),
 		  array_(array)
 {
@@ -46,8 +48,6 @@ DataFile::DataFile(std::string filename, std::string array)
 		try {
 			readArray();
 			readSampleRate();
-			readNumSamples();
-			readNumChannels();
 			readGain();
 			readOffset();
 			readDate();
@@ -57,9 +57,6 @@ DataFile::DataFile(std::string filename, std::string array)
 			throw std::invalid_argument(
 					"H5 file does not contain appropriate attributes");
 		}
-
-		/* Compute length of experiment */
-		setLength(nsamples() / sampleRate());
 
 	} else {
 		/* Construct the file. Define to have a chunk cache large enough to hold
@@ -81,8 +78,8 @@ DataFile::DataFile(std::string filename, std::string array)
 				H5::FileCreatPropList::DEFAULT, fileProps);
 
 		/* Create the dataset */
-		dataspace = H5::DataSpace(datafile::DATASET_RANK, 
-				datafile::DATASET_DEFAULT_DIMS, 
+		hsize_t dims[DATASET_RANK] = {nchannels, DATASET_DEFAULT_DIMS[1]};
+		dataspace = H5::DataSpace(datafile::DATASET_RANK, dims,
 				datafile::DATASET_MAX_DIMS);
 		props = H5::DSetCreatPropList();
 		props.setChunk(datafile::DATASET_RANK, datafile::DATASET_CHUNK_DIMS);
@@ -90,7 +87,6 @@ DataFile::DataFile(std::string filename, std::string array)
 		dataset = file.createDataSet("data", datatype, dataspace, props);
 
 		/* Set default parameters */
-		setNumChannels(datafile::NUM_CHANNELS);
 		setSampleRate(datafile::SAMPLE_RATE);
 		setRoom(datafile::DEFAULT_ROOM_STRING);
 		setDate();
@@ -112,22 +108,24 @@ std::string DataFile::filename() const { return filename_; }
 
 std::string DataFile::array() const { return array_; }
 
-double DataFile::length() const { return length_; }
-
-void DataFile::setLength(double length) 
-{
-	length_ = length;
-	setNumSamples(length_ * datafile::SAMPLE_RATE);
-	if (readOnly)
-		return;
-	hsize_t newSize[datafile::DATASET_RANK] = {datafile::NUM_CHANNELS, nsamples_};
-	dataset.extend(newSize);
-	dataspace = dataset.getSpace();
+double DataFile::length() const 
+{ 
+	return ((double) nsamples() / sampleRate());
 }
 
-uint32_t DataFile::nsamples(void) const { return nsamples_; }
+uint32_t DataFile::nsamples() const
+{
+	hsize_t dims[DATASET_RANK] = {0, 0};
+	dataspace.getSimpleExtentDims(dims);
+	return dims[1];
+}
 
-uint32_t DataFile::nchannels(void) const { return nchannels_; }
+uint32_t DataFile::nchannels() const
+{
+	hsize_t dims[DATASET_RANK] = {0, 0};
+	dataspace.getSimpleExtentDims(dims);
+	return dims[0];
+}
 
 float DataFile::sampleRate(void) const { return sampleRate_; }
 
@@ -264,16 +262,6 @@ void DataFile::setSampleRate(float sampleRate)
 	sampleRate_ = sampleRate;
 }
 
-void DataFile::setNumChannels(uint32_t nchannels) 
-{
-	nchannels_ = nchannels;
-}
-
-void DataFile::setNumSamples(uint32_t nsamples) 
-{
-	nsamples_ = nsamples;
-}
-
 void DataFile::setGain(float gain) 
 {
 	writeDataAttr("gain", H5::PredType::IEEE_F32LE, &gain);
@@ -379,20 +367,6 @@ void DataFile::readFileStringAttr(std::string name, std::string &loc)
 void DataFile::readSampleRate(void) 
 {
 	readDataAttr("sample-rate", &sampleRate_);
-}
-
-void DataFile::readNumSamples(void) 
-{
-	hsize_t dims[datafile::DATASET_RANK] = {0, 0};
-	dataset.getSpace().getSimpleExtentDims(dims, NULL);
-	nsamples_ = dims[1];
-}
-
-void DataFile::readNumChannels(void) 
-{
-	hsize_t dims[datafile::DATASET_RANK] = {0, 0};
-	dataset.getSpace().getSimpleExtentDims(dims, NULL);
-	nchannels_ = dims[0];
 }
 
 void DataFile::readGain(void) 

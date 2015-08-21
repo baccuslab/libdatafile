@@ -63,7 +63,7 @@ class HidensFile : public datafile::DataFile {
 }; // end HidensFile class
 }; // end hidensfile namespace
 
-#include "hidensfile.tc"
+#include "hidensfile-templates.cc"
 
 #endif
 
