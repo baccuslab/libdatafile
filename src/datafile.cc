@@ -89,7 +89,6 @@ DataFile::DataFile(const std::string& filename,
 		/* Set default parameters */
 		setSampleRate(datafile::SAMPLE_RATE);
 		setRoom(datafile::DEFAULT_ROOM_STRING);
-		setDate();
 	}
 }
 
@@ -274,12 +273,8 @@ void DataFile::setOffset(float offset)
 	offset_ = offset;
 }
 
-void DataFile::setDate(void) 
+void DataFile::setDate(std::string date)
 {
-	const size_t isoLength = 19;
-	std::string date(isoLength + 1, '\0');
-	std::time_t t = std::time(nullptr);
-	std::strftime(&date[0], isoLength, DATE_FORMAT, std::localtime(&t));
 	writeDataStringAttr("date", date);
 	date_ = date;
 }

@@ -89,7 +89,7 @@ class DataFile {
 		void setSampleRate(float sampleRate);
 		void setGain(float gain);
 		void setOffset(float offset);
-		void setDate(void);
+		void setDate(std::string date);
 		void setRoom(std::string room);
 
 		const H5::DataType& dtype() const { return datatype; }
