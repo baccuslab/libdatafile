@@ -17,6 +17,9 @@ HidensFile::HidensFile(std::string filename,
 {
 	if (readOnly)
 		readConfiguration();
+	else {
+		setSampleRate(hidensfile::SAMPLE_RATE);
+	}
 }
 
 arma::Col<uint32_t> HidensFile::xpos() const { return xpos_; }
@@ -92,22 +95,32 @@ void HidensFile::writeConfiguration()
 	H5::Group grp;
 	try {
 		grp = file.openGroup("configuration");
-	} catch (H5::FileIException &e) {
+	} catch ( ... ) {
 		grp = file.createGroup("configuration");
+		hsize_t rank = 1;
+		hsize_t dims[] = { static_cast<hsize_t>(xpos_.size()) };
+		auto space = H5::DataSpace(rank, dims);
+		grp.createDataSet("xpos", H5::PredType::STD_U32LE, space);
+		grp.createDataSet("ypos", H5::PredType::STD_U32LE, space);
+		grp.createDataSet("x", H5::PredType::STD_U16LE, space);
+		grp.createDataSet("y", H5::PredType::STD_U16LE, space);
+		H5::StrType labelType(0, 1);
+		grp.createDataSet("label", labelType, space);
+		grp.createDataSet("channels", H5::PredType::STD_I32LE, space);
 	}
 	try {
 		auto xposDset = grp.openDataSet("xpos");
-		readConfigurationDataset(xposDset, xpos_);
+		writeConfigurationDataset(xposDset, xpos_);
 		auto yposDset = grp.openDataSet("ypos");
-		readConfigurationDataset(yposDset, ypos_);
+		writeConfigurationDataset(yposDset, ypos_);
 		auto xDset = grp.openDataSet("x");
-		readConfigurationDataset(xDset, x_);
+		writeConfigurationDataset(xDset, x_);
 		auto yDset = grp.openDataSet("y");
-		readConfigurationDataset(yDset, y_);
+		writeConfigurationDataset(yDset, y_);
 		auto labelDset = grp.openDataSet("label");
-		readConfigurationDataset(labelDset, label_);
+		writeConfigurationDataset(labelDset, label_);
 		auto channelDset = grp.openDataSet("channels");
-		readConfigurationDataset(channelDset, channels_);
+		writeConfigurationDataset(channelDset, channels_);
 	} catch (H5::DataSetIException& e) {
 		std::stringstream what;
 		what << "The file " << filename() <<

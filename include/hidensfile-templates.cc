@@ -54,7 +54,7 @@ void hidensfile::HidensFile::writeConfigurationDataset(H5::DataSet& dset, T& in)
 	else if (hash == typeid(arma::Col<uint16_t>).hash_code())
 		dtype = H5::PredType::STD_U16LE;
 	else if (hash == typeid(arma::Col<uint8_t>).hash_code()) {
-		auto strtype = H5::StrType(H5::PredType::C_S1, 1);
+		auto strtype = H5::StrType(0, 1);
 		strtype.setStrpad(H5T_STR_NULLTERM);
 		dtype = strtype;
 	} else if (hash == typeid(arma::Col<int32_t>).hash_code())

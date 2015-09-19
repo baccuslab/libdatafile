@@ -22,12 +22,13 @@ namespace datafile {
 const std::string RECORDING_FILE_EXTENSION = ".h5";
 const int DATASET_RANK = 2;
 const int NUM_CHANNELS = 64;
+const int MAX_NUM_CHANNELS = 128; // Set here so HiDens files can use same ctor
 const int BLOCK_SIZE = 20000;
 const float SAMPLE_RATE = 10000;
 const unsigned int CHUNK_CACHE_SIZE = 5; // In number of chunks
 const hsize_t DATASET_DEFAULT_DIMS[DATASET_RANK] = {NUM_CHANNELS, BLOCK_SIZE};
 const hsize_t DATASET_CHUNK_DIMS[DATASET_RANK]= {NUM_CHANNELS, BLOCK_SIZE};
-const hsize_t DATASET_MAX_DIMS[DATASET_RANK] = {NUM_CHANNELS, H5S_UNLIMITED};
+const hsize_t DATASET_MAX_DIMS[DATASET_RANK] = {MAX_NUM_CHANNELS, H5S_UNLIMITED};
 const std::string DEFAULT_ROOM_STRING("recorded in d239");
 const char DATE_FORMAT[] = "%Y-%m-%dT%H:%M:%S";
 const std::string DEFAULT_ARRAY("hexagonal");

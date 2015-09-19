@@ -14,7 +14,7 @@
 namespace hidensfile {
 
 const int NUM_CHANNELS = 126;
-const float SAMPLE_RATE = 10000;
+const float SAMPLE_RATE = 20000;
 const std::string DEFAULT_ARRAY("hidens-v2");
 
 typedef struct {
