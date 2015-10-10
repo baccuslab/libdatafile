@@ -13,3 +13,4 @@ hdf2bin
 bin2hdf
 tools/bin/*
 tools/lib/*
+doc/*

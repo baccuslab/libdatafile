@@ -1,98 +1,220 @@
-/* datafile.h
+/*! \file datafile.h
+ *
  * Public API for the DataFile class, which represents an HDF5 data
  * file to which experimental data is saved
  *
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
 
-#ifndef MEAREC_DATAFILE_H_
-#define MEAREC_DATAFILE_H_
+#ifndef _DATAFILE_H_
+#define _DATAFILE_H_
 
-/* C++ standard library */
-#include <string>
-#include <vector>
-
-/* Third-party includes */
 #include "H5Cpp.h"
 #include <armadillo>
 
+#include <string>
+#include <vector>
+
+/*! Namespace containing all data and code relating to libdatafile. */
 namespace datafile {
 
-/* Constants */
+/*! File extension for all recording files created by libdatafile */
 const std::string RECORDING_FILE_EXTENSION = ".h5";
+
+/*! Rank of all datasets */
 const int DATASET_RANK = 2;
+
+/*! Default number of channels.
+ * Note that this is the number of channels for an MCS array recording, 
+ * not necessarily a HiDens recording. However it is defined here so that
+ * both the base DataFile class and the HidensFile subclass can use the
+ * same constructor
+ */
 const int NUM_CHANNELS = 64;
-const int MAX_NUM_CHANNELS = 128; // Set here so HiDens files can use same ctor
+
+/*! Maximum number of channels in any recording */
+const int MAX_NUM_CHANNELS = 128;
+
+/*! Chunk size for HDF5 library reads and writes. */
 const int BLOCK_SIZE = 20000;
+
+/*! Default sample rate for MCS array data */
 const float SAMPLE_RATE = 10000;
+
+/*! Number of chunks to request the HDF5 library keep cached */
 const unsigned int CHUNK_CACHE_SIZE = 5; // In number of chunks
+
+/*! Default dimensions of the dataset */
 const hsize_t DATASET_DEFAULT_DIMS[DATASET_RANK] = {NUM_CHANNELS, BLOCK_SIZE};
+
+/*! Chunksize for the dataset along each dimension */
 const hsize_t DATASET_CHUNK_DIMS[DATASET_RANK]= {NUM_CHANNELS, BLOCK_SIZE};
+
+/*! Maximum dimensions for the dataset, so that it can be
+ * extended as a recording grows
+ */
 const hsize_t DATASET_MAX_DIMS[DATASET_RANK] = {MAX_NUM_CHANNELS, H5S_UNLIMITED};
-const std::string DEFAULT_ROOM_STRING("recorded in d239");
+
+/*! String stored in the file giving the room in which data was recorded. */
+const std::string DEFAULT_ROOM_STRING = "recorded in d239";
+
+/*! Format in which to save the date of the recording */
 const char DATE_FORMAT[] = "%Y-%m-%dT%H:%M:%S";
-const std::string DEFAULT_ARRAY("hexagonal");
 
-/* Aliases for Armadillo matrices used to store data */
-using samples = arma::mat;				// Used for either MCS or HiDens 
-using ssamples = arma::Mat<short>;		// Used for MCS recordings
-using usamples = arma::Mat<uint8_t>; 	// Used for HiDens recordings
+/*! Default array to use when creating a new recording */
+const std::string DEFAULT_ARRAY = "hexagonal";
 
+/*! Type alias for data from either array */
+using samples = arma::mat;
+
+/*! Type alias for data from the MCS arrays only */
+using ssamples = arma::Mat<short>;
+
+/*! Type alias for adata from the HiDens arrays only */
+using usamples = arma::Mat<uint8_t>;
+
+
+/*! The DataFile class is the heart of libdatafile. It provides functionality
+ * for reading, writing, and modifying an HDF5 recording file in the Baccus Lab.
+ */
 class DataFile {
 
 	public:
-		/* Construct a new DataFile object. The file is created if it does
-		 * not exist, otherwise it is opened read-only.
+		/*! Construct a new DataFile object. 
+		 * The file is created if it does not exist, otherwise it is opened read-only.
+		 * \param filename The name of the file to create or open.
+		 * \param array The type of array the written data will come from.
+		 * \param nchannels The number of channels to be written to the dataset.
 		 */
 		DataFile(const std::string& filename, 
 				const std::string& array = DEFAULT_ARRAY,
 				const hsize_t nchannels = NUM_CHANNELS);
+
+		/*! Destroy a DataFile, flushing and closing the underlying file */
 		virtual ~DataFile();
 
-		std::string filename() const;	// Returns the full pathname of the file
-		std::string array() const;		// Array on which data was recorded
-		double length() const;			// Returns the recording's length in seconds
-		uint32_t nsamples() const;		// Returns the number of samples
-		uint32_t nchannels() const;		// Returns the number of channels
-		float sampleRate() const;		// Returns the data sample rate
-		float gain() const;				// Returns the NI-DAQ ADC gain
-		float offset() const;			// Returns the NI-DAQ ADC offset
-		std::string date() const;		// Returns date of the recording
-		std::string room() const;		// Returns room in which recording occurred
+		/*! Return the full pathname of the file */
+		std::string filename() const;
+		
+		/*! Return the array from which the data was recorded */
+		std::string array() const;
 
-		/* Return data in double-precision, true voltage values */
+		/*! Return the length of the full recording, in seconds */
+		double length() const;
+
+		/*! Return the total number of samples in the recording */
+		uint32_t nsamples() const;
+
+		/*! Return the number of channels in the data file */
+		uint32_t nchannels() const;
+
+		/*! Return the sample rate of the data */
+		float sampleRate() const;
+
+		/*! Return the total gain of the the analog-digital conversion stage
+		 * when recording the data.
+		 *
+		 * Note that this means different things for MCS and HiDens arrays.
+		 * For example, the NI-DAQ used to record data from the MCS arrays
+		 * converts into units of volts, while the HiDens system converts 
+		 * to microvolts.
+		 */
+		float gain() const;
+
+		/*! Return the voltage offset of the analog-digital conversion stage
+		 * when recording the data.
+		 */
+		float offset() const;
+
+		/*! Return the date on which the data was recorded */
+		std::string date() const;
+
+		/*! Return the room in which the data was recorded */
+		std::string room() const;
+
+		/*! Return data from all channels over the given sample rate.
+		 * Data is return in true voltage units, as double-precision IEEE floats.
+		 *
+		 * \param start The first sample to return
+		 * \param end The last sample to return.
+		 */
 		samples data(int start, int end) const;
+
+		/*! Return data from the given channel.
+		 * \param channel The channel whose data should be returned
+		 * \param start The first sample to return.
+		 * \param end The last sample to return.
+		 */
 		arma::vec data(int channel, int start, int end) const;
 
-		/* Return data from single channel of given type */
+		/* Fill the given Armadillo vector with data from the requested channel.
+		 * \param channel The channel to read data from
+		 * \param start The first sample to read
+		 * \param end The last sample to read
+		 * \param data The Armadillo matrix to fill with the requested data. Data
+		 * will be converted to the appropriate type to fill the given matrix.
+		 */
 		template<class T>
 		void data(int channel, int start, int end, T& data) const;
 
-		/* Return data from contiguous block of channels */
+		/* Read data from a contiguous set of channels into the given matrix.
+		 * \param startChan The first channel to read
+		 * \param endChan The last channel to read
+		 * \param startSample The first sample to read.
+		 * \param lastSample The last sample to read.
+		 * \param data The Armadillo matrix to fill with the requested data. Data
+		 * will be converted to the appropriate type to fill the given matrix.
+		 */
 		template<class T>
 		void data(int startChan, int endChan, 
 				int startSample, int endSample, T& data) const;
 
-		/* Return data from arbitrary selection of channels */
+		/* Read data from an arbitrary selection of channels into the given matrix.
+		 * This form of the function reads data from the channels whose indices
+		 * are given in the first parameter. The channels need not be contiguous.
+		 * Note that, if a contiguous selection of channels is desired, it can
+		 * be hugely more effecient to use the other version of this function.
+		 * \param channels A vector of channel indices to read.
+		 * \param start The first sample to read.
+		 * \param end The last sample to read.
+		 * \param data The Armadillo matrix to fill with the requested data. Data
+		 * will be converted to the appropriate type to fill the given matrix.
+		 */
 		template<class T>
 		void data(const arma::uvec& channels, int start, int end, T& data) const;
 
-		/* Write data to the file. This method will extend the 
-		 * dataset, if needed.
-		 * See datafile-templates.cc for implementation
+		/* Write data to the file, from the given Armadillo matrix type.
+		 * This function requires that data from all channels be written at once.
+		 * Data will not be converted to whataver type the underlying data set has.
+		 * Note that this may result in a loss of data.
+		 * \param startSample The first sample to write.
+		 * \param endSample The last sample to write.
+		 * \param data The Armadillo matrix containing data to write.
 		 */
 		template<class T>
 		void setData(int startSample, int endSample, const T& data);
 
-		/* Setters for data attributes */
-		void setFilename(std::string filename);
+		/*! Set the array from which data in this file derives.
+		 * \param array The array type.
+		 */
 		void setArray(std::string array);
+
+		/*! Set the sample rate of the data */
 		void setSampleRate(float sampleRate);
+
+		/*! Set the ADC gain of the data. */
 		void setGain(float gain);
+
+		/*! Set the ADC offset for the data */
 		void setOffset(float offset);
+
+		/*! Set the date */
 		void setDate(std::string date);
+
+		/*! Set the room string */
 		void setRoom(std::string room);
 
+		/*! Returns the HDF5 dataype for the underlying dataset. */
 		const H5::DataType& dtype() const { return datatype; }
 
 	protected:
@@ -129,7 +251,6 @@ class DataFile {
 
 		std::string filename_;		// Full path name of HDF5 file
 		std::string array_;			// Array type
-		uint32_t nchannels_;		// Number of channels
 		float sampleRate_;			// Data sample rate
 		float gain_;				// Gain of A/D conversion
 		float offset_;				// Offset of A/D conversion

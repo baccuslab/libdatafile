@@ -11,35 +11,75 @@
 
 #include "datafile.h"
 
+/*! The hidensfile namespace contains portions of libdatafile that are
+ * particular to the HiDens array data.
+ */
 namespace hidensfile {
 
+/*! The default number of channels in a HiDens recording */
 const int NUM_CHANNELS = 126;
+
+/*! The HiDens data sample rate */
 const float SAMPLE_RATE = 20000;
+
+/*! The default array type */
 const std::string DEFAULT_ARRAY("hidens-v2");
 
+
+/*! A structure for representing a single connected electrode */
 typedef struct {
+	/*! The channel number recording data from this electrode */
 	int32_t channel;
+
+	/*! The x-position of the electrode (microns) */
 	uint32_t xpos;
+
+	/*! The y-position of the electrode (microns) */
 	uint32_t ypos;
+
+	/*! The linear x-index of the electrode */
 	uint16_t x;
+
+	/*! The linear y-index of the electrode */
 	uint16_t y;
+
+	/*! A character label for this electrode */
 	uint8_t label;
 } Electrode;
 
+/*! The HidensFile class is a Datafile subclass that provides extra functionality
+ * specific to HiDens array recordings.
+ */
 class HidensFile : public datafile::DataFile {
 	public:
+
+		/*! Construct a HiDens recording file. */
 		HidensFile(std::string filename, 
 				std::string array = DEFAULT_ARRAY,
 				int nchannels = NUM_CHANNELS);
 
+		/*! Return the configuration saved in this file */
 		std::vector<Electrode> configuration() const;
+
+		/*! Return the list of x-positions for all connected electrodes */
 		arma::Col<uint32_t> xpos() const;
+
+		/*! Return the list of y-positions for all connected electrodes */
 		arma::Col<uint32_t> ypos() const;
+
+		/*! Return the list of x-indices for all connected electrodes */
 		arma::Col<uint16_t> x() const;
+
+		/*! Return the list of y-indices for all connected electrodes */
 		arma::Col<uint16_t> y() const;
+
+		/*! Return the list of labels for all connected electrodes */
 		arma::Col<uint8_t> label() const;
+
+		/*! Return the list of channels to which each electrode is connected */
 		arma::Col<int32_t> channels() const;
 
+		/*! Write the given configuration into the file */
 		void setConfiguration(const std::vector<Electrode>&);
 
 	protected:

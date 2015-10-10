@@ -145,8 +145,8 @@ samples DataFile::data(int startSample, int endSample) const
 				startSample << ", " << endSample << ")" << std::endl;
 		throw std::logic_error("Requested sample range invalid");
 	}
-	samples s(req_nsamples, nchannels_);
-	data(0, nchannels_, startSample, endSample, s);
+	samples s(req_nsamples, nchannels());
+	data(0, nchannels(), startSample, endSample, s);
 	return s;
 }
 
@@ -166,8 +166,6 @@ arma::vec DataFile::data(int channel, int startSample, int endSample) const
 	data(channel, startSample, endSample, s);
 	return s;
 }
-
-void DataFile::setFilename(std::string filename) { filename_ = filename; }
 
 void DataFile::writeFileAttr(std::string name, const H5::DataType &type, void *buf) 
 {
