@@ -103,10 +103,10 @@ class DataFile {
 		double length() const;
 
 		/*! Return the total number of samples in the recording */
-		uint32_t nsamples() const;
+		int nsamples() const;
 
 		/*! Return the number of channels in the data file */
-		uint32_t nchannels() const;
+		int nchannels() const;
 
 		/*! Return the sample rate of the data */
 		float sampleRate() const;

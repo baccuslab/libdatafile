@@ -173,7 +173,8 @@ void datafile::DataFile::setData(int startSample, int endSample, const T& data)
 	/* Select hyperslab from data set itself */
 	hsize_t spaceOffset[datafile::DATASET_RANK] = {0,
 			static_cast<hsize_t>(startSample)};
-	hsize_t spaceCount[datafile::DATASET_RANK] = {nchannels(),
+	hsize_t spaceCount[datafile::DATASET_RANK] = {
+			static_cast<hsize_t>(nchannels()),
 			static_cast<hsize_t>(requestedSamples)};
 	dataspace.selectHyperslab(H5S_SELECT_SET, spaceCount, spaceOffset);
 	if (!dataspace.selectValid()) {
@@ -186,11 +187,13 @@ void datafile::DataFile::setData(int startSample, int endSample, const T& data)
 	}
 
 	/* Define the source data space in memory */
-	hsize_t dims[datafile::DATASET_RANK] = {nchannels(),
+	hsize_t dims[datafile::DATASET_RANK] = {
+			static_cast<hsize_t>(nchannels()),
 			static_cast<hsize_t>(requestedSamples)};
 	H5::DataSpace memspace(datafile::DATASET_RANK, dims);
 	hsize_t offset[datafile::DATASET_RANK] = {0, 0};
-	hsize_t count[datafile::DATASET_RANK] = {nchannels(),
+	hsize_t count[datafile::DATASET_RANK] = {
+			static_cast<hsize_t>(nchannels()),
 			static_cast<hsize_t>(requestedSamples)};
 	memspace.selectHyperslab(H5S_SELECT_SET, count, offset);
 	if (!memspace.selectValid()) {

@@ -46,7 +46,7 @@ void HidensFile::setConfiguration(const std::vector<Electrode>& config)
 		label_.resize(sz);
 		channels_.resize(sz);
 	}
-	for (auto i = 0; i < sz; i++) {
+	for (decltype(sz) i = 0; i < sz; i++) {
 		auto& val = config[i];
 		xpos_[i] = val.xpos;
 		ypos_[i] = val.ypos;
