@@ -73,6 +73,7 @@ using ssamples = arma::Mat<short>;
 /*! Type alias for adata from the HiDens arrays only */
 using usamples = arma::Mat<uint8_t>;
 
+std::string array(const std::string& filename);
 
 /*! The DataFile class is the heart of libdatafile. It provides functionality
  * for reading, writing, and modifying an HDF5 recording file in the Baccus Lab.

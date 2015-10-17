@@ -82,6 +82,20 @@ void HidensFile::readConfiguration()
 		readConfigurationDataset(labelDset, label_);
 		auto channelDset = grp.openDataSet("channels");
 		readConfigurationDataset(channelDset, channels_);
+
+		configuration_.reserve(xpos_.n_elem);
+		for (arma::uword i = 0; i < xpos_.n_elem; i++) {
+			configuration_.push_back(
+					{ 
+					.xpos = xpos_(i), 
+					.ypos = ypos_(i),
+					.x = x_(i),
+					.y = y_(i),
+					.label = label_(i),
+					.channel = channels_(i)
+					});
+		}
+
 	} catch (H5::DataSetIException& e) {
 		std::stringstream what;
 		what << "The file " << filename() <<

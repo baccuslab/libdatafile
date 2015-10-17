@@ -407,5 +407,23 @@ void DataFile::computeCoords(const arma::uvec& channels,
 	}
 }
 
+std::string array(const std::string& fname)
+{
+	std::string a;
+	try {
+		H5::H5File f(fname, H5F_ACC_RDONLY);
+		H5::DataSet dset = f.openDataSet("data");
+		H5::Attribute attr = dset.openAttribute("array");
+		hsize_t sz = attr.getStorageSize();
+		a.resize(sz);
+		attr.read(attr.getDataType(), &a[0]);
+		attr.close();
+		dset.close();
+		f.close();
+	} catch ( ... ) {
+	}
+	return a;
+}
+
 }; // end datafile namespace
 
