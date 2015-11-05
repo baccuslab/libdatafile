@@ -87,12 +87,12 @@ void HidensFile::readConfiguration()
 		for (arma::uword i = 0; i < xpos_.n_elem; i++) {
 			configuration_.push_back(
 					{ 
+					.channel = channels_(i),
 					.xpos = xpos_(i), 
 					.ypos = ypos_(i),
 					.x = x_(i),
 					.y = y_(i),
-					.label = label_(i),
-					.channel = channels_(i)
+					.label = label_(i)
 					});
 		}
 
