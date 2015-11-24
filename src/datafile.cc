@@ -15,7 +15,9 @@ DataFile::DataFile(const std::string& filename,
 		const std::string& array,
 		const hsize_t nchannels)
 		: filename_(filename),
-		  array_(array)
+		  array_(array),
+		  date_("unknown"),
+		  room_("unknown")
 {
 	/* If file exists, verify it is valid HDF5 and load data from it.
 	 * Else, construct a new file.
@@ -207,7 +209,7 @@ void DataFile::writeDataAttr(std::string name, const H5::DataType &type, void *b
 
 void DataFile::writeDataStringAttr(std::string name, std::string value) 
 {
-	if (readOnly)
+	if ( (readOnly) || (value.length() == 0) )
 		return;
 	try {
 		H5::StrType stringType(0, value.length());
