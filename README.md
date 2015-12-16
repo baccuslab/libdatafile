@@ -9,7 +9,7 @@ Dependencies and building
 
 - C++11
 - [HDF5](https://www.hdfgroup.org/HDF5/) with C++ bindings
-- [Armadillo](arma.sourceforge.net) C++ linear algebra library
+- [Armadillo](https://www.arma.sourceforge.net) C++ linear algebra library
 
 The library can be built by doing:
 
