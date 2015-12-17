@@ -21,6 +21,10 @@ win32 {
 mac {
 	QMAKE_SONAME_PREFIX += @rpath
 }
+linux {
+	INCLUDEPATH += /usr/include/hdf5/serial
+	LIBS += -L/usr/lib/x86_64-linux-gnu/hdf5/serial
+}
 LIBS += -lhdf5_cpp -lhdf5 -larmadillo
 
 # Input
