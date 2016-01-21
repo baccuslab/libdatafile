@@ -322,7 +322,7 @@ void DataFile::readDataStringAttr(std::string name, std::string &loc)
 		hsize_t sz = attr.getStorageSize();
 		char *buf = new char[sz + 1]();
 		if (buf == NULL)
-			throw;
+			throw std::runtime_error("Error allocating memory for reading HDF string attribute");
 		readDataAttr(name, buf);
 		loc.clear();
 		loc.resize(sz + 1);
@@ -344,7 +344,7 @@ void DataFile::readFileStringAttr(std::string name, std::string &loc)
 		hsize_t sz = attr.getStorageSize();
 		char *buf = new char[sz + 1]();
 		if (buf == NULL)
-			throw;
+			throw std::runtime_error("Error allocating memory for reading HDF string attribute");
 		readDataAttr(name, buf);
 		loc.clear();
 		loc.resize(sz + 1);
