@@ -8,11 +8,14 @@ VERSION = 0.2.0
 
 DESTDIR = lib
 OBJECTS_DIR = build
-QT -= core gui
+QT -= gui
 CONFIG += c++11 debug_and_release
 QMAKE_CXXFLAGS += -std=c++11
 
-INCLUDEPATH += . include /usr/local/include /usr/include
+INCLUDEPATH += . include \
+		/usr/local/include \
+		/usr/include \
+		../libmea-device/include
 win32 {
 	LIBS += -LC:/msys64/mingw64/lib
 } else {

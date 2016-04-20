@@ -29,12 +29,12 @@ arma::Col<uint16_t> HidensFile::y() const { return y_; }
 arma::Col<uint8_t> HidensFile::label() const { return label_; }
 arma::Col<int32_t> HidensFile::channels() const { return channels_; }
 
-std::vector<Electrode> HidensFile::configuration() const
+Configuration HidensFile::configuration() const
 {
 	return configuration_;
 }
 
-void HidensFile::setConfiguration(const std::vector<Electrode>& config)
+void HidensFile::setConfiguration(const Configuration& config)
 {
 	configuration_ = config;
 	auto sz = configuration_.size();
@@ -85,15 +85,16 @@ void HidensFile::readConfiguration()
 
 		configuration_.reserve(xpos_.n_elem);
 		for (arma::uword i = 0; i < xpos_.n_elem; i++) {
-			configuration_.push_back(
-					{ 
-					.channel = channels_(i),
-					.xpos = xpos_(i), 
-					.ypos = ypos_(i),
-					.x = x_(i),
-					.y = y_(i),
-					.label = label_(i)
-					});
+			Electrode el {
+					static_cast<quint32>(i),
+					static_cast<quint32>(channels_(i)),
+					xpos_(i), 
+					x_(i),
+					ypos_(i),
+					y_(i),
+					label_(i)
+				};
+			configuration_.push_back(el);
 		}
 
 	} catch (H5::DataSetIException& e) {
