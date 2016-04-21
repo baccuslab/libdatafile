@@ -27,7 +27,7 @@ arma::Col<uint32_t> HidensFile::ypos() const { return ypos_; }
 arma::Col<uint16_t> HidensFile::x() const { return x_; }
 arma::Col<uint16_t> HidensFile::y() const { return y_; }
 arma::Col<uint8_t> HidensFile::label() const { return label_; }
-arma::Col<int32_t> HidensFile::channels() const { return channels_; }
+arma::Col<uint32_t> HidensFile::indices() const { return indices_; }
 
 Configuration HidensFile::configuration() const
 {
@@ -44,7 +44,7 @@ void HidensFile::setConfiguration(const Configuration& config)
 		x_.resize(sz);
 		y_.resize(sz);
 		label_.resize(sz);
-		channels_.resize(sz);
+		indices_.resize(sz);
 	}
 	for (decltype(sz) i = 0; i < sz; i++) {
 		auto& val = config[i];
@@ -53,7 +53,7 @@ void HidensFile::setConfiguration(const Configuration& config)
 		x_[i] = val.x;
 		y_[i] = val.y;
 		label_[i] = val.label;
-		channels_[i] = val.channel;
+		indices_[i] = val.index;
 	}
 	writeConfiguration();
 }
@@ -80,21 +80,19 @@ void HidensFile::readConfiguration()
 		readConfigurationDataset(yDset, y_);
 		auto labelDset = grp.openDataSet("label");
 		readConfigurationDataset(labelDset, label_);
-		auto channelDset = grp.openDataSet("channels");
-		readConfigurationDataset(channelDset, channels_);
+		auto indicesDset = grp.openDataSet("indices");
+		readConfigurationDataset(indicesDset, indices_);
 
 		configuration_.reserve(xpos_.n_elem);
 		for (arma::uword i = 0; i < xpos_.n_elem; i++) {
-			Electrode el {
-					static_cast<quint32>(i),
-					static_cast<quint32>(channels_(i)),
+			configuration_.emplace_back(std::move(Electrode{
+					indices_(i),
 					xpos_(i), 
 					x_(i),
 					ypos_(i),
 					y_(i),
 					label_(i)
-				};
-			configuration_.push_back(el);
+				}));
 		}
 
 	} catch (H5::DataSetIException& e) {
@@ -121,7 +119,7 @@ void HidensFile::writeConfiguration()
 		grp.createDataSet("y", H5::PredType::STD_U16LE, space);
 		H5::StrType labelType(0, 1);
 		grp.createDataSet("label", labelType, space);
-		grp.createDataSet("channels", H5::PredType::STD_I32LE, space);
+		grp.createDataSet("indices", H5::PredType::STD_U32LE, space);
 	}
 	try {
 		auto xposDset = grp.openDataSet("xpos");
@@ -134,8 +132,8 @@ void HidensFile::writeConfiguration()
 		writeConfigurationDataset(yDset, y_);
 		auto labelDset = grp.openDataSet("label");
 		writeConfigurationDataset(labelDset, label_);
-		auto channelDset = grp.openDataSet("channels");
-		writeConfigurationDataset(channelDset, channels_);
+		auto indicesDset = grp.openDataSet("indices");
+		writeConfigurationDataset(indicesDset, indices_);
 	} catch (H5::DataSetIException& e) {
 		std::stringstream what;
 		what << "The file " << filename() <<

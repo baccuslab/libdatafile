@@ -418,7 +418,7 @@ std::string array(const std::string& fname)
 		H5::Attribute attr = dset.openAttribute("array");
 		hsize_t sz = attr.getStorageSize();
 		a.resize(sz);
-		attr.read(attr.getDataType(), &a[0]);
+		attr.read(attr.getStrType(), a);
 		attr.close();
 		dset.close();
 		f.close();

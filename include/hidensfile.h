@@ -55,8 +55,8 @@ class HidensFile : public datafile::DataFile {
 		/*! Return the list of labels for all connected electrodes */
 		arma::Col<uint8_t> label() const;
 
-		/*! Return the list of channels to which each electrode is connected */
-		arma::Col<int32_t> channels() const;
+		/*! Return the indices of all connected electrodes */
+		arma::Col<uint32_t> indices() const;
 
 		/*! Write the given configuration into the file */
 		void setConfiguration(const Configuration&);
@@ -66,7 +66,7 @@ class HidensFile : public datafile::DataFile {
 		void writeConfiguration();
 
 		/* Read/write components of each Electrode struct.
-		 * See hidensfile.tc for implemenation
+		 * See include/hidensfile-templates.cc for implemenation
 		 */
 		template<class T>
 		void readConfigurationDataset(const H5::DataSet& dset, T& out);
@@ -77,7 +77,7 @@ class HidensFile : public datafile::DataFile {
 		arma::Col<uint32_t> xpos_, ypos_;
 		arma::Col<uint16_t> x_, y_;
 		arma::Col<uint8_t> label_;
-		arma::Col<int32_t> channels_;
+		arma::Col<uint32_t> indices_;
 
 }; // end HidensFile class
 }; // end hidensfile namespace
