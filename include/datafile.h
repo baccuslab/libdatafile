@@ -184,16 +184,26 @@ class DataFile {
 		template<class T>
 		void data(const arma::uvec& channels, int start, int end, T& data) const;
 
-		/* Write data to the file, from the given Armadillo matrix type.
-		 * This function requires that data from all channels be written at once.
-		 * Data will not be converted to whataver type the underlying data set has.
-		 * Note that this may result in a loss of data.
+		/* Write data to the file.
 		 * \param startSample The first sample to write.
 		 * \param endSample The last sample to write.
 		 * \param data The Armadillo matrix containing data to write.
 		 */
-		template<class T>
-		void setData(int startSample, int endSample, const T& data);
+		void setData(int startSample, int endSample, const arma::Mat<uint8_t>& data);
+
+		/* Write data to the file.
+		 * \param startSample The first sample to write.
+		 * \param endSample The last sample to write.
+		 * \param data The Armadillo matrix containing data to write.
+		 */
+		void setData(int startSample, int endSample, const arma::Mat<int16_t>& data);
+
+		/* Write data to the file.
+		 * \param startSample The first sample to write.
+		 * \param endSample The last sample to write.
+		 * \param data The Armadillo matrix containing data to write.
+		 */
+		void setData(int startSample, int endSample, const arma::Mat<double>& data);
 
 		/*! Set the array from which data in this file derives.
 		 * \param array The array type.
@@ -257,6 +267,13 @@ class DataFile {
 		float offset_;				// Offset of A/D conversion
 		std::string date_;			// Date of recording, ISO-8601 format
 		std::string room_; 			// Location of recording
+
+		/* Create a memory (source) dataspace and set up the file (dest)
+		 * dataspace for a write of data. This takes care of a lot of 
+		 * H5 library boilerplate that is shared across the different
+		 * setData() overloads.
+		 */
+		H5::DataSpace setupWrite(int startSample, int endSample);
 
 }; // End class
 }; // End namespace

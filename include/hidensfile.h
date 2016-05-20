@@ -24,7 +24,7 @@ const int NUM_CHANNELS = 126;
 const float SAMPLE_RATE = 20000;
 
 /*! The default array type */
-const std::string DEFAULT_ARRAY("hidens-v2");
+const std::string DEFAULT_ARRAY("hidens");
 
 /*! The HidensFile class is a Datafile subclass that provides extra functionality
  * specific to HiDens array recordings.

@@ -4,7 +4,7 @@
 
 TEMPLATE = lib
 TARGET = datafile
-VERSION = 0.3.0
+VERSION = 0.4.0
 
 DESTDIR = lib
 OBJECTS_DIR = build

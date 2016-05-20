@@ -19,6 +19,9 @@ DataFile::DataFile(const std::string& filename,
 		  date_("unknown"),
 		  room_("unknown")
 {
+	/* Turn off automatic printing of errors */
+	H5::Exception::dontPrint();
+
 	/* If file exists, verify it is valid HDF5 and load data from it.
 	 * Else, construct a new file.
 	 */
@@ -91,6 +94,7 @@ DataFile::DataFile(const std::string& filename,
 		/* Set default parameters */
 		setSampleRate(datafile::SAMPLE_RATE);
 		setRoom(datafile::DEFAULT_ROOM_STRING);
+		setArray(array_);
 	}
 }
 
@@ -327,7 +331,7 @@ void DataFile::readDataStringAttr(std::string name, std::string &loc)
 		loc.clear();
 		loc.resize(sz + 1);
 		loc.replace(0, sz, buf);
-		delete buf;
+		delete[] buf;
 	} catch (H5::DataSetIException &e) {
 		std::cerr << "DataSet exception accessing attribute: " << name << std::endl;
 	} catch (H5::AttributeIException &e) {
@@ -349,7 +353,7 @@ void DataFile::readFileStringAttr(std::string name, std::string &loc)
 		loc.clear();
 		loc.resize(sz + 1);
 		loc.replace(0, sz, buf);
-		delete buf;
+		delete[] buf;
 	} catch (H5::DataSetIException &e) {
 		std::cerr << "DataSet exception accessing attribute: " << name << std::endl;
 	} catch (H5::AttributeIException &e) {
@@ -425,6 +429,83 @@ std::string array(const std::string& fname)
 	} catch ( ... ) {
 	}
 	return a;
+}
+
+H5::DataSpace DataFile::setupWrite(int startSample, int endSample) {
+
+	/* Validate requested samples */
+	int requestedSamples = endSample - startSample;
+	if (requestedSamples < 0) {
+		throw std::logic_error("Requested sample range invalid: (" + 
+				std::to_string(startSample) + "-" + 
+				std::to_string(endSample) + ")");
+	}
+
+	/* Extend dataset if needed */
+	if (endSample > nsamples()) {
+		hsize_t dims[DATASET_RANK] = {0, 0};
+		dataspace = dataset.getSpace();
+		dataspace.getSimpleExtentDims(dims);
+		dims[1] += BLOCK_SIZE;
+		dataset.extend(dims);
+		dataspace = dataset.getSpace();
+	}
+
+	/* Compute the destination file data space */
+	hsize_t memoffset[datafile::DATASET_RANK] = {0,
+			static_cast<hsize_t>(startSample)};
+	hsize_t memcount[datafile::DATASET_RANK] = {
+			static_cast<hsize_t>(nchannels()),
+			static_cast<hsize_t>(requestedSamples)};
+	dataspace.selectHyperslab(H5S_SELECT_SET, memcount, memoffset);
+	if (!dataspace.selectValid()) {
+		std::stringstream what;
+		what << "Dataset selection invalid:" << std::endl
+				<< "Offset: (" << startSample << ", 0)" << std::endl
+				<< "Count: (" << requestedSamples << ", "
+				<< nchannels() << ")" << std::endl;
+		throw std::logic_error(what.str());
+	}
+
+	/* Define the source data space in memory */
+	hsize_t dims[datafile::DATASET_RANK] = {
+			static_cast<hsize_t>(nchannels()),
+			static_cast<hsize_t>(requestedSamples)};
+	H5::DataSpace memspace = {datafile::DATASET_RANK, dims};
+	hsize_t offset[datafile::DATASET_RANK] = {0, 0};
+	hsize_t count[datafile::DATASET_RANK] = {
+			static_cast<hsize_t>(nchannels()),
+			static_cast<hsize_t>(requestedSamples)};
+	memspace.selectHyperslab(H5S_SELECT_SET, count, offset);
+	if (!memspace.selectValid()) {
+		std::stringstream what;
+		what << "Memory dataspace selection invalid:" << std::endl
+				<< "Count: (" << requestedSamples << ", "
+				<< nchannels() << ")" << std::endl;
+		throw std::logic_error(what.str());
+	}
+	return memspace;
+}
+
+void DataFile::setData(int startSample, int endSample, const arma::Mat<uint8_t>& data) { 
+	H5::DataType memtype = H5::PredType::STD_U8LE;
+	auto memspace = setupWrite(startSample, endSample);
+	dataset.write(data.memptr(), memtype, memspace, dataspace);
+	flush();
+}
+
+void DataFile::setData(int startSample, int endSample, const arma::Mat<int16_t>& data) {
+	H5::DataType memtype = H5::PredType::STD_I16LE;
+	auto memspace = setupWrite(startSample, endSample);
+	dataset.write(data.memptr(), memtype, memspace, dataspace);
+	flush();
+}
+
+void DataFile::setData(int startSample, int endSample, const arma::Mat<double>& data) {
+	H5::DataType memtype = H5::PredType::IEEE_F64LE;
+	auto memspace = setupWrite(startSample, endSample);
+	dataset.write(data.memptr(), memtype, memspace, dataspace);
+	flush();
 }
 
 }; // end datafile namespace
