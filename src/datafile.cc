@@ -153,7 +153,7 @@ samples DataFile::data(int startSample, int endSample) const
 	}
 	samples s(req_nsamples, nchannels());
 	data(0, nchannels(), startSample, endSample, s);
-	return s;
+	return s * gain() + offset();
 }
 
 arma::vec DataFile::data(int channel, int startSample, int endSample) const
