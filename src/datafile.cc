@@ -17,7 +17,8 @@ DataFile::DataFile(const std::string& filename,
 		: filename_(filename),
 		  array_(array),
 		  date_("unknown"),
-		  room_("unknown")
+		  room_("unknown"),
+		  nsamples_(0)
 {
 	/* Turn off automatic printing of errors */
 	H5::Exception::dontPrint();
@@ -57,6 +58,7 @@ DataFile::DataFile(const std::string& filename,
 			readOffset();
 			readDate();
 			readRoom();
+			readNumSamples();
 		} catch ( ... ) {
 			std::cerr << "File does not contain appropriate attributes";
 			throw std::invalid_argument(
@@ -120,9 +122,7 @@ double DataFile::length() const
 
 int DataFile::nsamples() const
 {
-	hsize_t dims[DATASET_RANK] = {0, 0};
-	dataspace.getSimpleExtentDims(dims);
-	return dims[1];
+	return static_cast<int>(nsamples_);
 }
 
 int DataFile::nchannels() const
@@ -254,6 +254,7 @@ void DataFile::writeAllAttributes(void)
 	writeDataAttr("sample-rate", H5::PredType::IEEE_F32LE, &sampleRate_);
 	writeDataAttr("gain", H5::PredType::IEEE_F32LE, &gain_);
 	writeDataAttr("offset", H5::PredType::IEEE_F32LE, &offset_);
+	writeDataAttr("nsamples", H5::PredType::STD_U64LE, &nsamples_);
 	writeDataStringAttr("array", array_);
 	writeDataStringAttr("date", date_);
 	writeDataStringAttr("room", room_);
@@ -378,6 +379,11 @@ void DataFile::readOffset(void)
 	readDataAttr("offset", &offset_);
 }
 
+void DataFile::readNumSamples(void)
+{
+	readDataAttr("nsamples", &nsamples_);
+}
+
 void DataFile::readDate(void) 
 {
 	readDataStringAttr("date", date_);
@@ -449,6 +455,7 @@ H5::DataSpace DataFile::setupWrite(int startSample, int endSample) {
 		dims[1] += BLOCK_SIZE;
 		dataset.extend(dims);
 		dataspace = dataset.getSpace();
+		nsamples_ = static_cast<uint64_t>(endSample);
 	}
 
 	/* Compute the destination file data space */

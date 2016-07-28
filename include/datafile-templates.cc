@@ -19,7 +19,7 @@ void datafile::DataFile::data(int channel, int startSample,
 
 template<class T>
 void datafile::DataFile::data(int startChannel, int endChannel, int startSample, 
-		int endSample, T& data) const
+		int endSample, arma::Mat<T>& data) const
 {
 	/* Check input */
 	int requestedSamples = endSample - startSample;
@@ -77,13 +77,13 @@ void datafile::DataFile::data(int startChannel, int endChannel, int startSample,
 	/* Get the datatype of the array into which memory is read */
 	H5::DataType datatype;
 	auto hash = typeid(T).hash_code();
-	if (hash == typeid(arma::mat).hash_code()) {
+	if (hash == typeid(double).hash_code()) {
 		datatype = H5::PredType::IEEE_F64LE;
 		data.set_size(requestedSamples, requestedChannels);
-	} else if (hash == typeid(arma::Mat<short>).hash_code()) {
+	} else if (hash == typeid(short).hash_code()) {
 		datatype = H5::PredType::STD_I16LE;
 		data.set_size(requestedSamples, requestedChannels);
-	} else if (hash == typeid(arma::Mat<uint8_t>).hash_code()) {
+	} else if (hash == typeid(uint8_t).hash_code()) {
 		datatype = H5::PredType::STD_U8LE;
 		data.set_size(requestedSamples, requestedChannels);
 	} 
@@ -131,11 +131,11 @@ void datafile::DataFile::data(const arma::uvec& channels,
 	/* Get datatype of memory data space and read */
 	H5::DataType datatype;
 	auto hash = typeid(T).hash_code();
-	if (hash == typeid(arma::mat).hash_code())
+	if (hash == typeid(double).hash_code())
 		datatype = H5::PredType::IEEE_F64LE;
-	else if (hash == typeid(arma::Mat<short>).hash_code())
+	else if (hash == typeid(short).hash_code())
 		datatype = H5::PredType::STD_I16LE;
-	else if (hash == typeid(arma::Mat<uint8_t>).hash_code())
+	else if (hash == typeid(uint8_t).hash_code())
 		datatype = H5::PredType::STD_U8LE;
 	dataset.read(data.memptr(), datatype, mspace, dataspace);
 }

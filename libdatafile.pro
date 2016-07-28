@@ -4,7 +4,7 @@
 
 TEMPLATE = lib
 TARGET = datafile
-VERSION = 0.4.0
+VERSION = 0.5.0
 
 DESTDIR = lib
 OBJECTS_DIR = build
@@ -32,6 +32,12 @@ LIBS += -lhdf5_cpp -lhdf5 -larmadillo
 
 # Input
 HEADERS += include/datafile.h \
-			include/hidensfile.h
+			include/hidensfile.h \
+			include/snipfile.h \
+			include/hidenssnipfile.h \
+			include/sortfile.h
 SOURCES += src/datafile.cc \
-			src/hidensfile.cc
+			src/hidensfile.cc \
+			src/snipfile.cc \
+			src/hidenssnipfile.cc \
+			src/sortfile.cc

@@ -85,14 +85,14 @@ void HidensFile::readConfiguration()
 
 		configuration_.reserve(xpos_.n_elem);
 		for (arma::uword i = 0; i < xpos_.n_elem; i++) {
-			configuration_.emplace_back(std::move(Electrode{
+			configuration_.emplace_back(Electrode{
 					indices_(i),
 					xpos_(i), 
 					x_(i),
 					ypos_(i),
 					y_(i),
 					label_(i)
-				}));
+				});
 		}
 
 	} catch (H5::DataSetIException& e) {

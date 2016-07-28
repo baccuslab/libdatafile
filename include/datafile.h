@@ -168,7 +168,7 @@ class DataFile {
 		 */
 		template<class T>
 		void data(int startChan, int endChan, 
-				int startSample, int endSample, T& data) const;
+				int startSample, int endSample, arma::Mat<T>& data) const;
 
 		/* Read data from an arbitrary selection of channels into the given matrix.
 		 * This form of the function reads data from the channels whose indices
@@ -252,6 +252,7 @@ class DataFile {
 		void readOffset();
 		void readDate();
 		void readRoom();
+		void readNumSamples();
 
 		H5::H5File file;				// The actual HDF5 file
 		H5::DataSpace dataspace;		// Data space for actual data
@@ -267,6 +268,7 @@ class DataFile {
 		float offset_;				// Offset of A/D conversion
 		std::string date_;			// Date of recording, ISO-8601 format
 		std::string room_; 			// Location of recording
+		uint64_t nsamples_;			// Total number of samples written
 
 		/* Create a memory (source) dataspace and set up the file (dest)
 		 * dataspace for a write of data. This takes care of a lot of 

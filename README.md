@@ -1,8 +1,12 @@
 libdatafile
 ===========
 
-`libdatafile` is a C++11 library for reading and writing data
-to HDF5 files used to store data from MEA recordings in the Baccus Lab.
+`libdatafile` is a C++11 library for reading and writing data in the various
+HDF5-based file formats. This includes:
+
+1.	Raw voltage data from MEA recordings
+2.	"Snippet" files, which contain information about extracted candidate spike snippets.
+3.	Sort files, containing information about a spike-sorting session.
 
 Dependencies and building
 -------------------------
