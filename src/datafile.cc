@@ -381,7 +381,16 @@ void DataFile::readOffset(void)
 
 void DataFile::readNumSamples(void)
 {
-	readDataAttr("nsamples", &nsamples_);
+	try {
+		readDataAttr("nsamples", &nsamples_);
+	} catch ( ... ) {
+		/* 
+		 * Older versions of the library did not explicitly encode the
+		 * number of samples. Fall back to the size of the dataset if
+		 * needed.
+		 */
+		nsamples_ = datasetSize();
+	}
 }
 
 void DataFile::readDate(void) 
