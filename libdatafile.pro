@@ -34,10 +34,8 @@ LIBS += -lhdf5_cpp -lhdf5 -larmadillo
 HEADERS += include/datafile.h \
 			include/hidensfile.h \
 			include/snipfile.h \
-			include/hidenssnipfile.h \
-			include/sortfile.h
+			include/hidenssnipfile.h
 SOURCES += src/datafile.cc \
 			src/hidensfile.cc \
 			src/snipfile.cc \
-			src/hidenssnipfile.cc \
-			src/sortfile.cc
+			src/hidenssnipfile.cc

@@ -231,6 +231,9 @@ class DataFile {
 	protected:
 		void flush();			// Flush the file to disk
 
+		/* Read the available size of the dataset, in samples */
+		int datasetSize() const;
+
 		/* Read or write underlying dataset or file HDF5 attributes */
 		void writeFileAttr(std::string name, const H5::DataType &type, void *buf);
 		void writeDataAttr(std::string name, const H5::DataType &type, void *buf);

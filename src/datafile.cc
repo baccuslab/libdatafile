@@ -448,11 +448,14 @@ H5::DataSpace DataFile::setupWrite(int startSample, int endSample) {
 	}
 
 	/* Extend dataset if needed */
-	if (endSample > nsamples()) {
+	if (endSample > datasetSize()) {
 		hsize_t dims[DATASET_RANK] = {0, 0};
 		dataspace = dataset.getSpace();
 		dataspace.getSimpleExtentDims(dims);
-		dims[1] += BLOCK_SIZE;
+		auto nblocks = static_cast<int>(std::ceil(
+				static_cast<float>(endSample - datasetSize()) /
+				static_cast<float>(BLOCK_SIZE)));
+		dims[1] += nblocks * BLOCK_SIZE;
 		dataset.extend(dims);
 		dataspace = dataset.getSpace();
 		nsamples_ = static_cast<uint64_t>(endSample);
@@ -513,6 +516,12 @@ void DataFile::setData(int startSample, int endSample, const arma::Mat<double>& 
 	auto memspace = setupWrite(startSample, endSample);
 	dataset.write(data.memptr(), memtype, memspace, dataspace);
 	flush();
+}
+
+int DataFile::datasetSize() const {
+	hsize_t dims[DATASET_RANK] = { 0, 0 };
+	dataspace.getSimpleExtentDims(dims);
+	return static_cast<int>(dims[1]);
 }
 
 }; // end datafile namespace
