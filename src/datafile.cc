@@ -467,8 +467,8 @@ H5::DataSpace DataFile::setupWrite(int startSample, int endSample) {
 		dims[1] += nblocks * BLOCK_SIZE;
 		dataset.extend(dims);
 		dataspace = dataset.getSpace();
-		nsamples_ = static_cast<uint64_t>(endSample);
 	}
+	nsamples_ = static_cast<uint64_t>(endSample);
 
 	/* Compute the destination file data space */
 	hsize_t memoffset[datafile::DATASET_RANK] = {0,
