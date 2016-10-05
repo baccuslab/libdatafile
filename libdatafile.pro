@@ -9,7 +9,7 @@ VERSION = 0.5.0
 DESTDIR = lib
 OBJECTS_DIR = build
 QT -= gui
-CONFIG += c++11 debug_and_release
+CONFIG += c++11 debug_and_release shared
 QMAKE_CXXFLAGS += -std=c++11
 
 INCLUDEPATH += . include \

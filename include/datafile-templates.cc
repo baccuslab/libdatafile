@@ -22,11 +22,32 @@ void datafile::DataFile::data(int startChannel, int endChannel, int startSample,
 		int endSample, arma::Mat<T>& data) const
 {
 	/* Check input */
+	if ( (startSample < 0) || (startSample > nsamples()) ) {
+		throw std::logic_error("Requested start sample out of range: " + 
+				std::to_string(startSample) + " is not in range [0, " +
+				std::to_string(nsamples()) + "]");
+	}
+	if ( (endSample < 0) || (endSample > nsamples()) ) {
+		throw std::logic_error("Requested end sample out of range: " + 
+				std::to_string(endSample) + " is not in range [0, " +
+				std::to_string(nsamples()) + "]");
+	}
 	int requestedSamples = endSample - startSample;
 	if (requestedSamples < 0) {
 		throw std::logic_error("Requested sample range invalid: (" + 
-				std::to_string(startSample) + "-" + 
+				std::to_string(startSample) + " - " + 
 				std::to_string(endSample) + ")");
+	}
+
+	if ( (startChannel < 0) || (startChannel > nchannels()) ) {
+		throw std::logic_error("Requested start channel out of range: " + 
+				std::to_string(startSample) + " is not in range [0, " +
+				std::to_string(nsamples()) + "]");
+	}
+	if ( (endChannel < 0) || (endChannel > nchannels()) ) {
+		throw std::logic_error("Requested end channel out of range: " + 
+				std::to_string(startSample) + " is not in range [0, " +
+				std::to_string(nsamples()) + "]");
 	}
 	int requestedChannels = endChannel - startChannel;
 	if (requestedChannels < 0) {

@@ -34,7 +34,7 @@ DataFile::DataFile(const std::string& filename,
 		}
 		try {
 			readOnly = true;
-			file = H5::H5File(filename_, H5F_ACC_RDONLY);
+			file = H5::H5File(filename_, H5F_ACC_RDWR); // must be read-write so we can call setMeans()
 		} catch (H5::FileIException &e) {
 			std::cerr << "Could not open H5 file" << std::endl;
 			throw std::runtime_error("Could not open HDF5 file");
@@ -448,6 +448,10 @@ std::string array(const std::string& fname)
 
 H5::DataSpace DataFile::setupWrite(int startSample, int endSample) {
 
+	if (readOnly) {
+		throw std::logic_error("Cannot write to DataFile marked read-only.");
+	}
+
 	/* Validate requested samples */
 	int requestedSamples = endSample - startSample;
 	if (requestedSamples < 0) {
@@ -531,6 +535,38 @@ int DataFile::datasetSize() const {
 	hsize_t dims[DATASET_RANK] = { 0, 0 };
 	dataspace.getSimpleExtentDims(dims);
 	return static_cast<int>(dims[1]);
+}
+
+void DataFile::setMeans(const arma::vec& means)
+{
+	const char name[] = "channel-means";
+	if (dataset.attrExists(name)) {
+		dataset.removeAttr(name);
+	}
+	hsize_t dims[1] = { static_cast<hsize_t>(means.n_elem) };
+	auto space = H5::DataSpace(1, dims);
+	auto attr = dataset.createAttribute(name, H5::PredType::IEEE_F64LE, space);
+	attr.write(H5::PredType::IEEE_F64LE, means.memptr());
+	attr.close();
+}
+
+arma::vec DataFile::means() const
+{
+	arma::vec ret;
+	H5::Attribute attr;
+	try {
+		attr = dataset.openAttribute("channel-means");
+	} catch (H5::AttributeIException& e) {
+		return ret;
+	}
+
+	auto space = attr.getSpace();
+	hsize_t dims[1] = { 0 };
+	space.getSimpleExtentDims(dims);
+	ret.set_size(dims[0]);
+	attr.read(H5::PredType::IEEE_F64LE, ret.memptr());
+	attr.close();
+	return ret;
 }
 
 }; // end datafile namespace

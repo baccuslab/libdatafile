@@ -1,7 +1,7 @@
 /*! \file datafile.h
  *
  * Public API for the DataFile class, which represents an HDF5 data
- * file to which experimental data is saved
+ * file to which experimental data is saved.
  *
  * (C) 2015 Benjamin Naecker bnaecker@stanford.edu
  */
@@ -138,6 +138,10 @@ class DataFile {
 		 *
 		 * \param start The first sample to return
 		 * \param end The last sample to return.
+		 * 
+		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
+		 * Because Armadillo uses column-order majoring, this corresponds to the
+		 * HDF5 dataset with size (nchannels, nsamples).
 		 */
 		samples data(int start, int end) const;
 
@@ -154,6 +158,10 @@ class DataFile {
 		 * \param end The last sample to read
 		 * \param data The Armadillo matrix to fill with the requested data. Data
 		 * will be converted to the appropriate type to fill the given matrix.
+		 * 
+		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
+		 * Because Armadillo uses column-order majoring, this corresponds to the
+		 * HDF5 dataset with size (nchannels, nsamples).
 		 */
 		template<class T>
 		void data(int channel, int start, int end, T& data) const;
@@ -165,6 +173,10 @@ class DataFile {
 		 * \param lastSample The last sample to read.
 		 * \param data The Armadillo matrix to fill with the requested data. Data
 		 * will be converted to the appropriate type to fill the given matrix.
+		 * 
+		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
+		 * Because Armadillo uses column-order majoring, this corresponds to the
+		 * HDF5 dataset with size (nchannels, nsamples).
 		 */
 		template<class T>
 		void data(int startChan, int endChan, 
@@ -180,6 +192,10 @@ class DataFile {
 		 * \param end The last sample to read.
 		 * \param data The Armadillo matrix to fill with the requested data. Data
 		 * will be converted to the appropriate type to fill the given matrix.
+		 * 
+		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
+		 * Because Armadillo uses column-order majoring, this corresponds to the
+		 * HDF5 dataset with size (nchannels, nsamples).
 		 */
 		template<class T>
 		void data(const arma::uvec& channels, int start, int end, T& data) const;
@@ -188,6 +204,10 @@ class DataFile {
 		 * \param startSample The first sample to write.
 		 * \param endSample The last sample to write.
 		 * \param data The Armadillo matrix containing data to write.
+		 * 
+		 * NOTE: Data should be in an Armadillo matrix with size (nsamples, nchannels).
+		 * Because Armadillo uses column-order majoring, this corresponds to the
+		 * HDF5 dataset with size (nchannels, nsamples).
 		 */
 		void setData(int startSample, int endSample, const arma::Mat<uint8_t>& data);
 
@@ -195,6 +215,10 @@ class DataFile {
 		 * \param startSample The first sample to write.
 		 * \param endSample The last sample to write.
 		 * \param data The Armadillo matrix containing data to write.
+		 * 
+		 * NOTE: Data should be in an Armadillo matrix with size (nsamples, nchannels).
+		 * Because Armadillo uses column-order majoring, this corresponds to the
+		 * HDF5 dataset with size (nchannels, nsamples).
 		 */
 		void setData(int startSample, int endSample, const arma::Mat<int16_t>& data);
 
@@ -202,6 +226,10 @@ class DataFile {
 		 * \param startSample The first sample to write.
 		 * \param endSample The last sample to write.
 		 * \param data The Armadillo matrix containing data to write.
+		 * 
+		 * NOTE: Data should be in an Armadillo matrix with size (nsamples, nchannels).
+		 * Because Armadillo uses column-order majoring, this corresponds to the
+		 * HDF5 dataset with size (nchannels, nsamples).
 		 */
 		void setData(int startSample, int endSample, const arma::Mat<double>& data);
 
@@ -227,6 +255,17 @@ class DataFile {
 
 		/*! Returns the HDF5 dataype for the underlying dataset. */
 		const H5::DataType& dtype() const { return datatype; }
+
+		/*! Write a dataset containing the mean value of each channel's data.
+		 * This is computed and saved while running the `extract` program, which
+		 * extracts candidate spike snippets, and used during spike sorting.
+		 */
+		void setMeans(const arma::vec& means);
+
+		/*! Read the mean values stored for each channel.
+		 * An empty vector is returned if the mean values have not yet been computed.
+		 */
+		arma::vec means() const;
 
 	protected:
 		void flush();			// Flush the file to disk
