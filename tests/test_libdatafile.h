@@ -16,6 +16,8 @@
 #include <QtCore>
 #include <QtTest/QtTest>
 
+#include <memory> // for std::unique_ptr
+
 using namespace datafile;
 using namespace hidensfile;
 using namespace snipfile;

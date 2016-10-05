@@ -8,9 +8,11 @@ INCLUDEPATH += . \
 	/usr/local/include \
 	/usr/include \
 	../include \
-	../../libmea-device/include
+	../../libmea-device/include \
+	/usr/include/hdf5/serial
 
 LIBS += -L/usr/local/lib -L../lib/ \
+	-L/usr/lib/x86_64-linux-gnu/hdf5/serial \
 	-ldatafile -larmadillo -lhdf5_cpp -lhdf5
 
 QT += testlib

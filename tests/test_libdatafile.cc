@@ -62,8 +62,9 @@ void DatafileTest::cleanupTestCase()
 void DatafileTest::testBadFile()
 {
 	QString filename = "./test_libdatafile.cc";
-	DataFile* tmp;
+	DataFile* tmp = nullptr;
 	QVERIFY_EXCEPTION_THROWN(tmp = new DataFile(filename.toStdString()), std::invalid_argument);
+	delete tmp;
 }
 
 void DatafileTest::testBasicAttributes()
