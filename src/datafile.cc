@@ -18,7 +18,8 @@ DataFile::DataFile(const std::string& filename,
 		  array_(array),
 		  date_("unknown"),
 		  room_("unknown"),
-		  nsamples_(0)
+		  nsamples_(0),
+		  aoutSize_(0)
 {
 	/* Turn off automatic printing of errors */
 	H5::Exception::dontPrint();
@@ -59,6 +60,7 @@ DataFile::DataFile(const std::string& filename,
 			readDate();
 			readRoom();
 			readNumSamples();
+			readAnalogOutputSize();
 		} catch ( ... ) {
 			std::cerr << "File does not contain appropriate attributes";
 			throw std::invalid_argument(
@@ -296,6 +298,25 @@ void DataFile::setArray(std::string array)
 	array_ = array;
 }
 
+void DataFile::setAnalogOutputSize(int size)
+{
+	writeDataAttr("analog-output-size", H5::PredType::STD_U64LE, &aoutSize_);
+	aoutSize_ = static_cast<decltype(aoutSize_)>(size);
+}
+
+int DataFile::analogOutputSize() const
+{
+	return static_cast<int>(aoutSize_);
+}
+
+arma::vec DataFile::analogOutput()
+{
+	if (aoutSize_ == 0) {
+		return arma::vec{};
+	}
+	return data(1, 0, aoutSize_);
+}
+
 void DataFile::readFileAttr(std::string name, void *buf) 
 {
 	try {
@@ -381,15 +402,28 @@ void DataFile::readOffset(void)
 
 void DataFile::readNumSamples(void)
 {
-	try {
+	if (dataset.attrExists("nsamples")) {
 		readDataAttr("nsamples", &nsamples_);
-	} catch ( ... ) {
+	} else {
 		/* 
 		 * Older versions of the library did not explicitly encode the
 		 * number of samples. Fall back to the size of the dataset if
 		 * needed.
 		 */
 		nsamples_ = datasetSize();
+	}
+}
+
+void DataFile::readAnalogOutputSize(void)
+{
+	if (dataset.attrExists("analog-output-size")) {
+		readDataAttr("analog-output-size", &aoutSize_);
+		/* 
+		 * Older versions of the library did not explicitly encode
+		 * whether analog output was performed in this recording.
+		 * For simplicity, we just assume none was done in this
+		 * case. The constructor sets this value to 0.
+		 */
 	}
 }
 

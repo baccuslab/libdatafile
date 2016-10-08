@@ -133,6 +133,29 @@ class DataFile {
 		/*! Return the room in which the data was recorded */
 		std::string room() const;
 
+		/*! Return the size of any analog output used in this recording. */
+		int analogOutputSize() const;
+
+		/*! Return the analog output used in this recording.
+		 * If there was no analog output, the returned vector will be empty.
+		 * This is defined as a virtual function so that, if it is implemented
+		 * in the future, HiDens files may define which channels contain
+		 * the analog output.
+		 */
+		virtual arma::vec analogOutput();
+
+		/*! Set the size of any analog output used in the recording.
+		 * \param sz The size in samples of the output.
+		 *
+		 * Note that this is just used for book-keeping purposes to 
+		 * know whether or not any analog output was performed during
+		 * the recording this file represents. The actual values for
+		 * the analog output are stored in the file itself (e.g.,
+		 * as channel 1 for MCS data files.). The vector of values
+		 * can be returned using DataFile::analogOutput().
+		 */
+		void setAnalogOutputSize(int sz);
+
 		/*! Return data from all channels over the given sample rate.
 		 * Data is return in true voltage units, as double-precision IEEE floats.
 		 *
@@ -295,6 +318,7 @@ class DataFile {
 		void readDate();
 		void readRoom();
 		void readNumSamples();
+		void readAnalogOutputSize();
 
 		H5::H5File file;				// The actual HDF5 file
 		H5::DataSpace dataspace;		// Data space for actual data
@@ -311,6 +335,7 @@ class DataFile {
 		std::string date_;			// Date of recording, ISO-8601 format
 		std::string room_; 			// Location of recording
 		uint64_t nsamples_;			// Total number of samples written
+		uint64_t aoutSize_;			// Size of any analog output used in the recording
 
 		/* Create a memory (source) dataspace and set up the file (dest)
 		 * dataspace for a write of data. This takes care of a lot of 
