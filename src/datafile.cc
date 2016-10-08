@@ -314,7 +314,8 @@ arma::vec DataFile::analogOutput()
 	if (aoutSize_ == 0) {
 		return arma::vec{};
 	}
-	return data(1, 0, aoutSize_);
+	auto sz = std::min(aoutSize_, nsamples_);
+	return data(1, 0, sz);
 }
 
 void DataFile::readFileAttr(std::string name, void *buf) 

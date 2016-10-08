@@ -82,6 +82,10 @@ void DatafileTest::testBasicAttributes()
 	QVERIFY2(m_dataFile->date() == now,
 			"Date was set or read incorrectly");
 
+	m_dataFile->setAnalogOutputSize(100);
+	QVERIFY2(m_dataFile->analogOutputSize() == 100,
+			"Size of analog output not correctly set.");
+
 	QString array { "hexagonal" };
 	m_dataFile->setArray(array.toStdString());
 	QVERIFY2(m_dataFile->array() == "hexagonal",
@@ -115,6 +119,13 @@ void DatafileTest::testSmallDataReadWrite()
 	QVERIFY2(m_dataFile->length() == 
 			static_cast<double>(subsetSize) / static_cast<double>(m_dataFile->sampleRate()),
 			"Length of data in seconds not updated correctly when new data is added.");
+
+	/* Verify that reading back the newly-created analog output works. */
+	auto aout = m_dataFile->analogOutput();
+	QVERIFY2(static_cast<int>(aout.size()) == m_dataFile->analogOutputSize(),
+			"Size of returned analog output does not match.");
+	QVERIFY2(arma::all(arma::conv_to<arma::Col<qint16>>::from(aout) == subset.col(1)),
+			"Analog output not correctly returned.");
 
 	/* Verify that reading a single channel back works */
 	auto v = m_dataFile->data(0, 0, subsetSize);
