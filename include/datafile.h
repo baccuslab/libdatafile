@@ -138,6 +138,7 @@ class DataFile {
 
 		/*! Return the analog output used in this recording.
 		 * If there was no analog output, the returned vector will be empty.
+		 *
 		 * This is defined as a virtual function so that, if it is implemented
 		 * in the future, HiDens files may define which channels contain
 		 * the analog output.
@@ -153,8 +154,12 @@ class DataFile {
 		 * the analog output are stored in the file itself (e.g.,
 		 * as channel 1 for MCS data files.). The vector of values
 		 * can be returned using DataFile::analogOutput().
+		 *
+		 * This is defined as a virtual function because Hidens
+		 * files do not currently support analog output, but that
+		 * may change in the future.
 		 */
-		void setAnalogOutputSize(int sz);
+		virtual void setAnalogOutputSize(int sz);
 
 		/*! Return data from all channels over the given sample rate.
 		 * Data is return in true voltage units, as double-precision IEEE floats.

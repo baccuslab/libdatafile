@@ -61,6 +61,12 @@ class HidensFile : public datafile::DataFile {
 		/*! Write the given configuration into the file */
 		void setConfiguration(const Configuration&);
 
+		/*! Override for the Hidens file class which enforces 
+		 * that setting analog output is not supported for this
+		 * class.
+		 */
+		virtual void setAnalogOutputSize(int sz) override;
+
 	protected:
 		void readConfiguration();
 		void writeConfiguration();

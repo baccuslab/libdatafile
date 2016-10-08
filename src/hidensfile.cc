@@ -142,5 +142,9 @@ void HidensFile::writeConfiguration()
 	}
 }
 
+void HidensFile::setAnalogOutputSize(int /* size */)
+{
+}
+
 }; // end hidensfile namespace
 
