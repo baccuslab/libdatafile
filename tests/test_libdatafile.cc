@@ -371,4 +371,4 @@ void DatafileTest::testReadWriteMeans()
 			"Channel mean values not correctly read or written.");
 }
 
-QTEST_MAIN(DatafileTest)
+QTEST_APPLESS_MAIN(DatafileTest)
