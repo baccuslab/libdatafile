@@ -12,10 +12,10 @@
 void DatafileTest::initTestCase()
 {
 	/* Create data */
-	m_data.set_size(datafile::BLOCK_SIZE * 3, datafile::NUM_CHANNELS);
+	m_data.set_size(datafile::BlockSize * 3, datafile::NumChannels);
 	m_data.fill(arma::fill::randu);
-	m_hidensData.set_size(datafile::BLOCK_SIZE * 3, hidensfile::NUM_CHANNELS);
-	m_data.fill(arma::fill::randu);
+	m_hidensData.set_size(datafile::BlockSize * 3, hidensfile::NumChannels);
+	m_hidensData.fill(arma::fill::randu);
 
 	/* Names for the files */
 	m_datafileName = "test-datafile.h5";
@@ -94,9 +94,9 @@ void DatafileTest::testBasicAttributes()
 	QVERIFY2(m_dataFile->filename() == m_datafileName.toStdString(),
 			"Filename was set or read incorrectly.");
 
-	QVERIFY2(m_dataFile->nchannels() == datafile::NUM_CHANNELS,
+	QVERIFY2(m_dataFile->nchannels() == datafile::NumChannels,
 			"Number of channels for base DataFile class set or read incorrectly.");
-	QVERIFY2(m_hidensFile->nchannels() == hidensfile::NUM_CHANNELS,
+	QVERIFY2(m_hidensFile->nchannels() == hidensfile::NumChannels,
 			"Number of channels for HidensFile class set or read incorrectly.");
 
 	QVERIFY2(m_dataFile->nsamples() == 0,
@@ -110,7 +110,7 @@ void DatafileTest::testSmallDataReadWrite()
 {
 	/* Write small chunk of data. */
 	int subsetSize = 100;
-	auto subset = m_data.rows(0, subsetSize - 1);
+	auto subset = m_data.rows(0, subsetSize - 1).eval();
 	m_dataFile->setData(0, subsetSize, subset);
 
 	/* Verify that the number of samples and lenth have changed. */
@@ -139,9 +139,8 @@ void DatafileTest::testSmallDataReadWrite()
 			"Data read into arma::Mat<int16_t>& not read correctly.");
 
 	/* Verify that reading the full chunk as raw voltage values works. */
-	auto volts = m_dataFile->data(0, subsetSize);
 	QVERIFY2(arma::all(arma::vectorise(
-			((volts - m_dataFile->offset()) / m_dataFile->gain()) == subset)),
+			(m_dataFile->data(0, subsetSize) / m_dataFile->gain()) == subset)),
 			"Data read as true voltage values not generated correctly.");
 }
 
@@ -184,7 +183,7 @@ void DatafileTest::testWriteToExistingFile()
 	 * should fail.
 	 */
 	DataFile df(m_datafileName.toStdString());
-	QVERIFY_EXCEPTION_THROWN(df.setData(0, 100, m_data.rows(0, 100)),
+	QVERIFY_EXCEPTION_THROWN(df.setData(0, 100, m_data.rows(0, 100).eval()),
 			std::logic_error);
 }
 

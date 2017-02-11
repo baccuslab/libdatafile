@@ -15,14 +15,16 @@
 #include <string>
 #include <vector>
 
-/*! Namespace containing all data and code relating to libdatafile. */
+/*! The datafile namespace contains classes and constants related
+ * to the file format for storing data from Baccus lab experiments.
+ */
 namespace datafile {
 
 /*! File extension for all recording files created by libdatafile */
-const std::string RECORDING_FILE_EXTENSION = ".h5";
+const std::string FileExtension = ".h5";
 
 /*! Rank of all datasets */
-const int DATASET_RANK = 2;
+const int DatasetRank = 2;
 
 /*! Default number of channels.
  * Note that this is the number of channels for an MCS array recording, 
@@ -30,50 +32,98 @@ const int DATASET_RANK = 2;
  * both the base DataFile class and the HidensFile subclass can use the
  * same constructor
  */
-const int NUM_CHANNELS = 64;
+const int NumChannels = 64;
 
 /*! Maximum number of channels in any recording */
-const int MAX_NUM_CHANNELS = 128;
+const int MaxNumChannels = 128;
 
 /*! Chunk size for HDF5 library reads and writes. */
-const int BLOCK_SIZE = 20000;
+const int BlockSize = 20000;
 
 /*! Default sample rate for MCS array data */
-const float SAMPLE_RATE = 10000;
+const float SampleRate = 10000;
 
-/*! Number of chunks to request the HDF5 library keep cached */
-const unsigned int CHUNK_CACHE_SIZE = 5; // In number of chunks
+/*! Number of chunks to request the HDF5 library keep cached. */
+const unsigned int ChunkCacheSize = 5;
 
 /*! Default dimensions of the dataset */
-const hsize_t DATASET_DEFAULT_DIMS[DATASET_RANK] = {NUM_CHANNELS, BLOCK_SIZE};
+const hsize_t DatasetDefaultDims[DatasetRank] = { NumChannels, BlockSize };
 
-/*! Chunksize for the dataset along each dimension */
-const hsize_t DATASET_CHUNK_DIMS[DATASET_RANK]= {NUM_CHANNELS, BLOCK_SIZE};
+/*! Chunk size for the data set in each dimension. */
+const hsize_t DatasetChunkDims[DatasetRank] = { NumChannels, BlockSize };
 
-/*! Maximum dimensions for the dataset, so that it can be
- * extended as a recording grows
- */
-const hsize_t DATASET_MAX_DIMS[DATASET_RANK] = {MAX_NUM_CHANNELS, H5S_UNLIMITED};
+/*! Maximum dimensions for the dataset. */
+const hsize_t DatasetMaxDims[DatasetRank] = { MaxNumChannels, H5S_UNLIMITED };
 
 /*! String stored in the file giving the room in which data was recorded. */
-const std::string DEFAULT_ROOM_STRING = "recorded in d239";
+const std::string DefaultRoomString = "recorded in d239";
 
-/*! Format in which to save the date of the recording */
-const char DATE_FORMAT[] = "%Y-%m-%dT%H:%M:%S";
+/*! Format in which to save the date of a recording */
+const char DateFormat[] = "%Y-%m-%dT%H:%M:%S";
 
 /*! Default array to use when creating a new recording */
-const std::string DEFAULT_ARRAY = "hexagonal";
+const std::string DefaultArray = "mcs";
 
-/*! Type alias for data from either array */
-using samples = arma::mat;
+/*! Type aliases for data from arrays */
+using samples = arma::mat; 				// true voltage units
+using ssamples = arma::Mat<int16_t>;	// data from MCS arrays
+using usamples = arma::Mat<uint8_t>;	// data from HiDens arrays
 
-/*! Type alias for data from the MCS arrays only */
-using ssamples = arma::Mat<short>;
+/* Template methods for determining H5 datatype from the datatype of
+ * and Armadillo matrix or vector. These are used to enable correct 
+ * conversion of data to/from the file and in-memory matrices of
+ * various data types. These allow compile-time creation of the 
+ * correct HDF5 datatype, rather than runtime selection. Add more
+ * overloads returning the correct HDF5 datatype if needed.
+ */
+template<class T>
+H5::DataType dtypeForMat(const arma::Mat<T>& /* mat */, 
+		typename std::enable_if<std::is_same<T, double>::value>::type* = nullptr)
+{
+	return H5::PredType::IEEE_F64LE;
+}
 
-/*! Type alias for adata from the HiDens arrays only */
-using usamples = arma::Mat<uint8_t>;
+template<class T>
+H5::DataType dtypeForMat(const arma::Mat<T>& /* mat */, 
+		typename std::enable_if<std::is_same<T, float>::value>::type* = nullptr)
+{
+	return H5::PredType::IEEE_F32LE;
+}
 
-std::string array(const std::string& filename);
+template<class T>
+H5::DataType dtypeForMat(const arma::Mat<T>& /* mat */,
+		typename std::enable_if<std::is_same<T, int16_t>::value>::type* = nullptr)
+{
+	return H5::PredType::STD_I16LE;
+}
+
+template<class T>
+H5::DataType dtypeForMat(const arma::Mat<T>& /* mat */,
+		typename std::enable_if<std::is_same<T, uint8_t>::value>::type* = nullptr)
+{
+	return H5::PredType::STD_U8LE;
+}
+
+template<class T>
+H5::DataType dtypeForMat(const arma::Mat<T>& /* mat */,
+		typename std::enable_if<std::is_same<T, int>::value>::type* = nullptr)
+{
+	return H5::PredType::NATIVE_INT;
+}
+
+template<class T>
+H5::DataType dtypeForMat(const arma::Mat<T>& /* mat */,
+		typename std::enable_if<std::is_same<T, uint32_t>::value>::type* = nullptr)
+{
+	return H5::PredType::STD_U32LE;
+}
+
+template<class T>
+H5::DataType dtypeForMat(const arma::Mat<T>& /* mat */,
+		typename std::enable_if<std::is_same<T, uint16_t>::value>::type* = nullptr)
+{
+	return H5::PredType::STD_U16LE;
+}
 
 /*! The DataFile class is the heart of libdatafile. It provides functionality
  * for reading, writing, and modifying an HDF5 recording file in the Baccus Lab.
@@ -81,6 +131,10 @@ std::string array(const std::string& filename);
 class DataFile {
 
 	public:
+
+		/*! Static public method used to read array type from the given data file. */
+		static std::string array(const std::string& filename);
+
 		/*! Construct a new DataFile object. 
 		 * The file is created if it does not exist, otherwise it is opened read-only.
 		 * \param filename The name of the file to create or open.
@@ -88,8 +142,8 @@ class DataFile {
 		 * \param nchannels The number of channels to be written to the dataset.
 		 */
 		DataFile(const std::string& filename, 
-				const std::string& array = DEFAULT_ARRAY,
-				const hsize_t nchannels = NUM_CHANNELS);
+				const std::string& array = DefaultArray,
+				const hsize_t nchannels = NumChannels);
 
 		/*! Destroy a DataFile, flushing and closing the underlying file */
 		virtual ~DataFile();
@@ -143,7 +197,7 @@ class DataFile {
 		 * in the future, HiDens files may define which channels contain
 		 * the analog output.
 		 */
-		virtual arma::vec analogOutput();
+		virtual arma::vec analogOutput() const;
 
 		/*! Set the size of any analog output used in the recording.
 		 * \param sz The size in samples of the output.
@@ -170,29 +224,25 @@ class DataFile {
 		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
 		 * Because Armadillo uses column-order majoring, this corresponds to the
 		 * HDF5 dataset with size (nchannels, nsamples).
+		 *
+		 * Exceptions:
+		 * This will throw a std::logic_error if either the requested channels
+		 * or samples are outside of the range for the file.
 		 */
 		samples data(int start, int end) const;
 
 		/*! Return data from the given channel.
+		 * Data is returned in true voltage units of the ADC.
+		 *
 		 * \param channel The channel whose data should be returned
 		 * \param start The first sample to return.
 		 * \param end The last sample to return.
+		 *
+		 * Exceptions:
+		 * This will throw a std::logic_error if either the requested channels
+		 * or samples are outside of the range for the file.
 		 */
 		arma::vec data(int channel, int start, int end) const;
-
-		/* Fill the given Armadillo vector with data from the requested channel.
-		 * \param channel The channel to read data from
-		 * \param start The first sample to read
-		 * \param end The last sample to read
-		 * \param data The Armadillo matrix to fill with the requested data. Data
-		 * will be converted to the appropriate type to fill the given matrix.
-		 * 
-		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
-		 * Because Armadillo uses column-order majoring, this corresponds to the
-		 * HDF5 dataset with size (nchannels, nsamples).
-		 */
-		template<class T>
-		void data(int channel, int start, int end, T& data) const;
 
 		/* Read data from a contiguous set of channels into the given matrix.
 		 * \param startChan The first channel to read
@@ -205,61 +255,43 @@ class DataFile {
 		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
 		 * Because Armadillo uses column-order majoring, this corresponds to the
 		 * HDF5 dataset with size (nchannels, nsamples).
+		 *
+		 * Exceptions:
+		 * This will throw a std::logic_error if either the requested channels
+		 * or samples are outside of the range for the file.
 		 */
 		template<class T>
 		void data(int startChan, int endChan, 
-				int startSample, int endSample, arma::Mat<T>& data) const;
+				int startSample, int endSample, arma::Mat<T>& data) const
+		{
+			verifyReadRequest(startChan, endChan, startSample, endSample);
+			auto memspace = setupRead(startChan, endChan, startSample, endSample);
+			data.set_size(endSample - startSample, endChan - startChan);
+			m_dataset.read(data.memptr(), dtypeForMat(data), memspace, m_dataspace);
+		}
 
-		/* Read data from an arbitrary selection of channels into the given matrix.
-		 * This form of the function reads data from the channels whose indices
-		 * are given in the first parameter. The channels need not be contiguous.
-		 * Note that, if a contiguous selection of channels is desired, it can
-		 * be hugely more effecient to use the other version of this function.
-		 * \param channels A vector of channel indices to read.
-		 * \param start The first sample to read.
-		 * \param end The last sample to read.
-		 * \param data The Armadillo matrix to fill with the requested data. Data
-		 * will be converted to the appropriate type to fill the given matrix.
+		/* Write data to the file.
+		 * \param startSample The first sample to write.
+		 * \param endSample The last sample to write.
+		 * \param data The Armadillo matrix containing data to write.
 		 * 
-		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
+		 * NOTE: Data should be in an Armadillo matrix with size (nsamples, nchannels).
 		 * Because Armadillo uses column-order majoring, this corresponds to the
 		 * HDF5 dataset with size (nchannels, nsamples).
+		 *
+		 * Exceptions:
+		 * This will throw a std::logic_error endSample <= startSample. If endSample
+		 * is beyond the current end of the dataset, *it will be extended* to the next
+		 * largest multiple of the BLOCK_SIZE required to accommodate the data.
 		 */
 		template<class T>
-		void data(const arma::uvec& channels, int start, int end, T& data) const;
-
-		/* Write data to the file.
-		 * \param startSample The first sample to write.
-		 * \param endSample The last sample to write.
-		 * \param data The Armadillo matrix containing data to write.
-		 * 
-		 * NOTE: Data should be in an Armadillo matrix with size (nsamples, nchannels).
-		 * Because Armadillo uses column-order majoring, this corresponds to the
-		 * HDF5 dataset with size (nchannels, nsamples).
-		 */
-		void setData(int startSample, int endSample, const arma::Mat<uint8_t>& data);
-
-		/* Write data to the file.
-		 * \param startSample The first sample to write.
-		 * \param endSample The last sample to write.
-		 * \param data The Armadillo matrix containing data to write.
-		 * 
-		 * NOTE: Data should be in an Armadillo matrix with size (nsamples, nchannels).
-		 * Because Armadillo uses column-order majoring, this corresponds to the
-		 * HDF5 dataset with size (nchannels, nsamples).
-		 */
-		void setData(int startSample, int endSample, const arma::Mat<int16_t>& data);
-
-		/* Write data to the file.
-		 * \param startSample The first sample to write.
-		 * \param endSample The last sample to write.
-		 * \param data The Armadillo matrix containing data to write.
-		 * 
-		 * NOTE: Data should be in an Armadillo matrix with size (nsamples, nchannels).
-		 * Because Armadillo uses column-order majoring, this corresponds to the
-		 * HDF5 dataset with size (nchannels, nsamples).
-		 */
-		void setData(int startSample, int endSample, const arma::Mat<double>& data);
+		void setData(int startSample, int endSample, const arma::Mat<T>& data) { 
+			verifyWriteRequest(startSample, endSample);
+			auto memtype = dtypeForMat(data);
+			auto memspace = setupWrite(startSample, endSample);
+			m_dataset.write(data.memptr(), memtype, memspace, m_dataspace);
+			flush();
+		}
 
 		/*! Set the array from which data in this file derives.
 		 * \param array The array type.
@@ -282,7 +314,7 @@ class DataFile {
 		void setRoom(std::string room);
 
 		/*! Returns the HDF5 dataype for the underlying dataset. */
-		const H5::DataType& dtype() const { return datatype; }
+		const H5::DataType& dtype() const { return m_datatype; }
 
 		/*! Write a dataset containing the mean value of each channel's data.
 		 * This is computed and saved while running the `extract` program, which
@@ -302,18 +334,13 @@ class DataFile {
 		int datasetSize() const;
 
 		/* Read or write underlying dataset or file HDF5 attributes */
-		void writeFileAttr(std::string name, const H5::DataType &type, void *buf);
-		void writeDataAttr(std::string name, const H5::DataType &type, void *buf);
-		void writeDataStringAttr(std::string name, std::string value);
-		void writeFileStringAttr(std::string name, std::string value);
+		void writeDataAttr(const std::string& name, const H5::DataType &type, void *buf);
+		void writeDataStringAttr(const std::string& name, const std::string& value);
 		void writeAllAttributes();
-		void readFileAttr(std::string name, void *buf);
-		void readDataAttr(std::string name, void *buf);
-		void readDataStringAttr(std::string name, std::string &dst);
-		void readFileStringAttr(std::string name, std::string &dst);
-
-		void computeCoords(const arma::uvec& channels, 
-				int start, int end, arma::Mat<hsize_t>& out, hsize_t *nelem) const;
+		void readFileAttr(const std::string& name, void *buf);
+		void readDataAttr(const std::string& name, void *buf);
+		void readDataStringAttr(const std::string& name, std::string &dst);
+		void readFileStringAttr(const std::string& name, std::string &dst);
 
 		/* Read the corresponding values from the file */
 		void readArray();
@@ -325,22 +352,29 @@ class DataFile {
 		void readNumSamples();
 		void readAnalogOutputSize();
 
-		H5::H5File file;				// The actual HDF5 file
-		H5::DataSpace dataspace;		// Data space for actual data
-		H5::DataType datatype;			// Type for the actual data
-		H5::DSetCreatPropList props;	// Properties for the dataset (chunking, etc)
-		H5::DataSet dataset;			// The HDF5 dataset containing data
-		bool readOnly;					// Protection
+		H5::H5File m_file;				// The actual HDF5 file
+		H5::DataSpace m_dataspace;		// Data space for actual data
+		H5::DataType m_datatype;		// Type for the actual data
+		H5::DSetCreatPropList m_props;	// Properties for the dataset (chunking, etc)
+		H5::DataSet m_dataset;			// The HDF5 dataset containing data
+		bool m_readOnly;				// Protection
 
-		std::string filename_;		// Full path name of HDF5 file
-		std::string array_;			// Array type
-		float sampleRate_;			// Data sample rate
-		float gain_;				// Gain of A/D conversion
-		float offset_;				// Offset of A/D conversion
-		std::string date_;			// Date of recording, ISO-8601 format
-		std::string room_; 			// Location of recording
-		uint64_t nsamples_;			// Total number of samples written
-		uint64_t aoutSize_;			// Size of any analog output used in the recording
+		std::string m_filename;		// Full path name of HDF5 file
+		std::string m_array;		// Array type
+		float m_sampleRate;			// Data sample rate
+		float m_gain;				// Gain of A/D conversion
+		float m_offset;				// Offset of A/D conversion
+		std::string m_date;			// Date of recording, ISO-8601 format
+		std::string m_room; 		// Location of recording
+		uint64_t m_nsamples;		// Total number of samples written
+		uint64_t m_aoutSize;		// Size of any analog output used in the recording
+
+		bool readOnly() const { return m_readOnly; }
+
+		/* Throw a std::logic_error if the requested write parameters are invalid.
+		 * This resizes the file's dataset if needed.
+		 */
+		void verifyWriteRequest(int startSample, int endSample);
 
 		/* Create a memory (source) dataspace and set up the file (dest)
 		 * dataspace for a write of data. This takes care of a lot of 
@@ -349,10 +383,22 @@ class DataFile {
 		 */
 		H5::DataSpace setupWrite(int startSample, int endSample);
 
-}; // End class
-}; // End namespace
+		/* Throw a std::logic_error if the requested read parameters are invalid. */
+		void verifyReadRequest(int startChannel, int endChannel, 
+				int startSample, int endSample) const;
 
-#include "datafile-templates.cc" // Implementation of templated functions defined above
+		/* Create a memory (destination) dataspace and setup the file (source)
+		 * dataspace for a read of data.
+		 */
+		H5::DataSpace setupRead(int startChannel, int endChannel, 
+				int startSample, int endSample) const;
+
+
+
+}; // End class
+
+
+}; // end datafile namespace
 
 #endif
 

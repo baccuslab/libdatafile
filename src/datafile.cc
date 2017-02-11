@@ -14,12 +14,12 @@ namespace datafile {
 DataFile::DataFile(const std::string& filename, 
 		const std::string& array,
 		const hsize_t nchannels)
-		: filename_(filename),
-		  array_(array),
-		  date_("unknown"),
-		  room_("unknown"),
-		  nsamples_(0),
-		  aoutSize_(0)
+		: m_filename(filename),
+		  m_array(array),
+		  m_date("unknown"),
+		  m_room("unknown"),
+		  m_nsamples(0),
+		  m_aoutSize(0)
 {
 	/* Turn off automatic printing of errors */
 	H5::Exception::dontPrint();
@@ -28,14 +28,14 @@ DataFile::DataFile(const std::string& filename,
 	 * Else, construct a new file.
 	 */
 	struct stat buffer;
-	if (stat(filename_.c_str(), &buffer) == 0) {
-		if (!H5::H5File::isHdf5(filename_)) {
+	if (stat(m_filename.c_str(), &buffer) == 0) {
+		if (!H5::H5File::isHdf5(m_filename)) {
 			std::cerr << "Invalid H5 file" << std::endl;
 			throw std::invalid_argument("Invalid HDF5 file");
 		}
 		try {
-			readOnly = true;
-			file = H5::H5File(filename_, H5F_ACC_RDWR); // must be read-write so we can call setMeans()
+			m_readOnly = true;
+			m_file = H5::H5File(m_filename, H5F_ACC_RDWR); // must be read-write so we can call setMeans()
 		} catch (H5::FileIException &e) {
 			std::cerr << "Could not open H5 file" << std::endl;
 			throw std::runtime_error("Could not open HDF5 file");
@@ -43,13 +43,13 @@ DataFile::DataFile(const std::string& filename,
 
 		/* Open the dataset */
 		try {
-			dataset = file.openDataSet("data");
+			m_dataset = m_file.openDataSet("data");
 		} catch (H5::FileIException &e) {
 			std::cerr << "File must contain a dataset labeled 'data'";
 			throw std::invalid_argument("File must contain a 'data' dataset");
 		}
-		dataspace = dataset.getSpace();
-		datatype = dataset.getDataType();
+		m_dataspace = m_dataset.getSpace();
+		m_datatype = m_dataset.getDataType();
 
 		/* Read attributes into data members */
 		try {
@@ -71,51 +71,50 @@ DataFile::DataFile(const std::string& filename,
 		/* Construct the file. Define to have a chunk cache large enough to hold
 		 * a few chunks at a time.
 		 */
-		readOnly = false;
-		H5::FileAccPropList fileProps(H5::FileAccPropList::DEFAULT);
+		m_readOnly = false;
+		H5::FileAccPropList m_fileProps(H5::FileAccPropList::DEFAULT);
 		int mdc_nelmts = 0;
 		size_t rdcc_nelmts, rdcc_nbytes = 0;
 		size_t chunkCacheSizeElems = (
-				datafile::CHUNK_CACHE_SIZE * datafile::BLOCK_SIZE * 
-				datafile::NUM_CHANNELS
+				datafile::ChunkCacheSize * datafile::BlockSize * 
+				datafile::NumChannels
 			);
 		double rdcc_w0 = 0.0;
-		fileProps.getCache(mdc_nelmts, rdcc_nelmts, rdcc_nbytes, rdcc_w0);
-		fileProps.setCache(mdc_nelmts, chunkCacheSizeElems, 
+		m_fileProps.getCache(mdc_nelmts, rdcc_nelmts, rdcc_nbytes, rdcc_w0);
+		m_fileProps.setCache(mdc_nelmts, chunkCacheSizeElems, 
 				chunkCacheSizeElems * sizeof(int16_t), rdcc_w0);
-		file = H5::H5File(filename_, H5F_ACC_TRUNC, 
-				H5::FileCreatPropList::DEFAULT, fileProps);
+		m_file = H5::H5File(m_filename, H5F_ACC_TRUNC, 
+				H5::FileCreatPropList::DEFAULT, m_fileProps);
 
 		/* Create the dataset */
-		hsize_t dims[DATASET_RANK] = {nchannels, DATASET_DEFAULT_DIMS[1]};
-		dataspace = H5::DataSpace(datafile::DATASET_RANK, dims,
-				datafile::DATASET_MAX_DIMS);
-		props = H5::DSetCreatPropList();
-		props.setChunk(datafile::DATASET_RANK, datafile::DATASET_CHUNK_DIMS);
-		datatype = H5::DataType(H5::PredType::STD_I16LE);
-		dataset = file.createDataSet("data", datatype, dataspace, props);
+		hsize_t dims[DatasetRank] = {nchannels, DatasetDefaultDims[1]};
+		m_dataspace = H5::DataSpace(DatasetRank, dims, DatasetMaxDims);
+		m_props = H5::DSetCreatPropList();
+		m_props.setChunk(DatasetRank, DatasetChunkDims);
+		m_datatype = H5::DataType(H5::PredType::STD_I16LE);
+		m_dataset = m_file.createDataSet("data", m_datatype, m_dataspace, m_props);
 
 		/* Set default parameters */
-		setSampleRate(datafile::SAMPLE_RATE);
-		setRoom(datafile::DEFAULT_ROOM_STRING);
-		setArray(array_);
+		setSampleRate(SampleRate);
+		setRoom(DefaultRoomString);
+		setArray(m_array);
 	}
 }
 
 DataFile::~DataFile() 
 {
 	try {
-		if (!readOnly) 
+		if (!readOnly()) 
 			writeAllAttributes();
-		file.close();
+		m_file.close();
 	} catch (H5::FileIException &e) {
-		std::cerr << "Error closing HDF5 file: " << filename_ << std::endl;
+		std::cerr << "Error closing HDF5 file: " << m_filename << std::endl;
 	}
 }
 
-std::string DataFile::filename() const { return filename_; }
+std::string DataFile::filename() const { return m_filename; }
 
-std::string DataFile::array() const { return array_; }
+std::string DataFile::array() const { return m_array; }
 
 double DataFile::length() const 
 { 
@@ -124,87 +123,136 @@ double DataFile::length() const
 
 int DataFile::nsamples() const
 {
-	return static_cast<int>(nsamples_);
+	return static_cast<int>(m_nsamples);
 }
 
 int DataFile::nchannels() const
 {
-	hsize_t dims[DATASET_RANK] = {0, 0};
-	dataspace.getSimpleExtentDims(dims);
+	hsize_t dims[DatasetRank] = {0, 0};
+	m_dataspace.getSimpleExtentDims(dims);
 	return dims[0];
 }
 
-float DataFile::sampleRate(void) const { return sampleRate_; }
+float DataFile::sampleRate(void) const { return m_sampleRate; }
 
-float DataFile::gain(void) const { return gain_; }
+float DataFile::gain(void) const { return m_gain; }
 
-float DataFile::offset(void) const { return offset_; }
+float DataFile::offset(void) const { return m_offset; }
 
-std::string DataFile::date(void) const { return date_; }
+std::string DataFile::date(void) const { return m_date; }
 
-std::string DataFile::room(void) const { return room_; }
+std::string DataFile::room(void) const { return m_room; }
 
 samples DataFile::data(int startSample, int endSample) const
 {
-	/* Allocate return array */
-	int req_nsamples = endSample - startSample;
-	if (req_nsamples < 0) {
-		std::cerr << "Requested sample range is invalid: (" << 
-				startSample << ", " << endSample << ")" << std::endl;
-		throw std::logic_error("Requested sample range invalid");
-	}
-	samples s(req_nsamples, nchannels());
+	samples s;
 	data(0, nchannels(), startSample, endSample, s);
-	return s * gain() + offset();
+	return s * gain();
 }
 
 arma::vec DataFile::data(int channel, int startSample, int endSample) const
 {
-	int req_nsamples = endSample - startSample;
-	if (req_nsamples < 0) {
-		std::cerr << "Requested sample range is invalid: (" << 
-				startSample << ", " << endSample << ")" << std::endl;
-		throw std::logic_error("Requested sample range invalid");
-	}
-	if ( (channel < 0) || (channel >= nchannels()) ) {
-		std::cerr << "Requested channel is invalid: " << channel << std::endl;
-		throw std::logic_error("Requested channel invalid");
-	}
-	arma::vec s(req_nsamples);
-	data(channel, startSample, endSample, s);
-	return s;
+	arma::vec s;
+	data(channel, channel + 1, startSample, endSample, s);
+	return s * gain();
 }
 
-void DataFile::writeFileAttr(std::string name, const H5::DataType &type, void *buf) 
+void DataFile::verifyReadRequest(int startChannel, int endChannel, 
+		int startSample, int endSample) const
 {
-	if (readOnly)
+	if ( (startSample < 0) || (startSample > nsamples()) ) {
+		throw std::logic_error("Requested start sample out of range: " + 
+				std::to_string(startSample) + " is not in range [0, " +
+				std::to_string(nsamples()) + "]");
+	}
+	if ( (endSample < 0) || (endSample > nsamples()) ) {
+		throw std::logic_error("Requested end sample out of range: " + 
+				std::to_string(endSample) + " is not in range [0, " +
+				std::to_string(nsamples()) + "]");
+	}
+	int requestedSamples = endSample - startSample;
+	if (requestedSamples <= 0) {
+		throw std::logic_error("Requested sample range invalid: (" + 
+				std::to_string(startSample) + " - " + 
+				std::to_string(endSample) + ")");
+	}
+
+	if ( (startChannel < 0) || (startChannel > nchannels()) ) {
+		throw std::logic_error("Requested start channel out of range: " + 
+				std::to_string(startSample) + " is not in range [0, " +
+				std::to_string(nsamples()) + "]");
+	}
+	if ( (endChannel < 0) || (endChannel > nchannels()) ) {
+		throw std::logic_error("Requested end channel out of range: " + 
+				std::to_string(startSample) + " is not in range [0, " +
+				std::to_string(nsamples()) + "]");
+	}
+	int requestedChannels = endChannel - startChannel;
+	if (requestedChannels <= 0) {
+		throw std::logic_error("Requested sample range invalid: (" + 
+				std::to_string(startSample) + "-" + 
+				std::to_string(endSample) + ")");
+	}
+}
+
+H5::DataSpace DataFile::setupRead(int startChannel, int endChannel, 
+		int startSample, int endSample) const
+{
+	int requestedSamples = endSample - startSample;
+	int requestedChannels = endChannel - startChannel;
+
+	/* Compute the source file data space */
+	hsize_t fileOffset[DatasetRank] = {
+			static_cast<hsize_t>(startChannel), 
+			static_cast<hsize_t>(startSample)
+		};
+	hsize_t fileCount[DatasetRank] = {
+			static_cast<hsize_t>(requestedChannels),
+			static_cast<hsize_t>(requestedSamples)
+		};
+	m_dataspace.selectHyperslab(H5S_SELECT_SET, fileCount, fileOffset);
+	if (!m_dataspace.selectValid()) {
+		std::stringstream what;
+		what << "Dataset selection invalid:" << std::endl
+				<< "Offset: (" << startSample << ", 0)" << std::endl
+				<< "Count: (" << requestedSamples << ", "
+				<< nchannels() << ")" << std::endl;
+		throw std::logic_error(what.str());
+	}
+
+	/* Define the destination data space in memory */
+	hsize_t dims[DatasetRank] = {
+			static_cast<hsize_t>(requestedChannels),
+			static_cast<hsize_t>(requestedSamples)
+		};
+	hsize_t memOffset[DatasetRank] = {0, 0};
+	hsize_t memCount[DatasetRank] = {
+			static_cast<hsize_t>(requestedChannels),
+			static_cast<hsize_t>(requestedSamples)
+		};
+	H5::DataSpace memspace{DatasetRank, dims};
+	memspace.selectHyperslab(H5S_SELECT_SET, memCount, memOffset);
+	if (!memspace.selectValid()) {
+		std::stringstream what;
+		what << "Memory dataspace selection invalid:" << std::endl
+				<< "Count: (" << requestedSamples << ", "
+				<< nchannels() << ")" << std::endl;
+		throw std::logic_error(what.str());
+	}
+	return memspace;
+}
+
+void DataFile::writeDataAttr(const std::string& name, const H5::DataType &type, void *buf) 
+{
+	if (readOnly())
 		return;
 	try {
 		H5::DataType writeType(type);
-		if (!(file.attrExists(name))) {
+		if (!(m_dataset.attrExists(name))) {
 			H5::DataSpace space(H5S_SCALAR);
-			file.createAttribute(name, type, space);
+			m_dataset.createAttribute(name, writeType, space);
 		}
-		H5::Attribute attr = file.openAttribute(name);
-		attr.write(writeType, buf);
-	} catch (H5::AttributeIException &e) {
-		std::cerr << "Attribute exception accessing: " << name << std::endl;
-	} catch (H5::FileIException &e) {
-		std::cerr << "File exception accessing: " << name << std::endl;
-	}
-}
-
-void DataFile::writeDataAttr(std::string name, const H5::DataType &type, void *buf) 
-{
-	if (readOnly)
-		return;
-	try {
-		H5::DataType writeType(type);
-		if (!(dataset.attrExists(name))) {
-			H5::DataSpace space(H5S_SCALAR);
-			dataset.createAttribute(name, writeType, space);
-		}
-		H5::Attribute attr = dataset.openAttribute(name);
+		H5::Attribute attr = m_dataset.openAttribute(name);
 		attr.write(writeType, buf);
 	} catch (H5::DataSetIException &e) {
 		std::cerr << "DataSet exception accessing: " << name << std::endl;
@@ -213,115 +261,96 @@ void DataFile::writeDataAttr(std::string name, const H5::DataType &type, void *b
 	}
 }
 
-void DataFile::writeDataStringAttr(std::string name, std::string value) 
+void DataFile::writeDataStringAttr(const std::string& name, const std::string& value) 
 {
-	if ( (readOnly) || (value.length() == 0) )
+	if ( (readOnly()) || (value.length() == 0) )
 		return;
 	try {
 		H5::StrType stringType(0, value.length());
-		if (!(dataset.attrExists(name))) {
+		if (!(m_dataset.attrExists(name))) {
 			H5::DataSpace space(H5S_SCALAR);
-			dataset.createAttribute(name, stringType, space);
+			m_dataset.createAttribute(name, stringType, space);
 		}
-		H5::Attribute attr = dataset.openAttribute(name);
+		H5::Attribute attr = m_dataset.openAttribute(name);
 		attr.write(stringType, value.c_str());
 	} catch (H5::DataSetIException &e) {
 		std::cerr << "DataSet exception accessing: " << name << std::endl;
 	} catch (H5::AttributeIException &e) {
-		std::cerr << "Attribute exception accessing: " << name << std::endl;
-	}
-}
-
-void DataFile::writeFileStringAttr(std::string name, std::string value)
-{
-	if (readOnly)
-		return;
-	try {
-		H5::StrType stringType(0, value.length());
-		if (!file.attrExists(name)) {
-			H5::DataSpace space(H5S_SCALAR);
-			file.createAttribute(name, stringType, space);
-		}
-		H5::Attribute attr = file.openAttribute(name);
-		attr.write(stringType, value.c_str());
-	} catch (H5::FileIException &e) {
-		std::cerr << "File exception accessing: " << name << std::endl;
-	} catch( H5::AttributeIException &e) {
 		std::cerr << "Attribute exception accessing: " << name << std::endl;
 	}
 }
 
 void DataFile::writeAllAttributes(void) 
 {
-	writeDataAttr("sample-rate", H5::PredType::IEEE_F32LE, &sampleRate_);
-	writeDataAttr("gain", H5::PredType::IEEE_F32LE, &gain_);
-	writeDataAttr("offset", H5::PredType::IEEE_F32LE, &offset_);
-	writeDataAttr("nsamples", H5::PredType::STD_U64LE, &nsamples_);
-	writeDataStringAttr("array", array_);
-	writeDataStringAttr("date", date_);
-	writeDataStringAttr("room", room_);
+	writeDataAttr("sample-rate", H5::PredType::IEEE_F32LE, &m_sampleRate);
+	writeDataAttr("gain", H5::PredType::IEEE_F32LE, &m_gain);
+	writeDataAttr("offset", H5::PredType::IEEE_F32LE, &m_offset);
+	writeDataAttr("nsamples", H5::PredType::STD_U64LE, &m_nsamples);
+	writeDataStringAttr("array", m_array);
+	writeDataStringAttr("date", m_date);
+	writeDataStringAttr("room", m_room);
 }
 
 void DataFile::setSampleRate(float sampleRate) 
 {
 	writeDataAttr("sample-rate", H5::PredType::IEEE_F32LE, &sampleRate);
-	sampleRate_ = sampleRate;
+	m_sampleRate = sampleRate;
 }
 
 void DataFile::setGain(float gain) 
 {
 	writeDataAttr("gain", H5::PredType::IEEE_F32LE, &gain);
-	gain_ = gain;
+	m_gain = gain;
 }
 
 void DataFile::setOffset(float offset) 
 {
 	writeDataAttr("offset", H5::PredType::IEEE_F32LE, &offset);
-	offset_ = offset;
+	m_offset = offset;
 }
 
 void DataFile::setDate(std::string date)
 {
 	writeDataStringAttr("date", date);
-	date_ = date;
+	m_date = date;
 }
 
 void DataFile::setRoom(std::string room) 
 {
 	writeDataStringAttr("room", room);
-	room_ = room;
+	m_room = room;
 }
 
 void DataFile::setArray(std::string array)
 {
-	writeDataStringAttr("array", array_);
-	array_ = array;
+	writeDataStringAttr("array", m_array);
+	m_array = array;
 }
 
 void DataFile::setAnalogOutputSize(int size)
 {
-	writeDataAttr("analog-output-size", H5::PredType::STD_U64LE, &aoutSize_);
-	aoutSize_ = static_cast<decltype(aoutSize_)>(size);
+	writeDataAttr("analog-output-size", H5::PredType::STD_U64LE, &m_aoutSize);
+	m_aoutSize = static_cast<decltype(m_aoutSize)>(size);
 }
 
 int DataFile::analogOutputSize() const
 {
-	return static_cast<int>(aoutSize_);
+	return static_cast<int>(m_aoutSize);
 }
 
-arma::vec DataFile::analogOutput()
+arma::vec DataFile::analogOutput() const
 {
-	if (aoutSize_ == 0) {
+	if (m_aoutSize == 0) {
 		return arma::vec{};
 	}
-	auto sz = std::min(aoutSize_, nsamples_);
+	auto sz = std::min(m_aoutSize, m_nsamples);
 	return data(1, 0, sz);
 }
 
-void DataFile::readFileAttr(std::string name, void *buf) 
+void DataFile::readFileAttr(const std::string& name, void *buf) 
 {
 	try {
-		H5::Attribute attr = file.openAttribute(name);
+		H5::Attribute attr = m_file.openAttribute(name);
 		attr.read(attr.getDataType(), buf);
 	} catch (H5::FileIException &e) {
 		std::cerr << "File exception accessing attribute: " << name << std::endl;
@@ -330,10 +359,10 @@ void DataFile::readFileAttr(std::string name, void *buf)
 	}
 }
 
-void DataFile::readDataAttr(std::string name, void *buf) 
+void DataFile::readDataAttr(const std::string& name, void *buf) 
 {
 	try {
-		H5::Attribute attr = dataset.openAttribute(name);
+		H5::Attribute attr = m_dataset.openAttribute(name);
 		attr.read(attr.getDataType(), buf);
 	} catch (H5::DataSetIException &e) {
 		std::cerr << "DataSet exception accessing attribute: " << name << std::endl;
@@ -342,10 +371,10 @@ void DataFile::readDataAttr(std::string name, void *buf)
 	}
 }
 
-void DataFile::readDataStringAttr(std::string name, std::string &loc) 
+void DataFile::readDataStringAttr(const std::string& name, std::string &loc) 
 {
 	try {
-		H5::Attribute attr = dataset.openAttribute(name);
+		H5::Attribute attr = m_dataset.openAttribute(name);
 		hsize_t sz = attr.getStorageSize();
 		char *buf = new char[sz + 1]();
 		if (buf == NULL)
@@ -364,10 +393,10 @@ void DataFile::readDataStringAttr(std::string name, std::string &loc)
 	}
 }
 
-void DataFile::readFileStringAttr(std::string name, std::string &loc) 
+void DataFile::readFileStringAttr(const std::string& name, std::string &loc) 
 {
 	try {
-		H5::Attribute attr = file.openAttribute(name);
+		H5::Attribute attr = m_file.openAttribute(name);
 		hsize_t sz = attr.getStorageSize();
 		char *buf = new char[sz + 1]();
 		if (buf == NULL)
@@ -388,37 +417,37 @@ void DataFile::readFileStringAttr(std::string name, std::string &loc)
 
 void DataFile::readSampleRate(void) 
 {
-	readDataAttr("sample-rate", &sampleRate_);
+	readDataAttr("sample-rate", &m_sampleRate);
 }
 
 void DataFile::readGain(void) 
 {
-	readDataAttr("gain", &gain_);
+	readDataAttr("gain", &m_gain);
 }
 
 void DataFile::readOffset(void) 
 {
-	readDataAttr("offset", &offset_);
+	readDataAttr("offset", &m_offset);
 }
 
 void DataFile::readNumSamples(void)
 {
-	if (dataset.attrExists("nsamples")) {
-		readDataAttr("nsamples", &nsamples_);
+	if (m_dataset.attrExists("nsamples")) {
+		readDataAttr("nsamples", &m_nsamples);
 	} else {
 		/* 
 		 * Older versions of the library did not explicitly encode the
 		 * number of samples. Fall back to the size of the dataset if
 		 * needed.
 		 */
-		nsamples_ = datasetSize();
+		m_nsamples = datasetSize();
 	}
 }
 
 void DataFile::readAnalogOutputSize(void)
 {
-	if (dataset.attrExists("analog-output-size")) {
-		readDataAttr("analog-output-size", &aoutSize_);
+	if (m_dataset.attrExists("analog-output-size")) {
+		readDataAttr("analog-output-size", &m_aoutSize);
 		/* 
 		 * Older versions of the library did not explicitly encode
 		 * whether analog output was performed in this recording.
@@ -430,37 +459,22 @@ void DataFile::readAnalogOutputSize(void)
 
 void DataFile::readDate(void) 
 {
-	readDataStringAttr("date", date_);
+	readDataStringAttr("date", m_date);
 }
 
 void DataFile::readRoom(void) 
 {
-	readDataStringAttr("room", room_);
+	readDataStringAttr("room", m_room);
 }
 
 void DataFile::readArray()
 {
-	readDataStringAttr("array", array_);
+	readDataStringAttr("array", m_array);
 }
 
 void DataFile::flush(void) 
 {
-	file.flush(H5F_SCOPE_GLOBAL);
-}
-
-void DataFile::computeCoords(const arma::uvec& channels, 
-		int start, int end, arma::Mat<hsize_t>& out, hsize_t* nelem) const
-{
-	auto nsamp = end - start;
-	auto nchan = channels.n_elem;
-	*nelem = nsamp * nchan;
-	out.set_size(datafile::DATASET_RANK, *nelem);
-	for (decltype(nchan) c = 0; c < nchan; c++) {
-		for (auto s = 0; s < nsamp; s++) {
-			out(0, c * nsamp + s) = channels(c);
-			out(1, c * nsamp + s) = s + start;
-		}
-	}
+	m_file.flush(H5F_SCOPE_GLOBAL);
 }
 
 std::string array(const std::string& fname)
@@ -481,15 +495,15 @@ std::string array(const std::string& fname)
 	return a;
 }
 
-H5::DataSpace DataFile::setupWrite(int startSample, int endSample) {
-
-	if (readOnly) {
+void DataFile::verifyWriteRequest(int startSample, int endSample)
+{
+	if (readOnly()) {
 		throw std::logic_error("Cannot write to DataFile marked read-only.");
 	}
 
 	/* Validate requested samples */
 	int requestedSamples = endSample - startSample;
-	if (requestedSamples < 0) {
+	if (requestedSamples <= 0) {
 		throw std::logic_error("Requested sample range invalid: (" + 
 				std::to_string(startSample) + "-" + 
 				std::to_string(endSample) + ")");
@@ -497,26 +511,30 @@ H5::DataSpace DataFile::setupWrite(int startSample, int endSample) {
 
 	/* Extend dataset if needed */
 	if (endSample > datasetSize()) {
-		hsize_t dims[DATASET_RANK] = {0, 0};
-		dataspace = dataset.getSpace();
-		dataspace.getSimpleExtentDims(dims);
+		hsize_t dims[DatasetRank] = {0, 0};
+		m_dataspace = m_dataset.getSpace();
+		m_dataspace.getSimpleExtentDims(dims);
 		auto nblocks = static_cast<int>(std::ceil(
 				static_cast<float>(endSample - datasetSize()) /
-				static_cast<float>(BLOCK_SIZE)));
-		dims[1] += nblocks * BLOCK_SIZE;
-		dataset.extend(dims);
-		dataspace = dataset.getSpace();
+				static_cast<float>(BlockSize)));
+		dims[1] += nblocks * BlockSize;
+		m_dataset.extend(dims);
+		m_dataspace = m_dataset.getSpace();
 	}
-	nsamples_ = static_cast<uint64_t>(endSample);
+	m_nsamples = static_cast<uint64_t>(endSample);
+}
 
+H5::DataSpace DataFile::setupWrite(int startSample, int endSample)
+{
 	/* Compute the destination file data space */
-	hsize_t memoffset[datafile::DATASET_RANK] = {0,
+	int requestedSamples = endSample - startSample;
+		hsize_t memoffset[DatasetRank] = {0,
 			static_cast<hsize_t>(startSample)};
-	hsize_t memcount[datafile::DATASET_RANK] = {
+	hsize_t memcount[DatasetRank] = {
 			static_cast<hsize_t>(nchannels()),
 			static_cast<hsize_t>(requestedSamples)};
-	dataspace.selectHyperslab(H5S_SELECT_SET, memcount, memoffset);
-	if (!dataspace.selectValid()) {
+	m_dataspace.selectHyperslab(H5S_SELECT_SET, memcount, memoffset);
+	if (!m_dataspace.selectValid()) {
 		std::stringstream what;
 		what << "Dataset selection invalid:" << std::endl
 				<< "Offset: (" << startSample << ", 0)" << std::endl
@@ -526,12 +544,12 @@ H5::DataSpace DataFile::setupWrite(int startSample, int endSample) {
 	}
 
 	/* Define the source data space in memory */
-	hsize_t dims[datafile::DATASET_RANK] = {
+	hsize_t dims[DatasetRank] = {
 			static_cast<hsize_t>(nchannels()),
 			static_cast<hsize_t>(requestedSamples)};
-	H5::DataSpace memspace = {datafile::DATASET_RANK, dims};
-	hsize_t offset[datafile::DATASET_RANK] = {0, 0};
-	hsize_t count[datafile::DATASET_RANK] = {
+	H5::DataSpace memspace = {DatasetRank, dims};
+	hsize_t offset[DatasetRank] = {0, 0};
+	hsize_t count[DatasetRank] = {
 			static_cast<hsize_t>(nchannels()),
 			static_cast<hsize_t>(requestedSamples)};
 	memspace.selectHyperslab(H5S_SELECT_SET, count, offset);
@@ -545,42 +563,21 @@ H5::DataSpace DataFile::setupWrite(int startSample, int endSample) {
 	return memspace;
 }
 
-void DataFile::setData(int startSample, int endSample, const arma::Mat<uint8_t>& data) { 
-	H5::DataType memtype = H5::PredType::STD_U8LE;
-	auto memspace = setupWrite(startSample, endSample);
-	dataset.write(data.memptr(), memtype, memspace, dataspace);
-	flush();
-}
-
-void DataFile::setData(int startSample, int endSample, const arma::Mat<int16_t>& data) {
-	H5::DataType memtype = H5::PredType::STD_I16LE;
-	auto memspace = setupWrite(startSample, endSample);
-	dataset.write(data.memptr(), memtype, memspace, dataspace);
-	flush();
-}
-
-void DataFile::setData(int startSample, int endSample, const arma::Mat<double>& data) {
-	H5::DataType memtype = H5::PredType::IEEE_F64LE;
-	auto memspace = setupWrite(startSample, endSample);
-	dataset.write(data.memptr(), memtype, memspace, dataspace);
-	flush();
-}
-
 int DataFile::datasetSize() const {
-	hsize_t dims[DATASET_RANK] = { 0, 0 };
-	dataspace.getSimpleExtentDims(dims);
+	hsize_t dims[DatasetRank] = { 0, 0 };
+	m_dataspace.getSimpleExtentDims(dims);
 	return static_cast<int>(dims[1]);
 }
 
 void DataFile::setMeans(const arma::vec& means)
 {
 	const char name[] = "channel-means";
-	if (dataset.attrExists(name)) {
-		dataset.removeAttr(name);
+	if (m_dataset.attrExists(name)) {
+		m_dataset.removeAttr(name);
 	}
 	hsize_t dims[1] = { static_cast<hsize_t>(means.n_elem) };
 	auto space = H5::DataSpace(1, dims);
-	auto attr = dataset.createAttribute(name, H5::PredType::IEEE_F64LE, space);
+	auto attr = m_dataset.createAttribute(name, H5::PredType::IEEE_F64LE, space);
 	attr.write(H5::PredType::IEEE_F64LE, means.memptr());
 	attr.close();
 }
@@ -590,7 +587,7 @@ arma::vec DataFile::means() const
 	arma::vec ret;
 	H5::Attribute attr;
 	try {
-		attr = dataset.openAttribute("channel-means");
+		attr = m_dataset.openAttribute("channel-means");
 	} catch (H5::AttributeIException& e) {
 		return ret;
 	}
@@ -604,5 +601,5 @@ arma::vec DataFile::means() const
 	return ret;
 }
 
-}; // end datafile namespace
+} // end datafile namespace
 

@@ -12,19 +12,16 @@
 #include "datafile.h"
 #include "configuration.h"
 
-/*! The hidensfile namespace contains portions of libdatafile that are
- * particular to the HiDens array data.
- */
 namespace hidensfile {
 
 /*! The default number of channels in a HiDens recording */
-const int NUM_CHANNELS = 126;
+const int NumChannels = 126;
 
 /*! The HiDens data sample rate */
-const float SAMPLE_RATE = 20000;
+const float SampleRate = 20000;
 
 /*! The default array type */
-const std::string DEFAULT_ARRAY("hidens");
+const std::string DefaultArray = "hidens";
 
 /*! The HidensFile class is a Datafile subclass that provides extra functionality
  * specific to HiDens array recordings.
@@ -34,8 +31,8 @@ class HidensFile : public datafile::DataFile {
 
 		/*! Construct a HiDens recording file. */
 		HidensFile(std::string filename, 
-				std::string array = DEFAULT_ARRAY,
-				int nchannels = NUM_CHANNELS);
+				std::string array = DefaultArray,
+				int nchannels = NumChannels);
 
 		/*! Return the configuration saved in this file */
 		Configuration configuration() const;
@@ -71,24 +68,55 @@ class HidensFile : public datafile::DataFile {
 		void readConfiguration();
 		void writeConfiguration();
 
-		/* Read/write components of each Electrode struct.
-		 * See include/hidensfile-templates.cc for implemenation
-		 */
-		template<class T>
-		void readConfigurationDataset(const H5::DataSet& dset, T& out);
-		template<class T>
-		void writeConfigurationDataset(H5::DataSet& dset, T& out);
+		/* Configuration itself. */
+		Configuration m_configuration;
+		arma::Col<uint32_t> m_xpos, m_ypos;
+		arma::Col<uint16_t> m_x, m_y;
+		arma::Col<uint8_t> m_label;
+		arma::Col<uint32_t> m_indices;
 
-		Configuration configuration_;
-		arma::Col<uint32_t> xpos_, ypos_;
-		arma::Col<uint16_t> x_, y_;
-		arma::Col<uint8_t> label_;
-		arma::Col<uint32_t> indices_;
+		/* Read components of each Electrode struct.  */
+		template<class T>
+		void readConfigurationDataset(const H5::DataSet& dset, arma::Col<T>& out) const
+		{
+			/* Define file (source) space. */
+			auto space = dset.getSpace();
+			hsize_t dims[1] = { 0 };
+			space.getSimpleExtentDims(dims);
+			auto sz = dims[0];
+			hsize_t offset[1] = { 0 };
+			hsize_t count[1] = { sz };
+			space.selectHyperslab(H5S_SELECT_SET, count, offset);
+
+			/* Create memory (destination) dataspace */
+			auto memspace = H5::DataSpace(1, dims);
+			memspace.selectHyperslab(H5S_SELECT_SET, count, offset);
+
+			/* Read into output array */
+			out.set_size(sz);
+			dset.read(out.memptr(), datafile::dtypeForMat(out), memspace, space);
+		}
+
+		/* Write components of each Electrode struct.  */
+		template<class T>
+		void writeConfigurationDataset(H5::DataSet& dset, const arma::Col<T>& in)
+		{
+			/* Define file (destination) dataspace. */
+			hsize_t dims[1] = { in.n_elem };
+			H5::DataSpace space(1, dims);
+			hsize_t offset[1] = { 0 };
+			space.selectHyperslab(H5S_SELECT_SET, dims, offset);
+
+			/* Create memory (source) dataspace. */
+			auto memspace = H5::DataSpace(1, dims);
+			memspace.selectHyperslab(H5S_SELECT_SET, dims, offset);
+
+			/* Write from input array */ 
+			dset.write(in.memptr(), datafile::dtypeForMat(in), memspace, space);
+		}
 
 }; // end HidensFile class
 }; // end hidensfile namespace
-
-#include "hidensfile-templates.cc"
 
 #endif
 

@@ -13,47 +13,47 @@ namespace hidensfile {
 
 HidensFile::HidensFile(std::string filename,
 		std::string array, int nchannels)
-		: datafile::DataFile(filename, array, nchannels)
+		: DataFile(filename, array, nchannels)
 {
-	if (readOnly)
+	if (readOnly())
 		readConfiguration();
 	else {
-		setSampleRate(hidensfile::SAMPLE_RATE);
+		setSampleRate(SampleRate);
 	}
 }
 
-arma::Col<uint32_t> HidensFile::xpos() const { return xpos_; }
-arma::Col<uint32_t> HidensFile::ypos() const { return ypos_; }
-arma::Col<uint16_t> HidensFile::x() const { return x_; }
-arma::Col<uint16_t> HidensFile::y() const { return y_; }
-arma::Col<uint8_t> HidensFile::label() const { return label_; }
-arma::Col<uint32_t> HidensFile::indices() const { return indices_; }
+arma::Col<uint32_t> HidensFile::xpos() const { return m_xpos; }
+arma::Col<uint32_t> HidensFile::ypos() const { return m_ypos; }
+arma::Col<uint16_t> HidensFile::x() const { return m_x; }
+arma::Col<uint16_t> HidensFile::y() const { return m_y; }
+arma::Col<uint8_t> HidensFile::label() const { return m_label; }
+arma::Col<uint32_t> HidensFile::indices() const { return m_indices; }
 
 Configuration HidensFile::configuration() const
 {
-	return configuration_;
+	return m_configuration;
 }
 
 void HidensFile::setConfiguration(const Configuration& config)
 {
-	configuration_ = config;
-	auto sz = configuration_.size();
-	if (xpos_.size() != sz) {
-		xpos_.resize(sz);
-		ypos_.resize(sz);
-		x_.resize(sz);
-		y_.resize(sz);
-		label_.resize(sz);
-		indices_.resize(sz);
+	m_configuration = config;
+	auto sz = m_configuration.size();
+	if (m_xpos.size() != sz) {
+		m_xpos.resize(sz);
+		m_ypos.resize(sz);
+		m_x.resize(sz);
+		m_y.resize(sz);
+		m_label.resize(sz);
+		m_indices.resize(sz);
 	}
 	for (decltype(sz) i = 0; i < sz; i++) {
 		auto& val = config[i];
-		xpos_[i] = val.xpos;
-		ypos_[i] = val.ypos;
-		x_[i] = val.x;
-		y_[i] = val.y;
-		label_[i] = val.label;
-		indices_[i] = val.index;
+		m_xpos[i] = val.xpos;
+		m_ypos[i] = val.ypos;
+		m_x[i] = val.x;
+		m_y[i] = val.y;
+		m_label[i] = val.label;
+		m_indices[i] = val.index;
 	}
 	writeConfiguration();
 }
@@ -62,7 +62,7 @@ void HidensFile::readConfiguration()
 {
 	H5::Group grp;
 	try {
-		grp = file.openGroup("configuration");
+		grp = m_file.openGroup("configuration");
 	} catch (H5::FileIException &e) {
 		std::stringstream what;
 		what << "The file " << filename() 
@@ -71,27 +71,27 @@ void HidensFile::readConfiguration()
 	}
 	try {
 		auto xposDset = grp.openDataSet("xpos");
-		readConfigurationDataset(xposDset, xpos_);
+		readConfigurationDataset(xposDset, m_xpos);
 		auto yposDset = grp.openDataSet("ypos");
-		readConfigurationDataset(yposDset, ypos_);
+		readConfigurationDataset(yposDset, m_ypos);
 		auto xDset = grp.openDataSet("x");
-		readConfigurationDataset(xDset, x_);
+		readConfigurationDataset(xDset, m_x);
 		auto yDset = grp.openDataSet("y");
-		readConfigurationDataset(yDset, y_);
+		readConfigurationDataset(yDset, m_y);
 		auto labelDset = grp.openDataSet("label");
-		readConfigurationDataset(labelDset, label_);
+		readConfigurationDataset(labelDset, m_label);
 		auto indicesDset = grp.openDataSet("indices");
-		readConfigurationDataset(indicesDset, indices_);
+		readConfigurationDataset(indicesDset, m_indices);
 
-		configuration_.reserve(xpos_.n_elem);
-		for (arma::uword i = 0; i < xpos_.n_elem; i++) {
-			configuration_.emplace_back(Electrode{
-					indices_(i),
-					xpos_(i), 
-					x_(i),
-					ypos_(i),
-					y_(i),
-					label_(i)
+		m_configuration.reserve(m_xpos.n_elem);
+		for (arma::uword i = 0; i < m_xpos.n_elem; i++) {
+			m_configuration.emplace_back(Electrode{
+					m_indices(i),
+					m_xpos(i), 
+					m_x(i),
+					m_ypos(i),
+					m_y(i),
+					m_label(i)
 				});
 		}
 
@@ -107,11 +107,11 @@ void HidensFile::writeConfiguration()
 {
 	H5::Group grp;
 	try {
-		grp = file.openGroup("configuration");
+		grp = m_file.openGroup("configuration");
 	} catch ( ... ) {
-		grp = file.createGroup("configuration");
+		grp = m_file.createGroup("configuration");
 		hsize_t rank = 1;
-		hsize_t dims[] = { static_cast<hsize_t>(xpos_.size()) };
+		hsize_t dims[] = { static_cast<hsize_t>(m_xpos.size()) };
 		auto space = H5::DataSpace(rank, dims);
 		grp.createDataSet("xpos", H5::PredType::STD_U32LE, space);
 		grp.createDataSet("ypos", H5::PredType::STD_U32LE, space);
@@ -123,17 +123,17 @@ void HidensFile::writeConfiguration()
 	}
 	try {
 		auto xposDset = grp.openDataSet("xpos");
-		writeConfigurationDataset(xposDset, xpos_);
+		writeConfigurationDataset(xposDset, m_xpos);
 		auto yposDset = grp.openDataSet("ypos");
-		writeConfigurationDataset(yposDset, ypos_);
+		writeConfigurationDataset(yposDset, m_ypos);
 		auto xDset = grp.openDataSet("x");
-		writeConfigurationDataset(xDset, x_);
+		writeConfigurationDataset(xDset, m_x);
 		auto yDset = grp.openDataSet("y");
-		writeConfigurationDataset(yDset, y_);
+		writeConfigurationDataset(yDset, m_y);
 		auto labelDset = grp.openDataSet("label");
-		writeConfigurationDataset(labelDset, label_);
+		writeConfigurationDataset(labelDset, m_label);
 		auto indicesDset = grp.openDataSet("indices");
-		writeConfigurationDataset(indicesDset, indices_);
+		writeConfigurationDataset(indicesDset, m_indices);
 	} catch (H5::DataSetIException& e) {
 		std::stringstream what;
 		what << "The file " << filename() <<
@@ -146,5 +146,5 @@ void HidensFile::setAnalogOutputSize(int /* size */)
 {
 }
 
-}; // end hidensfile namespace
+} // end hidensfile namespace
 
