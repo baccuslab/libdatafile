@@ -69,6 +69,9 @@ using samples = arma::mat; 				// true voltage units
 using ssamples = arma::Mat<int16_t>;	// data from MCS arrays
 using usamples = arma::Mat<uint8_t>;	// data from HiDens arrays
 
+/*! Public method used to read array type from the given data file. */
+std::string array(const std::string& filename);
+
 /* Template methods for determining H5 datatype from the datatype of
  * and Armadillo matrix or vector. These are used to enable correct 
  * conversion of data to/from the file and in-memory matrices of
@@ -131,9 +134,6 @@ H5::DataType dtypeForMat(const arma::Mat<T>& /* mat */,
 class DataFile {
 
 	public:
-
-		/*! Static public method used to read array type from the given data file. */
-		static std::string array(const std::string& filename);
 
 		/*! Construct a new DataFile object. 
 		 * The file is created if it does not exist, otherwise it is opened read-only.
@@ -270,6 +270,29 @@ class DataFile {
 			m_dataset.read(data.memptr(), dtypeForMat(data), memspace, m_dataspace);
 		}
 
+		/* Read data from a contiguous set of channels into the given matrix.
+		 * \param startSample The first sample to read.
+		 * \param lastSample The last sample to read.
+		 * \param data The Armadillo matrix to fill with the requested data. Data
+		 * will be converted to the appropriate type to fill the given matrix.
+		 * 
+		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
+		 * Because Armadillo uses column-order majoring, this corresponds to the
+		 * HDF5 dataset with size (nchannels, nsamples).
+		 *
+		 * Exceptions:
+		 * This will throw a std::logic_error if either the requested channels
+		 * or samples are outside of the range for the file.
+		 */
+		template<class T>
+		void data(int startSample, int endSample, arma::Mat<T>& data) const
+		{
+			verifyReadRequest(0, nchannels(), startSample, endSample);
+			auto memspace = setupRead(0, nchannels(), startSample, endSample);
+			data.set_size(endSample - startSample, nchannels());
+			m_dataset.read(data.memptr(), dtypeForMat(data), memspace, m_dataspace);
+		}
+
 		/* Write data to the file.
 		 * \param startSample The first sample to write.
 		 * \param endSample The last sample to write.
@@ -351,6 +374,7 @@ class DataFile {
 		void readRoom();
 		void readNumSamples();
 		void readAnalogOutputSize();
+		void setNumSamples(int nsamples);
 
 		H5::H5File m_file;				// The actual HDF5 file
 		H5::DataSpace m_dataspace;		// Data space for actual data

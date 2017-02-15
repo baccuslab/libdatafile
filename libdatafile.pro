@@ -15,7 +15,7 @@ QMAKE_CXXFLAGS += -std=c++11
 INCLUDEPATH += . include \
 		/usr/local/include \
 		/usr/include \
-		../libmea-device/include
+		../libdata-source/include
 win32 {
 	LIBS += -LC:/msys64/mingw64/lib
 } else {

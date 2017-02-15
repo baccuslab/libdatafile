@@ -104,8 +104,9 @@ DataFile::DataFile(const std::string& filename,
 DataFile::~DataFile() 
 {
 	try {
-		if (!readOnly()) 
-			writeAllAttributes();
+		if (!readOnly()) {
+			flush();
+		}
 		m_file.close();
 	} catch (H5::FileIException &e) {
 		std::cerr << "Error closing HDF5 file: " << m_filename << std::endl;
@@ -333,6 +334,12 @@ void DataFile::setAnalogOutputSize(int size)
 	m_aoutSize = static_cast<decltype(m_aoutSize)>(size);
 }
 
+void DataFile::setNumSamples(int nsamples)
+{
+	m_nsamples = static_cast<decltype(m_nsamples)>(nsamples);
+	writeDataAttr("nsamples", H5::PredType::STD_U64LE, &m_nsamples);
+}
+
 int DataFile::analogOutputSize() const
 {
 	return static_cast<int>(m_aoutSize);
@@ -521,7 +528,8 @@ void DataFile::verifyWriteRequest(int startSample, int endSample)
 		m_dataset.extend(dims);
 		m_dataspace = m_dataset.getSpace();
 	}
-	m_nsamples = static_cast<uint64_t>(endSample);
+	m_nsamples = std::max(m_nsamples, static_cast<uint64_t>(endSample));
+	setNumSamples(m_nsamples);
 }
 
 H5::DataSpace DataFile::setupWrite(int startSample, int endSample)
