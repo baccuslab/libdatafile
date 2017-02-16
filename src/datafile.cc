@@ -51,6 +51,10 @@ DataFile::DataFile(const std::string& filename,
 		m_dataspace = m_dataset.getSpace();
 		m_datatype = m_dataset.getDataType();
 
+		hsize_t dims[DatasetRank] = {0, 0};
+		m_dataspace.getSimpleExtentDims(dims);
+		m_nchannels = dims[0];
+
 		/* Read attributes into data members */
 		try {
 			readArray();
@@ -87,6 +91,7 @@ DataFile::DataFile(const std::string& filename,
 				H5::FileCreatPropList::DEFAULT, m_fileProps);
 
 		/* Create the dataset */
+		m_nchannels = nchannels;
 		hsize_t dims[DatasetRank] = {nchannels, DatasetDefaultDims[1]};
 		m_dataspace = H5::DataSpace(DatasetRank, dims, DatasetMaxDims);
 		m_props = H5::DSetCreatPropList();
@@ -129,9 +134,7 @@ int DataFile::nsamples() const
 
 int DataFile::nchannels() const
 {
-	hsize_t dims[DatasetRank] = {0, 0};
-	m_dataspace.getSimpleExtentDims(dims);
-	return dims[0];
+	return static_cast<int>(m_nchannels);
 }
 
 float DataFile::sampleRate(void) const { return m_sampleRate; }

@@ -8,7 +8,7 @@ INCLUDEPATH += . \
 	/usr/local/include \
 	/usr/include \
 	../include \
-	../../libmea-device/include \
+	../../libdata-source/include \
 	/usr/include/hdf5/serial
 
 LIBS += -L/usr/local/lib -L../lib/ \

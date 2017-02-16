@@ -297,6 +297,7 @@ class DataFile {
 		 * \param startSample The first sample to write.
 		 * \param endSample The last sample to write.
 		 * \param data The Armadillo matrix containing data to write.
+		 * \param flush If true, immediately flush the file to disk.
 		 * 
 		 * NOTE: Data should be in an Armadillo matrix with size (nsamples, nchannels).
 		 * Because Armadillo uses column-order majoring, this corresponds to the
@@ -308,12 +309,14 @@ class DataFile {
 		 * largest multiple of the BLOCK_SIZE required to accommodate the data.
 		 */
 		template<class T>
-		void setData(int startSample, int endSample, const arma::Mat<T>& data) { 
+		void setData(int startSample, int endSample, 
+				const arma::Mat<T>& data, bool flush = false) { 
 			verifyWriteRequest(startSample, endSample);
 			auto memtype = dtypeForMat(data);
 			auto memspace = setupWrite(startSample, endSample);
 			m_dataset.write(data.memptr(), memtype, memspace, m_dataspace);
-			flush();
+			if (flush)
+				this->flush();
 		}
 
 		/*! Set the array from which data in this file derives.
@@ -391,6 +394,7 @@ class DataFile {
 		std::string m_date;			// Date of recording, ISO-8601 format
 		std::string m_room; 		// Location of recording
 		uint64_t m_nsamples;		// Total number of samples written
+		uint64_t m_nchannels;		// Total number of channels in the file
 		uint64_t m_aoutSize;		// Size of any analog output used in the recording
 
 		bool readOnly() const { return m_readOnly; }
