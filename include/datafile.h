@@ -249,7 +249,7 @@ class DataFile {
 		 * \param endChan The last channel to read
 		 * \param startSample The first sample to read.
 		 * \param lastSample The last sample to read.
-		 * \param data The Armadillo matrix to fill with the requested data. Data
+		 * \param mat The Armadillo matrix to fill with the requested data. Data
 		 * will be converted to the appropriate type to fill the given matrix.
 		 * 
 		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
@@ -262,18 +262,18 @@ class DataFile {
 		 */
 		template<class T>
 		void data(int startChan, int endChan, 
-				int startSample, int endSample, arma::Mat<T>& data) const
+				int startSample, int endSample, arma::Mat<T>& mat) const
 		{
 			verifyReadRequest(startChan, endChan, startSample, endSample);
 			auto memspace = setupRead(startChan, endChan, startSample, endSample);
-			data.set_size(endSample - startSample, endChan - startChan);
-			m_dataset.read(data.memptr(), dtypeForMat(data), memspace, m_dataspace);
+			mat.set_size(endSample - startSample, endChan - startChan);
+			m_dataset.read(mat.memptr(), dtypeForMat(mat), memspace, m_dataspace);
 		}
 
 		/* Read data from a contiguous set of channels into the given matrix.
 		 * \param startSample The first sample to read.
 		 * \param lastSample The last sample to read.
-		 * \param data The Armadillo matrix to fill with the requested data. Data
+		 * \param mat The Armadillo matrix to fill with the requested data. Data
 		 * will be converted to the appropriate type to fill the given matrix.
 		 * 
 		 * NOTE: Data is returned in an Armadillo matrix with size (nsamples, nchannels).
@@ -285,18 +285,18 @@ class DataFile {
 		 * or samples are outside of the range for the file.
 		 */
 		template<class T>
-		void data(int startSample, int endSample, arma::Mat<T>& data) const
+		void data(int startSample, int endSample, arma::Mat<T>& mat) const
 		{
 			verifyReadRequest(0, nchannels(), startSample, endSample);
 			auto memspace = setupRead(0, nchannels(), startSample, endSample);
-			data.set_size(endSample - startSample, nchannels());
-			m_dataset.read(data.memptr(), dtypeForMat(data), memspace, m_dataspace);
+			mat.set_size(endSample - startSample, nchannels());
+			m_dataset.read(mat.memptr(), dtypeForMat(mat), memspace, m_dataspace);
 		}
 
 		/* Write data to the file.
 		 * \param startSample The first sample to write.
 		 * \param endSample The last sample to write.
-		 * \param data The Armadillo matrix containing data to write.
+		 * \param mat The Armadillo matrix containing data to write.
 		 * \param flush If true, immediately flush the file to disk.
 		 * 
 		 * NOTE: Data should be in an Armadillo matrix with size (nsamples, nchannels).
@@ -310,11 +310,10 @@ class DataFile {
 		 */
 		template<class T>
 		void setData(int startSample, int endSample, 
-				const arma::Mat<T>& data, bool flush = false) { 
+				const arma::Mat<T>& mat, bool flush = false) { 
 			verifyWriteRequest(startSample, endSample);
-			auto memtype = dtypeForMat(data);
 			auto memspace = setupWrite(startSample, endSample);
-			m_dataset.write(data.memptr(), memtype, memspace, m_dataspace);
+			m_dataset.write(mat.memptr(), dtypeForMat(mat), memspace, m_dataspace);
 			if (flush)
 				this->flush();
 		}

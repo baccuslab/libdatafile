@@ -1,4 +1,4 @@
-h5recording - A C++ library for reading and writing HDF5 recording files
+libdatafile - A C++ library for reading and writing HDF5 recording files
 Copyright (C) Benjamin Naecker bnaecker@stanford.edu
 
 This program is free software: you can redistribute it and/or modify
