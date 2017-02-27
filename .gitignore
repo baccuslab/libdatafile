@@ -16,3 +16,4 @@ tools/lib/*
 doc/*
 lib/*
 tests/test_libdatafile
+*.rc
