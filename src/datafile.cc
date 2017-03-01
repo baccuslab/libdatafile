@@ -30,14 +30,12 @@ DataFile::DataFile(const std::string& filename,
 	struct stat buffer;
 	if (stat(m_filename.c_str(), &buffer) == 0) {
 		if (!H5::H5File::isHdf5(m_filename)) {
-			std::cerr << "Invalid H5 file" << std::endl;
 			throw std::invalid_argument("Invalid HDF5 file");
 		}
 		try {
 			m_readOnly = true;
 			m_file = H5::H5File(m_filename, H5F_ACC_RDWR); // must be read-write so we can call setMeans()
 		} catch (H5::FileIException &e) {
-			std::cerr << "Could not open H5 file" << std::endl;
 			throw std::runtime_error("Could not open HDF5 file");
 		}
 
@@ -45,7 +43,6 @@ DataFile::DataFile(const std::string& filename,
 		try {
 			m_dataset = m_file.openDataSet("data");
 		} catch (H5::FileIException &e) {
-			std::cerr << "File must contain a dataset labeled 'data'";
 			throw std::invalid_argument("File must contain a 'data' dataset");
 		}
 		m_dataspace = m_dataset.getSpace();
@@ -55,21 +52,18 @@ DataFile::DataFile(const std::string& filename,
 		m_dataspace.getSimpleExtentDims(dims);
 		m_nchannels = dims[0];
 
-		/* Read attributes into data members */
-		try {
-			readArray();
-			readSampleRate();
-			readGain();
-			readOffset();
-			readDate();
-			readRoom();
-			readNumSamples();
-			readAnalogOutputSize();
-		} catch ( ... ) {
-			std::cerr << "File does not contain appropriate attributes";
-			throw std::invalid_argument(
-					"H5 file does not contain appropriate attributes");
-		}
+		/* Read attributes into data members. These will throw a
+		 * std::invalid_argument if the attribute could not accessed
+		 * for some reason.
+		 */
+		readArray();
+		readSampleRate();
+		readGain();
+		readOffset();
+		readDate();
+		readRoom();
+		readNumSamples();
+		readAnalogOutputSize();
 
 	} else {
 		/* Construct the file. Define to have a chunk cache large enough to hold
@@ -258,10 +252,9 @@ void DataFile::writeDataAttr(const std::string& name, const H5::DataType &type, 
 		}
 		H5::Attribute attr = m_dataset.openAttribute(name);
 		attr.write(writeType, buf);
-	} catch (H5::DataSetIException &e) {
-		std::cerr << "DataSet exception accessing: " << name << std::endl;
-	} catch (H5::AttributeIException &e) {
-		std::cerr << "Attribute exception accessing: " << name << std::endl;
+	} catch (H5::Exception& e) {
+		throw std::invalid_argument("The data attribute '" + name +
+				"' could does not exist or could not be written.");
 	}
 }
 
@@ -277,10 +270,9 @@ void DataFile::writeDataStringAttr(const std::string& name, const std::string& v
 		}
 		H5::Attribute attr = m_dataset.openAttribute(name);
 		attr.write(stringType, value.c_str());
-	} catch (H5::DataSetIException &e) {
-		std::cerr << "DataSet exception accessing: " << name << std::endl;
-	} catch (H5::AttributeIException &e) {
-		std::cerr << "Attribute exception accessing: " << name << std::endl;
+	} catch (H5::Exception& e) {
+		throw std::invalid_argument("The data string attribute '" + name +
+				"' could does not exist or could not be written.");
 	}
 }
 
@@ -362,10 +354,9 @@ void DataFile::readFileAttr(const std::string& name, void *buf)
 	try {
 		H5::Attribute attr = m_file.openAttribute(name);
 		attr.read(attr.getDataType(), buf);
-	} catch (H5::FileIException &e) {
-		std::cerr << "File exception accessing attribute: " << name << std::endl;
-	} catch (H5::AttributeIException &e) {
-		std::cerr << "Attribute exception accessing attribute: " << name << std::endl;
+	} catch (H5::Exception &e) {
+		throw std::invalid_argument("The file attribute '" + name +
+				"' could does not exist or could not be read correctly from the file.");
 	}
 }
 
@@ -374,10 +365,9 @@ void DataFile::readDataAttr(const std::string& name, void *buf)
 	try {
 		H5::Attribute attr = m_dataset.openAttribute(name);
 		attr.read(attr.getDataType(), buf);
-	} catch (H5::DataSetIException &e) {
-		std::cerr << "DataSet exception accessing attribute: " << name << std::endl;
-	} catch (H5::AttributeIException &e) {
-		std::cerr << "Attribute exception accessing attribute: " << name << std::endl;
+	} catch (H5::Exception &e) {
+		throw std::invalid_argument("The dataset attribute '" + name +
+				"' could does not exist or could not be read correctly from the file.");
 	}
 }
 
@@ -394,12 +384,9 @@ void DataFile::readDataStringAttr(const std::string& name, std::string &loc)
 		loc.resize(sz + 1);
 		loc.replace(0, sz, buf);
 		delete[] buf;
-	} catch (H5::DataSetIException &e) {
-		std::cerr << "DataSet exception accessing attribute: " << name << std::endl;
-	} catch (H5::AttributeIException &e) {
-		std::cerr << "Attribute exception accessing attribute: " << name << std::endl;
-	} catch (std::exception &e) {
-		std::cerr << "Calloc error" << std::endl;
+	} catch (H5::Exception& e) {
+		throw std::invalid_argument("The dataset string attribute '" + name +
+				"' could does not exist or could not be read correctly from the file.");
 	}
 }
 
@@ -416,12 +403,9 @@ void DataFile::readFileStringAttr(const std::string& name, std::string &loc)
 		loc.resize(sz + 1);
 		loc.replace(0, sz, buf);
 		delete[] buf;
-	} catch (H5::DataSetIException &e) {
-		std::cerr << "DataSet exception accessing attribute: " << name << std::endl;
-	} catch (H5::AttributeIException &e) {
-		std::cerr << "Attribute exception accessing attribute: " << name << std::endl;
-	} catch (std::exception &e) {
-		std::cerr << "Calloc error" << std::endl;
+	} catch (H5::Exception& e) {
+		throw std::invalid_argument("The file string attribute '" + name +
+				"' could not be accessed or was incorrectly written.");
 	}
 }
 
