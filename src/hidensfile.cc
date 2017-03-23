@@ -78,10 +78,10 @@ void HidensFile::readConfiguration()
 		readConfigurationDataset(xDset, m_x);
 		auto yDset = grp.openDataSet("y");
 		readConfigurationDataset(yDset, m_y);
-		auto labelDset = grp.openDataSet("label");
-		readConfigurationDataset(labelDset, m_label);
 		auto indicesDset = grp.openDataSet("indices");
 		readConfigurationDataset(indicesDset, m_indices);
+		auto labelDset = grp.openDataSet("label");
+		readConfigurationDataset(labelDset, m_label);
 
 		m_configuration.reserve(m_xpos.n_elem);
 		for (arma::uword i = 0; i < m_xpos.n_elem; i++) {

@@ -97,6 +97,35 @@ class HidensFile : public datafile::DataFile {
 			dset.read(out.memptr(), datafile::dtypeForMat(out), memspace, space);
 		}
 
+		/* Specialization for labels. 
+		 *
+		 * The datatype in memory is uint8_t, which should just be directly 
+		 * convertible from a single-byte char. But HDF's string datatypes are
+		 * more complicated, and must be specified as full StrType's to be
+		 * read correctly.
+		 */
+		void readConfigurationDataset(const H5::DataSet& dset, 
+				arma::Col<uint8_t>& out) const
+		{
+			/* Define file (source) space. */
+			auto space = dset.getSpace();
+			hsize_t dims[1] = { 0 };
+			space.getSimpleExtentDims(dims);
+			auto sz = dims[0];
+			hsize_t offset[1] = { 0 };
+			hsize_t count[1] = { sz };
+			space.selectHyperslab(H5S_SELECT_SET, count, offset);
+
+			/* Create memory (destination) dataspace */
+			auto memspace = H5::DataSpace(1, dims);
+			memspace.selectHyperslab(H5S_SELECT_SET, count, offset);
+
+			/* Read into output array */
+			out.set_size(sz);
+			H5::StrType type{ H5::PredType::C_S1, 1 };
+			dset.read(out.memptr(), type, memspace, space);
+		}
+
 		/* Write components of each Electrode struct.  */
 		template<class T>
 		void writeConfigurationDataset(H5::DataSet& dset, const arma::Col<T>& in)
