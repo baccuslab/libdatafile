@@ -29,14 +29,14 @@ DataFile::DataFile(const std::string& filename,
 	 */
 	struct stat buffer;
 	if (stat(m_filename.c_str(), &buffer) == 0) {
-		if (!H5::H5File::isHdf5(m_filename)) {
-			throw std::invalid_argument("Invalid HDF5 file");
-		}
 		try {
+			if (!H5::H5File::isHdf5(m_filename)) {
+				throw std::invalid_argument("Invalid HDF5 file");
+			}
 			m_readOnly = true;
 			m_file = H5::H5File(m_filename, H5F_ACC_RDWR); // must be read-write so we can call setMeans()
 		} catch (H5::FileIException &e) {
-			throw std::runtime_error("Could not open HDF5 file");
+			throw std::invalid_argument("Could not open HDF5 file");
 		}
 
 		/* Open the dataset */
