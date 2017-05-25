@@ -117,8 +117,7 @@ void HidensFile::writeConfiguration()
 		grp.createDataSet("ypos", H5::PredType::STD_U32LE, space);
 		grp.createDataSet("x", H5::PredType::STD_U16LE, space);
 		grp.createDataSet("y", H5::PredType::STD_U16LE, space);
-		H5::StrType labelType(0, 1);
-		grp.createDataSet("label", labelType, space);
+		grp.createDataSet("label", H5::PredType::STD_U8LE, space);
 		grp.createDataSet("indices", H5::PredType::STD_U32LE, space);
 	}
 	try {
@@ -135,10 +134,11 @@ void HidensFile::writeConfiguration()
 		auto indicesDset = grp.openDataSet("indices");
 		writeConfigurationDataset(indicesDset, m_indices);
 	} catch (H5::DataSetIException& e) {
+		std::cout << e.getDetailMsg() << std::endl;
 		std::stringstream what;
 		what << "The file " << filename() <<
 			" is missing a configuration dataset";
-		std::invalid_argument(what.str());
+		throw std::invalid_argument(what.str());
 	}
 }
 
